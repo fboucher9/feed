@@ -1,0 +1,117 @@
+# See LICENSE for license details
+
+#
+# Module: feed_project.mak
+#
+# Description:
+#   Makefile definitions for feed project.
+#
+# Remarks:
+#   Definitions must be independant of current folder, all folders
+#   must be relative to FEED_SRC_PATH and FEED_OBJ_PATH.
+#
+
+ifndef DBG
+DBG = 0
+endif
+
+ifndef FEED_SRC_PATH
+FEED_SRC_PATH = .
+endif
+
+ifndef FEED_DST_PATH
+FEED_DST_PATH = .
+endif
+
+ifndef FEED_CC
+FEED_CC = $(CC)
+endif
+
+ifndef FEED_CXX
+FEED_CXX = $(CXX)
+endif
+
+ifeq ($(DBG),1)
+FEED_CFG_DBG = chk
+else
+FEED_CFG_DBG = fre
+endif
+
+FEED_CFLAGS_chk = -g -O0
+
+FEED_CFLAGS_fre = -O2 -Os
+
+FEED_CFLAGS_WARNINGS = \
+    -pedantic -Wall -Wextra -Wabi -Waggregate-return -Warray-bounds \
+    -Wattributes -Wbad-function-cast -Wbuiltin-macro-redefined -Wc++-compat \
+    -Wcast-align -Wcast-qual -Wconversion -Wdeclaration-after-statement \
+    -Wdeprecated -Wdiv-by-zero -Wendif-labels -Wfloat-equal \
+    -Wformat-contains-nul -Wformat-extra-args -Wformat-nonliteral \
+    -Wformat-security -Wformat-y2k -Wformat-zero-length -Wint-to-pointer-cast \
+    -Wlarger-than=1024 -Wlong-long -Wmissing-declarations \
+    -Wmissing-format-attribute -Wmissing-include-dirs -Wmissing-prototypes \
+    -Wmultichar -Wnested-externs -Wold-style-definition -Woverflow \
+    -Woverlength-strings -Wpacked -Wpacked-bitfield-compat -Wpadded \
+    -Wpointer-arith -Wpointer-to-int-cast -Wpragmas -Wredundant-decls \
+    -Wsequence-point -Wshadow -Wstrict-overflow=5 -Wstrict-prototypes \
+    -Wsync-nand -Wundef -Wunused -Wunused-macros -Wunused-result \
+    -Wvariadic-macros -Wvla -Wwrite-strings
+
+FEED_CXXFLAGS_chk = $(FEED_CFLAGS_chk)
+
+FEED_CXXFLAGS_fre = $(FEED_CFLAGS_fre)
+
+FEED_CXXFLAGS_WARNINGS = \
+    -pedantic -Wall -Wextra -Wabi -Waggregate-return -Warray-bounds \
+    -Wattributes -Wbuiltin-macro-redefined -Wc++0x-compat \
+    -Wcast-align -Wcast-qual -Wconversion \
+    -Wdeprecated -Wdiv-by-zero -Wendif-labels -Wfloat-equal \
+    -Wformat-contains-nul -Wformat-extra-args -Wformat-nonliteral \
+    -Wformat-security -Wformat-y2k \
+    -Wlarger-than=1024 -Wlong-long -Wmissing-declarations \
+    -Wmissing-format-attribute -Wmissing-include-dirs \
+    -Wmultichar -Woverflow \
+    -Woverlength-strings -Wpacked -Wpacked-bitfield-compat -Wpadded \
+    -Wpointer-arith -Wpragmas -Wredundant-decls \
+    -Wsequence-point -Wshadow -Wstrict-overflow=5 \
+    -Wsync-nand -Wundef -Wunused -Wunused-macros -Wunused-result \
+    -Wvariadic-macros -Wvla -Wwrite-strings \
+    -Wctor-dtor-privacy -Weffc++ -Wenum-compare -Wnon-virtual-dtor \
+    -Woverloaded-virtual -Wstrict-null-sentinel -Wsign-promo
+
+
+FEED_INCLUDES = -I$(FEED_DST_PATH)
+
+FEED_CFLAGS = $(CFLAGS) $(FEED_CFLAGS_$(FEED_CFG_DBG)) $(FEED_CFLAGS_WARNINGS) $(FEED_INCLUDES)
+
+FEED_CXXFLAGS = $(CXXFLAGS) $(FEED_CXXFLAGS_$(FEED_CFG_DBG)) $(FEED_CXXFLAGS_WARNINGS) $(FEED_INCLUDES)
+
+FEED_LDFLAGS_chk =
+
+FEED_LDFLAGS_fre = -s
+
+FEED_LDFLAGS = $(LDFLAGS) $(FEED_LDFLAGS_$(FEED_CFG_DBG))
+
+FEED_SRCS = \
+    $(FEED_SRC_PATH)/feed_os.c \
+    $(FEED_SRC_PATH)/feed_tty.c \
+    $(FEED_SRC_PATH)/feed_buf.c
+
+# Default target
+.PHONY: all
+all : testfeed
+
+# Test application
+.PHONY: testfeed
+testfeed: $(FEED_DST_PATH)/testfeed.exe
+
+# Link the target
+$(FEED_DST_PATH)/testfeed.exe : $(FEED_SRCS)
+	@echo linking $@
+	@echo -o $@ $(FEED_CFLAGS) $(FEED_SRCS) $(FEED_LDFLAGS) > $(FEED_DST_PATH)/_obj_testfeed.cmd
+	@$(FEED_CC) @$(FEED_DST_PATH)/_obj_testfeed.cmd
+
+# Indicate dependency on makefile
+$(FEED_DST_PATH)/testfeed.exe : $(FEED_SRC_PATH)/feed_project.mak
+
+-include $(FEED_DST_PATH)/_obj_*.o.d
