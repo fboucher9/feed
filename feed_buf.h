@@ -13,7 +13,7 @@ Description:
 
 struct feed_buf
 {
-    char *
+    unsigned char *
         p_buf;
 
     void *
@@ -36,7 +36,7 @@ char
 feed_buf_init(
     struct feed_buf * const
         p_this,
-    char * const
+    unsigned char * const
         p_buf,
     unsigned int const
         i_max_len);
@@ -50,7 +50,7 @@ char
 feed_buf_write_character(
     struct feed_buf * const
         p_this,
-    char const
+    unsigned char const
         c_data);
 
 char
@@ -70,12 +70,26 @@ feed_buf_write_number(
         i_data);
 
 char
+feed_buf_write_unicode_character(
+    struct feed_buf * const
+        p_buf,
+    unsigned long int const
+        i_code);
+
+char
 feed_buf_encode_move_cursor(
     struct feed_buf * const
         p_buf,
     int const
         i_count,
-    char const
+    unsigned char const
         c_direction);
+
+char
+feed_buf_encode_erase_in_display(
+    struct feed_buf * const
+        p_buf,
+    int const
+        i_count);
 
 /* end-of-file: feed_buf.h */

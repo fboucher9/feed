@@ -1,3 +1,15 @@
+/* See LICENSE for license details */
+
+/*
+
+Module: feed_tty.c
+
+Description:
+
+    Basic input and output routines for tty devices.
+
+*/
+
 #include "feed_os.h"
 
 #include "feed_client.h"
@@ -5,6 +17,8 @@
 #include "feed_tty.h"
 
 #include "feed_buf.h"
+
+#include "feed_const.h"
 
 char
 feed_tty_init(
@@ -629,7 +643,7 @@ feed_tty_read_escape_sequence(
             i_char_len;
 
         if (
-            FEED_TTY_ESC_CHAR == i_value)
+            FEED_ESC_CHAR == i_value)
         {
             /* read second character */
             b_result =
@@ -778,7 +792,7 @@ feed_tty_get_cursor_position(
 
     static char const g_escape_report_cursor_location [] =
     {
-        FEED_TTY_ESC_CHAR,
+        FEED_ESC_CHAR,
         '[',
         '6',
         'n'
@@ -838,7 +852,7 @@ feed_tty_get_cursor_position(
         {
             if (
                 (
-                    FEED_TTY_ESC_CHAR == a_buf[0u])
+                    FEED_ESC_CHAR == a_buf[0u])
                 && (
                     '[' == a_buf[1u]))
             {
@@ -903,13 +917,13 @@ feed_tty_move_cursor(
         p_tty,
     int const
         i_count,
-    char const
+    unsigned char const
         c_direction)
 {
     char
         b_result;
 
-    char
+    unsigned char
         a_buf[32u];
 
     int
@@ -1094,3 +1108,117 @@ feed_tty_get_window_size(
 
 }
 
+char
+feed_tty_clear(
+    struct feed_client * const
+        p_client,
+    struct feed_tty * const
+        p_tty,
+    int const
+        i_count)
+{
+    char
+        b_result;
+
+    unsigned char
+        a_buf[64u];
+
+    struct feed_buf
+        o_buf;
+
+    (void)(
+        p_client);
+    (void)(
+        p_tty);
+
+    b_result =
+        feed_buf_init(
+            &(
+                o_buf),
+            a_buf,
+            sizeof(
+                a_buf));
+
+    if (
+        b_result)
+    {
+        b_result =
+            feed_buf_encode_erase_in_display(
+                &(
+                    o_buf),
+                i_count);
+
+        if (
+            b_result)
+        {
+            b_result =
+                feed_tty_write_character_array(
+                    p_client,
+                    p_tty,
+                    o_buf.p_buf,
+                    o_buf.i_len);
+        }
+    }
+
+    return
+        b_result;
+
+}
+
+char
+feed_tty_clear_bottom(
+    struct feed_client * const
+        p_client,
+    struct feed_tty * const
+        p_tty)
+{
+    return
+        feed_tty_clear(
+            p_client,
+            p_tty,
+            FEED_TTY_CLEAR_BOTTOM);
+}
+
+char
+feed_tty_clear_top(
+    struct feed_client * const
+        p_client,
+    struct feed_tty * const
+        p_tty)
+{
+    return
+        feed_tty_clear(
+            p_client,
+            p_tty,
+            FEED_TTY_CLEAR_TOP);
+}
+
+char
+feed_tty_clear_screen(
+    struct feed_client * const
+        p_client,
+    struct feed_tty * const
+        p_tty)
+{
+    return
+        feed_tty_clear(
+            p_client,
+            p_tty,
+            FEED_TTY_CLEAR_SCREEN);
+}
+
+char
+feed_tty_clear_history(
+    struct feed_client * const
+        p_client,
+    struct feed_tty * const
+        p_tty)
+{
+    return
+        feed_tty_clear(
+            p_client,
+            p_tty,
+            FEED_TTY_CLEAR_HISTORY);
+}
+
+/* end-of-file: feed_tty.c */

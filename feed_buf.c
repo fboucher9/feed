@@ -4,11 +4,13 @@
 
 #include "feed_buf.h"
 
+#include "feed_const.h"
+
 char
 feed_buf_init(
     struct feed_buf * const
         p_this,
-    char * const
+    unsigned char * const
         p_buf,
     unsigned int const
         i_max_len)
@@ -34,7 +36,7 @@ feed_buf_init(
 }
 
 static
-char
+unsigned char
 g_feed_buf_empty[1u] =
 {
     '@'
@@ -60,7 +62,7 @@ char
 feed_buf_write_character(
     struct feed_buf * const
         p_this,
-    char const
+    unsigned char const
         c_data)
 {
     char
@@ -130,7 +132,7 @@ feed_buf_write_number(
     signed long int const
         i_data)
 {
-    static char const g_digit_representation[10u] =
+    static unsigned char const g_digit_representation[10u] =
     {
         '0',
         '1',
@@ -147,10 +149,10 @@ feed_buf_write_number(
     char
         b_result;
 
-    char
+    unsigned char
         a_digits[16u];
 
-    char *
+    unsigned char *
         p_digits_iterator;
 
     unsigned int
@@ -228,12 +230,117 @@ feed_buf_write_number(
 }
 
 char
+feed_buf_write_unicode_character(
+    struct feed_buf * const
+        p_buf,
+    unsigned long int const
+        i_code)
+{
+    char
+        b_result;
+
+    unsigned char
+        a_byte[4u];
+
+    if (
+        i_code < 128ul)
+    {
+        b_result =
+            feed_buf_write_character(
+                p_buf,
+                (unsigned char)(
+                    i_code & 0x7Ful));
+    }
+    else if (
+        i_code < (1ul << 11ul))
+    {
+        a_byte[0u] =
+            (unsigned char)(
+                0xC0u
+                | ((i_code >> 6u) & 0x1Fu));
+
+        a_byte[1u] =
+            (unsigned char)(
+                0x80u
+                | ((i_code >> 0u) & 0x3Fu));
+
+        b_result =
+            feed_buf_write_character_array(
+                p_buf,
+                a_byte,
+                2u);
+    }
+    else if (
+        i_code < (1ul << 16ul))
+    {
+        a_byte[0u] =
+            (unsigned char)(
+                0xC0u
+                | ((i_code >> 12u) & 0x0Fu));
+
+        a_byte[1u] =
+            (unsigned char)(
+                0x80u
+                | ((i_code >> 6u) & 0x3Fu));
+
+        a_byte[2u] =
+            (unsigned char)(
+                0x80u
+                | ((i_code >> 0u) & 0x3Fu));
+
+        b_result =
+            feed_buf_write_character_array(
+                p_buf,
+                a_byte,
+                3u);
+    }
+    else if (
+        i_code < (1ul << 21ul))
+    {
+        a_byte[0u] =
+            (unsigned char)(
+                0xC0u
+                | ((i_code >> 18u) & 0x07u));
+
+        a_byte[1u] =
+            (unsigned char)(
+                0x80u
+                | ((i_code >> 12u) & 0x3Fu));
+
+        a_byte[2u] =
+            (unsigned char)(
+                0x80u
+                | ((i_code >> 6u) & 0x3Fu));
+
+        a_byte[3u] =
+            (unsigned char)(
+                0x80u
+                | ((i_code >> 0u) & 0x3Fu));
+
+        b_result =
+            feed_buf_write_character_array(
+                p_buf,
+                a_byte,
+                4u);
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+}
+
+char
 feed_buf_encode_move_cursor(
     struct feed_buf * const
         p_buf,
     int const
         i_count,
-    char const
+    unsigned char const
         c_direction)
 {
     char
@@ -242,7 +349,7 @@ feed_buf_encode_move_cursor(
     b_result =
         feed_buf_write_character(
             p_buf,
-            '\033');
+            FEED_ESC_CHAR);
 
     if (
         b_result)

@@ -10,8 +10,6 @@ Description:
 
 */
 
-#define FEED_TTY_ESC_CHAR '\033'
-
 struct feed_client;
 
 struct feed_tty
@@ -153,7 +151,7 @@ feed_tty_move_cursor(
         p_tty,
     int const
         i_count,
-    char const
+    unsigned char const
         c_direction);
 
 char
@@ -202,5 +200,47 @@ feed_tty_get_window_size(
         p_width,
     int * const
         p_height);
+
+#define FEED_TTY_CLEAR_BOTTOM 0
+#define FEED_TTY_CLEAR_TOP 1
+#define FEED_TTY_CLEAR_SCREEN 2
+#define FEED_TTY_CLEAR_HISTORY 3
+
+char
+feed_tty_clear(
+    struct feed_client * const
+        p_client,
+    struct feed_tty * const
+        p_tty,
+    int const
+        i_count);
+
+char
+feed_tty_clear_bottom(
+    struct feed_client * const
+        p_client,
+    struct feed_tty * const
+        p_tty);
+
+char
+feed_tty_clear_top(
+    struct feed_client * const
+        p_client,
+    struct feed_tty * const
+        p_tty);
+
+char
+feed_tty_clear_screen(
+    struct feed_client * const
+        p_client,
+    struct feed_tty * const
+        p_tty);
+
+char
+feed_tty_clear_history(
+    struct feed_client * const
+        p_client,
+    struct feed_tty * const
+        p_tty);
 
 /* end-of-file: feed_tty.h */
