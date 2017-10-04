@@ -18,6 +18,8 @@ Description:
 
 #include "feed_buf.h"
 
+#include "feed_esc.h"
+
 #include "feed_const.h"
 
 char
@@ -909,6 +911,7 @@ feed_tty_get_cursor_position(
 
 }
 
+static
 char
 feed_tty_move_cursor(
     struct feed_client * const
@@ -946,7 +949,7 @@ feed_tty_move_cursor(
     if (b_result)
     {
         b_result =
-            feed_buf_encode_move_cursor(
+            feed_esc_write_n1(
                 &(
                     o_buf),
                 i_count,
@@ -999,7 +1002,7 @@ feed_tty_move_cursor_left(
             p_client,
             p_tty,
             i_count,
-            FEED_TTY_CURSOR_DIRECTION_LEFT);
+            FEED_CSI_CUB);
 }
 
 char
@@ -1016,7 +1019,7 @@ feed_tty_move_cursor_right(
             p_client,
             p_tty,
             i_count,
-            FEED_TTY_CURSOR_DIRECTION_RIGHT);
+            FEED_CSI_CUF);
 }
 
 char
@@ -1033,7 +1036,7 @@ feed_tty_move_cursor_up(
             p_client,
             p_tty,
             i_count,
-            FEED_TTY_CURSOR_DIRECTION_UP);
+            FEED_CSI_CUU);
 }
 
 char
@@ -1050,7 +1053,7 @@ feed_tty_move_cursor_down(
             p_client,
             p_tty,
             i_count,
-            FEED_TTY_CURSOR_DIRECTION_DOWN);
+            FEED_CSI_CUD);
 }
 
 char
@@ -1143,7 +1146,7 @@ feed_tty_clear(
         b_result)
     {
         b_result =
-            feed_buf_encode_erase_in_display(
+            feed_esc_write_ed(
                 &(
                     o_buf),
                 i_count);
@@ -1176,7 +1179,7 @@ feed_tty_clear_bottom(
         feed_tty_clear(
             p_client,
             p_tty,
-            FEED_TTY_CLEAR_BOTTOM);
+            FEED_CSI_ED_BOTTOM);
 }
 
 char
@@ -1190,7 +1193,7 @@ feed_tty_clear_top(
         feed_tty_clear(
             p_client,
             p_tty,
-            FEED_TTY_CLEAR_TOP);
+            FEED_CSI_ED_TOP);
 }
 
 char
@@ -1204,7 +1207,7 @@ feed_tty_clear_screen(
         feed_tty_clear(
             p_client,
             p_tty,
-            FEED_TTY_CLEAR_SCREEN);
+            FEED_CSI_ED_SCREEN);
 }
 
 char
@@ -1218,7 +1221,7 @@ feed_tty_clear_history(
         feed_tty_clear(
             p_client,
             p_tty,
-            FEED_TTY_CLEAR_HISTORY);
+            FEED_CSI_ED_HISTORY);
 }
 
 /* end-of-file: feed_tty.c */

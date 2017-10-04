@@ -138,22 +138,6 @@ feed_tty_get_cursor_position(
     int * const
         p_cols);
 
-#define FEED_TTY_CURSOR_DIRECTION_UP 'A'
-#define FEED_TTY_CURSOR_DIRECTION_DOWN 'B'
-#define FEED_TTY_CURSOR_DIRECTION_RIGHT 'C'
-#define FEED_TTY_CURSOR_DIRECTION_LEFT 'D'
-
-char
-feed_tty_move_cursor(
-    struct feed_client * const
-        p_client,
-    struct feed_tty * const
-        p_tty,
-    int const
-        i_count,
-    unsigned char const
-        c_direction);
-
 char
 feed_tty_move_cursor_left(
     struct feed_client * const
@@ -201,11 +185,7 @@ feed_tty_get_window_size(
     int * const
         p_height);
 
-#define FEED_TTY_CLEAR_BOTTOM 0
-#define FEED_TTY_CLEAR_TOP 1
-#define FEED_TTY_CLEAR_SCREEN 2
-#define FEED_TTY_CLEAR_HISTORY 3
-
+/* use FEED_CSI_ED_ constants for count */
 char
 feed_tty_clear(
     struct feed_client * const

@@ -76,20 +76,4 @@ feed_buf_write_unicode_character(
     unsigned long int const
         i_code);
 
-char
-feed_buf_encode_move_cursor(
-    struct feed_buf * const
-        p_buf,
-    int const
-        i_count,
-    unsigned char const
-        c_direction);
-
-char
-feed_buf_encode_erase_in_display(
-    struct feed_buf * const
-        p_buf,
-    int const
-        i_count);
-
 /* end-of-file: feed_buf.h */

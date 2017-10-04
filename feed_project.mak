@@ -93,9 +93,10 @@ FEED_LDFLAGS_fre = -s
 FEED_LDFLAGS = $(LDFLAGS) $(FEED_LDFLAGS_$(FEED_CFG_DBG))
 
 FEED_SRCS = \
-    $(FEED_SRC_PATH)/feed_os.c \
-    $(FEED_SRC_PATH)/feed_tty.c \
-    $(FEED_SRC_PATH)/feed_buf.c
+    $(FEED_DST_PATH)/_obj_feed_os.o \
+    $(FEED_DST_PATH)/_obj_feed_tty.o \
+    $(FEED_DST_PATH)/_obj_feed_buf.o \
+    $(FEED_DST_PATH)/_obj_feed_esc.o
 
 # Default target
 .PHONY: all
@@ -110,6 +111,22 @@ $(FEED_DST_PATH)/testfeed.exe : $(FEED_SRCS)
 	@echo linking $@
 	@echo -o $@ $(FEED_CFLAGS) $(FEED_SRCS) $(FEED_LDFLAGS) > $(FEED_DST_PATH)/_obj_testfeed.cmd
 	@$(FEED_CC) @$(FEED_DST_PATH)/_obj_testfeed.cmd
+
+# Build each object file
+$(FEED_DST_PATH)/_obj_%.o : $(FEED_SRC_PATH)/%.c
+	@echo compiling $@
+	@echo -c -o $@ $(FEED_CFLAGS) -MT $@ -MMD -MP -MF $@.d $< > $@.cmd
+	@$(FEED_CXX) -c -x c++ -o $@.oxx $(FEED_CXXFLAGS) $<
+	@$(FEED_CC) @$@.cmd
+
+# Build the precompiled header
+$(FEED_DST_PATH)/feed_os.h.gch : $(FEED_SRC_PATH)/feed_os.h
+	@echo generating $@
+	@$(FEED_CXX) -c -o $@.oxx $(FEED_CXXFLAGS) $(FEED_SRC_PATH)/feed_os.h
+	@$(FEED_CC) -c -o $@ $(FEED_CFLAGS) $(FEED_SRC_PATH)/feed_os.h
+
+# Indicate that all object files have dependency on precompiled header
+$(FEED_SRCS) : $(FEED_DST_PATH)/feed_os.h.gch
 
 # Indicate dependency on makefile
 $(FEED_DST_PATH)/testfeed.exe : $(FEED_SRC_PATH)/feed_project.mak

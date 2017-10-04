@@ -19,3 +19,8 @@
 #include <sys/types.h>
 
 #include <sys/ioctl.h>
+
+#if defined(__GNUC__)
+#if defined(__SSP_STRONG__)
+#endif
+#endif
