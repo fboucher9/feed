@@ -1,5 +1,15 @@
 /* See LICENCE for license details */
 
+/*
+
+Module: feed_os.h
+
+Description:
+
+    Include of operating system header files and precompiled header file.
+
+*/
+
 #include <stdarg.h>
 
 #include <stdio.h>
@@ -20,7 +30,10 @@
 
 #include <sys/ioctl.h>
 
+/* Avoid unused macro warning while using precompiled header file */
 #if defined(__GNUC__)
 #if defined(__SSP_STRONG__)
 #endif
 #endif
+
+/* end-of-file: feed_os.h */

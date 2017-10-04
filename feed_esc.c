@@ -1,3 +1,15 @@
+/* See LICENSE for license details */
+
+/*
+
+Module: feed_esc.c
+
+Description:
+
+    Encode of terminal escape codes.
+
+*/
+
 #include "feed_os.h"
 
 #include "feed_esc.h"
