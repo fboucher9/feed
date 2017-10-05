@@ -18,7 +18,6 @@ Description:
 
 #include "feed_const.h"
 
-static
 char
 feed_esc_write_prefix(
     struct feed_buf * const
@@ -46,6 +45,7 @@ feed_esc_write_prefix(
 
 }
 
+static
 char
 feed_esc_write_n1(
     struct feed_buf * const

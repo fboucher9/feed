@@ -139,7 +139,7 @@ feed_tty_get_cursor_position(
         p_cols);
 
 char
-feed_tty_move_cursor_left(
+feed_tty_move_cursor_backward(
     struct feed_client * const
         p_client,
     struct feed_tty * const
@@ -148,7 +148,7 @@ feed_tty_move_cursor_left(
         i_count);
 
 char
-feed_tty_move_cursor_right(
+feed_tty_move_cursor_forward(
     struct feed_client * const
         p_client,
     struct feed_tty * const
@@ -222,5 +222,14 @@ feed_tty_clear_history(
         p_client,
     struct feed_tty * const
         p_tty);
+
+char
+feed_tty_line_wrap(
+    struct feed_client * const
+        p_client,
+    struct feed_tty * const
+        p_tty,
+    char const
+        b_enable);
 
 /* end-of-file: feed_tty.h */

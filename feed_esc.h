@@ -13,13 +13,9 @@ Description:
 struct feed_buf;
 
 char
-feed_esc_write_n1(
+feed_esc_write_prefix(
     struct feed_buf * const
-        p_buf,
-    int const
-        i_count,
-    unsigned char const
-        c_direction);
+        p_buf);
 
 char
 feed_esc_write_cuu(
@@ -49,8 +45,8 @@ feed_esc_write_cub(
     int const
         i_count);
 
-#define FEED_CSI_ED_BOTTOM 0
-#define FEED_CSI_ED_TOP 1
+#define FEED_CSI_ED_DOWN 0
+#define FEED_CSI_ED_UP 1
 #define FEED_CSI_ED_SCREEN 2
 #define FEED_CSI_ED_HISTORY 3
 
@@ -61,9 +57,9 @@ feed_esc_write_ed(
     int const
         i_count);
 
-#define FEED_CSI_EL_END 0
-#define FEED_CSI_EL_BEGIN 1
-#define FEED_CSI_EL_LINE 2
+#define FEED_CSI_EL_RIGHT 0
+#define FEED_CSI_EL_LEFT 1
+#define FEED_CSI_EL_ALL 2
 
 char
 feed_esc_write_el(
