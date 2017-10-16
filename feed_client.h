@@ -11,11 +11,28 @@ Description:
 
 */
 
+struct feed_heap;
+
 struct feed_client
 {
-    void *
-        p_dummy;
+    struct feed_heap *
+        p_heap;
 
 }; /* struct feed_client */
+
+char
+feed_client_init(
+    struct feed_client * const
+        p_client);
+
+void
+feed_client_cleanup(
+    struct feed_client * const
+        p_client);
+
+struct feed_heap *
+feed_client_get_heap(
+    struct feed_client * const
+        p_client);
 
 /* end-of-file: feed_client.h */

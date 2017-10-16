@@ -94,6 +94,9 @@ FEED_LDFLAGS = $(LDFLAGS) $(FEED_LDFLAGS_$(FEED_CFG_DBG))
 
 FEED_SRCS = \
     $(FEED_DST_PATH)/_obj_feed_os.o \
+    $(FEED_DST_PATH)/_obj_feed_client.o \
+    $(FEED_DST_PATH)/_obj_feed_main.o \
+    $(FEED_DST_PATH)/_obj_feed_heap.o \
     $(FEED_DST_PATH)/_obj_feed_tty.o \
     $(FEED_DST_PATH)/_obj_feed_buf.o \
     $(FEED_DST_PATH)/_obj_feed_esc.o
