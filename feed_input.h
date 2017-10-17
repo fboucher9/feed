@@ -14,123 +14,80 @@ struct feed_client;
 
 struct feed_input;
 
-enum feed_input_event_type
+enum feed_event_type
 {
-    feed_input_event_type_raw,
-    feed_input_event_type_ascii,
-    feed_input_event_type_unicode,
-    feed_input_event_type_key,
-    feed_input_event_type_escape
+    /* Raw sequence of bytes */
+    feed_event_type_raw = 1,
+
+    /* Single 7-bit ASCII character */
+    feed_event_type_ascii = 2,
+
+    /* Single 32-bit unicode character */
+    feed_event_type_unicode = 3,
+
+    /* Virtual key code and modifier mask */
+    feed_event_type_key = 4
+
 };
 
-struct feed_input_event_raw
-{
-    enum feed_input_event_type
-        e_type;
+/*
 
+Structure: feed_event
+
+Description:
+
+*/
+struct feed_event
+{
     unsigned char
-        a_raw[31u];
+        e_type;
 
     unsigned char
         i_raw_len;
 
-};
-
-struct feed_input_event_ascii
-{
-    struct feed_input_event_raw
-        o_raw;
-
     unsigned char
-        i_code;
+        a_raw[30u];
 
-} o_ascii;
+    union feed_event_data
+    {
+        struct feed_event_ascii
+        {
+            unsigned char
+                i_code;
 
-struct feed_input_event_unicode
-{
-    struct feed_input_event_raw
-        o_raw;
+            unsigned char
+                a_padding[7u];
 
-    unsigned long int
-        i_code;
+        } o_ascii;
 
-} o_unicode;
+        struct feed_event_unicode
+        {
+            unsigned long int
+                i_code;
 
-#define FEED_INPUT_MOD_CTRL 1u
-#define FEED_INPUT_MOD_SHIFT 2u
-#define FEED_INPUT_MOD_ALT 4u
+        } o_unicode;
 
-struct feed_input_event_key
-{
-    struct feed_input_event_raw
-        o_raw;
+        struct feed_event_key
+        {
+            unsigned char
+                i_keycode;
 
-    unsigned short int
-        i_keycode;
+            unsigned char
+                i_modmask;
 
-    unsigned short int
-        i_modmask;
+            unsigned char
+                a_padding[6u];
 
-} o_key;
+        } o_key;
 
-struct feed_input_event_escape
-{
-    struct feed_input_event_raw
-        o_raw;
+    } u;
 
-    unsigned char
-        i_stop;
-
-    unsigned char
-        i_param_offset;
-
-    unsigned char
-        i_param_count;
-
-} o_escape;
-
-union feed_input_event
-{
-    enum feed_input_event_type
-        e_type;
-
-    struct feed_input_event_raw
-        o_raw;
-
-    struct feed_input_event_ascii
-        o_ascii;
-
-    struct feed_input_event_unicode
-        o_unicode;
-
-    struct feed_input_event_key
-        o_key;
-
-    struct feed_input_event_escape
-        o_escape;
-
-}; /* union feed_input_event */
-
-struct feed_input_descriptor
-{
-    char
-        (* p_event)(
-            void * const
-                p_context,
-            union feed_input_event const * const
-                p_input_event);
-
-    void *
-        p_context;
-
-}; /* struct feed_input_descriptor */
+}; /* struct feed_event */
 
 struct feed_input *
 feed_input_create(
     struct feed_client * const
-        p_client,
-    struct feed_input_descriptor const * const
-        p_input_descriptor);
+        p_client);
 
 void
 feed_input_destroy(
@@ -138,10 +95,17 @@ feed_input_destroy(
         p_input);
 
 char
-feed_input_write_character(
+feed_input_write(
     struct feed_input * const
         p_input,
     unsigned char const
-        c_data);
+        c_data,
+    char (* const p_event)(
+        void * const
+            p_context,
+        struct feed_event const * const
+            p_event),
+    void * const
+        p_context);
 
 /* end-of-file: feed_input.h */
