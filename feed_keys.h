@@ -91,9 +91,20 @@ char
 feed_keys_lookup(
     unsigned char const * const
         p_data,
-    unsigned short int const
+    unsigned int const
         i_data_length,
     struct feed_keys_descriptor * const
         p_info);
+
+char
+feed_keys_print(
+    struct feed_keys_descriptor const * const
+        p_info,
+    unsigned char * const
+        p_buf,
+    unsigned int const
+        i_buf_len,
+    unsigned int * const
+        p_actual);
 
 /* end-of-file: feed_keys.h */

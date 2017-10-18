@@ -12,6 +12,8 @@
 
 #include "feed_heap.h"
 
+#include "feed_keys.h"
+
 static
 void
 #if defined(__GNUC__)
@@ -95,9 +97,30 @@ feed_main_event_callback(
     }
     else if (feed_event_type_key == p_event->e_type)
     {
-        printf(" kc=%u mm=%u",
+        struct feed_keys_descriptor o_key;
+
+        unsigned char a_name[64u];
+
+        unsigned int i_name_length;
+
+        o_key.i_code =
+            p_event->u.o_key.i_keycode;
+
+        o_key.i_mods =
+            p_event->u.o_key.i_modmask;
+
+        memset(a_name, 0, sizeof(a_name));
+
+        feed_keys_print(
+            &(o_key),
+            a_name,
+            (unsigned int)(sizeof(a_name) - 1u),
+            &(i_name_length));
+
+        printf(" kc=%u mm=%u name=%s",
             (unsigned int)(p_event->u.o_key.i_keycode),
-            (unsigned int)(p_event->u.o_key.i_modmask));
+            (unsigned int)(p_event->u.o_key.i_modmask),
+            a_name);
     }
     else if (feed_event_type_raw == p_event->e_type)
     {
