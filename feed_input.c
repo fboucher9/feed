@@ -8,12 +8,21 @@
 
 #include "feed_heap.h"
 
+#include "feed_keys.h"
+
 enum feed_input_state
 {
     feed_input_state_idle = 1,
+
     feed_input_state_unicode,
-    feed_input_state_escape
-};
+
+    feed_input_state_escape,
+
+    feed_input_state_escape_csi,
+
+    feed_input_state_escape_ssx
+
+}; /* enum feed_input_state */
 
 struct feed_input
 {
@@ -106,13 +115,59 @@ feed_input_destroy(
 
 }
 
+static
+void
+feed_input_lookup(
+    struct feed_input * const
+        p_input)
+{
+    struct feed_keys_descriptor
+        o_key;
+
+    if (
+        feed_keys_lookup(
+            p_input->o_event.a_raw,
+            p_input->o_event.i_raw_len,
+            &(
+                o_key)))
+    {
+        p_input->o_event.e_type =
+            feed_event_type_key;
+
+        p_input->o_event.u.o_key.i_keycode =
+            o_key.i_code;
+
+        p_input->o_event.u.o_key.i_modmask =
+            o_key.i_mods;
+    }
+}
+
+static
+void
+feed_input_notify(
+    struct feed_input * const
+        p_input,
+    void (* const p_callback)(
+        void * const
+            p_context,
+        struct feed_event const * const
+            p_event),
+    void * const
+        p_context)
+{
+    (*(p_callback))(
+        p_context,
+        &(
+            p_input->o_event));
+}
+
 char
 feed_input_write(
     struct feed_input * const
         p_input,
     unsigned char const
         c_data,
-    char (* const p_callback)(
+    void (* const p_callback)(
         void * const
             p_context,
         struct feed_event const * const
@@ -133,6 +188,9 @@ feed_input_write(
 
         p_input->o_event.i_raw_len =
             1u;
+
+        b_result =
+            1;
     }
     else
     {
@@ -142,59 +200,145 @@ feed_input_write(
                 c_data;
 
             p_input->o_event.i_raw_len ++;
+
+            b_result =
+                1;
+        }
+        else
+        {
+            b_result =
+                0;
         }
     }
 
     if (
-        feed_input_state_idle
-        == p_input->e_state)
+        b_result)
     {
-        if (0xC0u <= c_data)
+        if (
+            feed_input_state_idle
+            == p_input->e_state)
         {
-            if (0xC0u == (c_data & 0xE0u))
+            if (0xC0u <= c_data)
+            {
+                if (0xC0u == (c_data & 0xE0u))
+                {
+                    p_input->e_state =
+                        feed_input_state_unicode;
+
+                    p_input->o_event.u.o_unicode.i_code =
+                        (unsigned long int)(
+                            c_data & 0x1Fu);
+
+                    p_input->i_count =
+                        2u;
+
+                    b_result =
+                        1;
+                }
+                else if (0xE0u == (c_data & 0xF0u))
+                {
+                    p_input->e_state =
+                        feed_input_state_unicode;
+
+                    p_input->o_event.u.o_unicode.i_code =
+                        (unsigned long int)(
+                            c_data & 0x0Fu);
+
+                    p_input->i_count =
+                        3u;
+
+                    b_result =
+                        1;
+                }
+                else if (0xF0u == (c_data & 0xF8u))
+                {
+                    p_input->e_state =
+                        feed_input_state_unicode;
+
+                    p_input->o_event.u.o_unicode.i_code =
+                        (unsigned long int)(
+                            c_data & 0x07u);
+
+                    p_input->i_count =
+                        4u;
+
+                    b_result =
+                        1;
+                }
+                else
+                {
+                    p_input->e_state =
+                        feed_input_state_idle;
+
+                    b_result =
+                        0;
+                }
+            }
+            else if (27u == c_data)
             {
                 p_input->e_state =
-                    feed_input_state_unicode;
-
-                p_input->o_event.u.o_unicode.i_code =
-                    (unsigned long int)(
-                        c_data & 0x1Fu);
-
-                p_input->i_count =
-                    2u;
+                    feed_input_state_escape;
 
                 b_result =
                     1;
             }
-            else if (0xE0u == (c_data & 0xF0u))
+            else
             {
+                p_input->o_event.e_type =
+                    feed_event_type_ascii;
+
+                p_input->o_event.u.o_ascii.i_code =
+                    c_data;
+
+                feed_input_lookup(
+                    p_input);
+
+                feed_input_notify(
+                    p_input,
+                    p_callback,
+                    p_context);
+
                 p_input->e_state =
-                    feed_input_state_unicode;
-
-                p_input->o_event.u.o_unicode.i_code =
-                    (unsigned long int)(
-                        c_data & 0x0Fu);
-
-                p_input->i_count =
-                    3u;
+                    feed_input_state_idle;
 
                 b_result =
                     1;
             }
-            else if (0xF0u == (c_data & 0xF8u))
+        }
+        else if (
+            feed_input_state_unicode
+            == p_input->e_state)
+        {
+            if (0x80u == (c_data & 0xC0u))
             {
-                p_input->e_state =
-                    feed_input_state_unicode;
-
                 p_input->o_event.u.o_unicode.i_code =
                     (unsigned long int)(
-                        c_data & 0x07u);
+                        (
+                            p_input->o_event.u.o_unicode.i_code << 6u)
+                        | (unsigned long int)(
+                            c_data & 0x3Fu));
 
-                p_input->i_count =
-                    4u;
+                if (
+                    p_input->o_event.i_raw_len
+                    == p_input->i_count)
+                {
+                    /* Notify */
+                    p_input->o_event.e_type =
+                        feed_event_type_unicode;
 
-                b_result =
-                    1;
+                    feed_input_lookup(
+                        p_input);
+
+                    feed_input_notify(
+                        p_input,
+                        p_callback,
+                        p_context);
+
+                    p_input->e_state =
+                        feed_input_state_idle;
+                }
+
+                b_result = 1;
             }
             else
             {
@@ -205,65 +349,106 @@ feed_input_write(
                     0;
             }
         }
-        else if (27u == c_data)
+        else if (
+            feed_input_state_escape
+            == p_input->e_state)
         {
-            p_input->e_state =
-                feed_input_state_escape;
+            if (
+                '[' == c_data)
+            {
+                p_input->e_state =
+                    feed_input_state_escape_csi;
 
-            b_result =
-                1;
+                b_result =
+                    1;
+            }
+            else if (
+                (
+                    'O' == c_data)
+                || (
+                    'N' == c_data))
+            {
+                p_input->e_state =
+                    feed_input_state_escape_ssx;
+
+                b_result =
+                    1;
+            }
+            else
+            {
+                p_input->o_event.e_type =
+                    feed_event_type_raw;
+
+                /* Lookup for a key */
+                feed_input_lookup(
+                    p_input);
+
+                /* Notify */
+                feed_input_notify(
+                    p_input,
+                    p_callback,
+                    p_context);
+
+                p_input->e_state =
+                    feed_input_state_idle;
+
+                b_result =
+                    1;
+            }
         }
-        else
+        else if (
+            feed_input_state_escape_csi
+            == p_input->e_state)
+        {
+            if (0x40u <= c_data)
+            {
+                p_input->o_event.e_type =
+                    feed_event_type_raw;
+
+                /* Lookup for a key */
+                feed_input_lookup(
+                    p_input);
+
+                /* Notify */
+                feed_input_notify(
+                    p_input,
+                    p_callback,
+                    p_context);
+
+                p_input->e_state =
+                    feed_input_state_idle;
+
+                b_result =
+                    1;
+            }
+            else
+            {
+                b_result =
+                    1;
+            }
+        }
+        else if (
+            feed_input_state_escape_ssx
+            == p_input->e_state)
         {
             p_input->o_event.e_type =
-                feed_event_type_ascii;
+                feed_event_type_raw;
 
-            p_input->o_event.u.o_ascii.i_code =
-                c_data;
+            /* Lookup for a key */
+            feed_input_lookup(
+                p_input);
 
-            (*(p_callback))(
-                p_context,
-                &(
-                    p_input->o_event));
+            /* Notify */
+            feed_input_notify(
+                p_input,
+                p_callback,
+                p_context);
 
             p_input->e_state =
                 feed_input_state_idle;
 
             b_result =
                 1;
-        }
-    }
-    else if (
-        feed_input_state_unicode
-        == p_input->e_state)
-    {
-        if (0x80u == (c_data & 0xC0u))
-        {
-            p_input->o_event.u.o_unicode.i_code =
-                (unsigned long int)(
-                    (
-                        p_input->o_event.u.o_unicode.i_code << 6u)
-                    | (unsigned long int)(
-                        c_data & 0x3Fu));
-
-            if (
-                p_input->o_event.i_raw_len
-                == p_input->i_count)
-            {
-                /* Notify */
-                p_input->o_event.e_type =
-                    feed_event_type_unicode;
-
-                (*(p_callback))(
-                    p_context,
-                    &(
-                        p_input->o_event));
-
-                p_input->e_state =
-                    feed_input_state_idle;
-            }
-
-            b_result = 1;
         }
         else
         {
@@ -273,21 +458,6 @@ feed_input_write(
             b_result =
                 0;
         }
-    }
-    else if (
-        feed_input_state_escape
-        == p_input->e_state)
-    {
-        b_result =
-            1;
-    }
-    else
-    {
-        p_input->e_state =
-            feed_input_state_idle;
-
-        b_result =
-            0;
     }
 
     return

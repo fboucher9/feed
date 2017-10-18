@@ -12,7 +12,7 @@
 #
 
 ifndef DBG
-DBG = 0
+DBG = 1
 endif
 
 ifndef FEED_SRC_PATH

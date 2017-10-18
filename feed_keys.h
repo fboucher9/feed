@@ -21,14 +21,6 @@ Description:
 
 #define FEED_MOD_CTRL 4u
 
-#define FEED_KEY_BACKSPACE 8
-
-#define FEED_KEY_TAB 9
-
-#define FEED_KEY_ENTER 13
-
-#define FEED_KEY_ESCAPE 27
-
 #define FEED_KEY_UP 130
 
 #define FEED_KEY_DOWN 131
@@ -75,13 +67,13 @@ Description:
 
 /*
 
-Structure: feed_key
+Structure: feed_keys_descriptor
 
 Description:
     Information about a single virtual key.
 
 */
-struct feed_key
+struct feed_keys_descriptor
 {
     /* Virtual key code, see the FEED_KEY_ definitions */
     unsigned char
@@ -99,9 +91,9 @@ char
 feed_keys_lookup(
     unsigned char const * const
         p_data,
-    unsigned int const
+    unsigned short int const
         i_data_length,
-    struct feed_key * const
+    struct feed_keys_descriptor * const
         p_info);
 
 /* end-of-file: feed_keys.h */

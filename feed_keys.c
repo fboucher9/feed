@@ -132,7 +132,7 @@ struct feed_key_node
 
 }; /* struct feed_key_node */
 
-static struct feed_key_node const g_feed_key_table[] =
+static struct feed_key_node const g_feed_keys_table[] =
 {
     { g_feed_key_up, sizeof(g_feed_key_up) },
 
@@ -200,27 +200,107 @@ static struct feed_key_node const g_feed_key_table[] =
 
 };
 
+static unsigned short int const g_feed_keys_table_length =
+(unsigned int)(
+    sizeof(g_feed_keys_table)
+    / sizeof(g_feed_keys_table[0u]));
+
+static
+char
+feed_keys_compare_node(
+    unsigned char const * const
+        p_data,
+    unsigned short int const
+        i_data_length,
+    struct feed_key_node const * const
+        p_node)
+{
+    char
+        b_result;
+
+    if (
+        (i_data_length + 2u)
+        == p_node->i_name_length)
+    {
+        if (
+            0
+            == memcmp(
+                p_data,
+                p_node->p_name + 2u,
+                i_data_length))
+        {
+            b_result =
+                1;
+        }
+        else
+        {
+            b_result =
+                0;
+        }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+}
+
 char
 feed_keys_lookup(
     unsigned char const * const
         p_data,
-    unsigned int const
+    unsigned short int const
         i_data_length,
-    struct feed_key * const
+    struct feed_keys_descriptor * const
         p_info)
 {
     char
         b_result;
 
-    (void)(
-        p_data);
-    (void)(
-        i_data_length);
-    (void)(
-        p_info);
+    unsigned short int
+        i;
+
+    struct feed_key_node const *
+        p_node;
 
     b_result =
         0;
+
+    i =
+        0;
+
+    while (
+        !(b_result)
+        && (
+            i < g_feed_keys_table_length))
+    {
+        p_node =
+            g_feed_keys_table + i;
+
+        b_result =
+            feed_keys_compare_node(
+                p_data,
+                i_data_length,
+                p_node);
+
+        if (
+            b_result)
+        {
+            p_info->i_code =
+                p_node->p_name[0u];
+
+            p_info->i_mods =
+                p_node->p_name[1u];
+        }
+        else
+        {
+            i ++;
+        }
+    }
 
     return
         b_result;

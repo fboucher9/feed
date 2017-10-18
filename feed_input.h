@@ -100,7 +100,7 @@ feed_input_write(
         p_input,
     unsigned char const
         c_data,
-    char (* const p_event)(
+    void (* const p_event)(
         void * const
             p_context,
         struct feed_event const * const

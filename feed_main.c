@@ -8,6 +8,9 @@
 
 #include "feed_tty.h"
 
+#include "feed_input.h"
+
+#include "feed_heap.h"
 
 static
 void
@@ -41,6 +44,72 @@ feed_dbg_print(
         o_args);
 }
 
+static
+void
+feed_main_event_callback(
+    void * const
+        p_context,
+    struct feed_event const * const
+        p_event)
+{
+    char *
+        p_more;
+
+    unsigned char
+        i;
+
+    unsigned char
+        c;
+
+    p_more =
+        (char *)(
+            p_context);
+
+    printf("%u: [", (unsigned int)(p_event->e_type));
+    for (i=0u; i<p_event->i_raw_len; i++)
+    {
+        c = p_event->a_raw[i];
+
+        if ((c >= 32) && (c < 127))
+        {
+            printf(" '%c'", (char)(c));
+        }
+        else
+        {
+            printf(" %3u", (unsigned int)(p_event->a_raw[i]));
+        }
+    }
+    printf(" ]");
+
+    if (feed_event_type_ascii == p_event->e_type)
+    {
+        if ('q' == p_event->u.o_ascii.i_code)
+        {
+            *(p_more) =
+                0;
+        }
+    }
+    else if (feed_event_type_unicode == p_event->e_type)
+    {
+        printf(" c=%lu", p_event->u.o_unicode.i_code);
+    }
+    else if (feed_event_type_key == p_event->e_type)
+    {
+        printf(" kc=%u mm=%u",
+            (unsigned int)(p_event->u.o_key.i_keycode),
+            (unsigned int)(p_event->u.o_key.i_modmask));
+    }
+    else if (feed_event_type_raw == p_event->e_type)
+    {
+    }
+    else
+    {
+        fprintf(stderr, "error!");
+    }
+
+    printf("\r\n");
+}
+
 int
 feed_main(
     unsigned int const
@@ -51,25 +120,40 @@ feed_main(
     struct feed_client
         o_client;
 
+    struct feed_client *
+        p_client;
+
     struct feed_tty
         o_tty;
+
+    struct feed_heap *
+        p_heap;
 
     (void)(
         argc);
     (void)(
         argv);
 
+    p_client =
+        &(
+            o_client);
+
+    feed_client_init(
+        p_client);
+
+    p_heap =
+        feed_heap_create(
+            p_client);
+
     if (
         feed_tty_init(
-            &(
-                o_client),
+            p_client,
             &(
                 o_tty)))
     {
         if (
             feed_tty_enable(
-                &(
-                    o_client),
+                p_client,
                 &(
                     o_tty)))
         {
@@ -81,8 +165,7 @@ feed_main(
 
             if (
                 feed_tty_get_cursor_position(
-                    &(
-                        o_client),
+                    p_client,
                     &(
                         o_tty),
                     &(
@@ -103,8 +186,7 @@ feed_main(
 
             if (
                 feed_tty_get_window_size(
-                    &(
-                        o_client),
+                    p_client,
                     &(
                         o_tty),
                     &(
@@ -193,15 +275,13 @@ feed_main(
                 };
 
                 feed_tty_line_wrap(
-                    &(
-                        o_client),
+                    p_client,
                     &(
                         o_tty),
                     1);
 
                 feed_tty_write_character_array(
-                    &(
-                        o_client),
+                    p_client,
                     &(
                         o_tty),
                     g_test_line_wrap_enable,
@@ -209,23 +289,20 @@ feed_main(
                         g_test_line_wrap_enable));
 
                 feed_tty_move_cursor_backward(
-                    &(
-                        o_client),
+                    p_client,
                     &(
                         o_tty),
                     20);
 
                 /* test line wrap disable */
                 feed_tty_line_wrap(
-                    &(
-                        o_client),
+                    p_client,
                     &(
                         o_tty),
                     0);
 
                 feed_tty_write_character_array(
-                    &(
-                        o_client),
+                    p_client,
                     &(
                         o_tty),
                     g_test_line_wrap_enable,
@@ -233,8 +310,7 @@ feed_main(
                         g_test_line_wrap_enable));
 
                 feed_tty_move_cursor_backward(
-                    &(
-                        o_client),
+                    p_client,
                     &(
                         o_tty),
                     20);
@@ -244,21 +320,20 @@ feed_main(
 #if 0
 
             feed_tty_move_cursor_up(
-                &(
-                    o_client),
+                p_client,
                 &(
                     o_tty),
                 3);
 
             feed_tty_move_cursor_forward(
-                &(
-                    o_client),
+                p_client,
                 &(
                     o_tty),
                 40);
 
 #endif
 
+            if (0)
             {
                 char
                     b_more;
@@ -277,8 +352,7 @@ feed_main(
 
                     if (
                         feed_tty_read_escape_sequence(
-                            &(
-                                o_client),
+                            p_client,
                             &(
                                 o_tty),
                             a_escape,
@@ -325,9 +399,62 @@ feed_main(
                 }
             }
 
+            if (1)
+            {
+                char
+                    b_more;
+
+                struct feed_input *
+                    p_input;
+
+                b_more =
+                    1;
+
+                p_input =
+                    feed_input_create(
+                        p_client);
+
+                while (
+                    b_more)
+                {
+                    int
+                        c;
+
+                    c = getchar();
+
+                    if (
+                        EOF != c)
+                    {
+                        if (
+                            feed_input_write(
+                                p_input,
+                                (unsigned char)(
+                                    c),
+                                &(
+                                    feed_main_event_callback),
+                                &(
+                                    b_more)))
+                        {
+                        }
+                        else
+                        {
+                            b_more =
+                                0;
+                        }
+                    }
+                    else
+                    {
+                        b_more =
+                            0;
+                    }
+                }
+
+                feed_input_destroy(
+                    p_input);
+            }
+
             feed_tty_disable(
-                &(
-                    o_client),
+                p_client,
                 &(
                     o_tty));
         }
@@ -338,8 +465,7 @@ feed_main(
         }
 
         feed_tty_cleanup(
-            &(
-                o_client),
+            p_client,
             &(
                 o_tty));
     }
@@ -348,6 +474,12 @@ feed_main(
         feed_dbg_print(
             "init error!");
     }
+
+    feed_heap_destroy(
+        p_heap);
+
+    feed_client_cleanup(
+        p_client);
 
     return
         0;
