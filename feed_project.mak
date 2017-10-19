@@ -48,7 +48,7 @@ FEED_CFLAGS_WARNINGS = \
     -Wdeprecated -Wdiv-by-zero -Wendif-labels -Wfloat-equal \
     -Wformat-contains-nul -Wformat-extra-args -Wformat-nonliteral \
     -Wformat-security -Wformat-y2k -Wformat-zero-length -Wint-to-pointer-cast \
-    -Wlarger-than=1024 -Wlong-long -Wmissing-declarations \
+    -Wlarger-than=4096 -Wlong-long -Wmissing-declarations \
     -Wmissing-format-attribute -Wmissing-include-dirs -Wmissing-prototypes \
     -Wmultichar -Wnested-externs -Wold-style-definition -Woverflow \
     -Woverlength-strings -Wpacked -Wpacked-bitfield-compat -Wpadded \
@@ -68,7 +68,7 @@ FEED_CXXFLAGS_WARNINGS = \
     -Wdeprecated -Wdiv-by-zero -Wendif-labels -Wfloat-equal \
     -Wformat-contains-nul -Wformat-extra-args -Wformat-nonliteral \
     -Wformat-security -Wformat-y2k \
-    -Wlarger-than=1024 -Wlong-long -Wmissing-declarations \
+    -Wlarger-than=4096 -Wlong-long -Wmissing-declarations \
     -Wmissing-format-attribute -Wmissing-include-dirs \
     -Wmultichar -Woverflow \
     -Woverlength-strings -Wpacked -Wpacked-bitfield-compat -Wpadded \
@@ -136,4 +136,8 @@ $(FEED_SRCS) : $(FEED_DST_PATH)/feed_os.h.gch
 # Indicate dependency on makefile
 $(FEED_DST_PATH)/testfeed.exe : $(FEED_SRC_PATH)/feed_project.mak
 
+# Indicate dependency on makefile
+$(FEED_SRCS): $(FEED_SRC_PATH)/feed_project.mak
+
+# Include header dependency files
 -include $(FEED_DST_PATH)/_obj_*.o.d

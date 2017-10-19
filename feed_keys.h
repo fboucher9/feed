@@ -15,11 +15,11 @@ Description:
 
 #define INC_FEED_KEYS_H
 
-#define FEED_MOD_SHIFT 1u
+#define FEED_MOD_SHIFT (1u << 28u)
 
-#define FEED_MOD_ALT 2u
+#define FEED_MOD_ALT (2u << 28u)
 
-#define FEED_MOD_CTRL 4u
+#define FEED_MOD_CTRL (4u << 28u)
 
 #define FEED_KEY_UP 130
 
@@ -65,41 +65,19 @@ Description:
 
 #define FEED_KEY_F12 152
 
-/*
-
-Structure: feed_keys_descriptor
-
-Description:
-    Information about a single virtual key.
-
-*/
-struct feed_keys_descriptor
-{
-    /* Virtual key code, see the FEED_KEY_ definitions */
-    unsigned char
-        i_code;
-
-    /* Modifier masks, see the FEED_MOD_ definitions */
-    unsigned char
-        i_mods;
-
-}; /* struct feed_key */
-
 /* --- Interface --- */
 
-char
+unsigned long int
 feed_keys_lookup(
     unsigned char const * const
         p_data,
     unsigned int const
-        i_data_length,
-    struct feed_keys_descriptor * const
-        p_info);
+        i_data_length);
 
 char
 feed_keys_print(
-    struct feed_keys_descriptor const * const
-        p_info,
+    unsigned long int const
+        i_code,
     unsigned char * const
         p_buf,
     unsigned int const

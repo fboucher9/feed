@@ -67,7 +67,7 @@ feed_main_event_callback(
         (char *)(
             p_context);
 
-    printf("%u: [", (unsigned int)(p_event->e_type));
+    printf("%08lx: [", p_event->i_code);
     for (i=0u; i<p_event->i_raw_len; i++)
     {
         c = p_event->a_raw[i];
@@ -83,51 +83,31 @@ feed_main_event_callback(
     }
     printf(" ]");
 
-    if (feed_event_type_ascii == p_event->e_type)
     {
-        if ('q' == p_event->u.o_ascii.i_code)
-        {
-            *(p_more) =
-                0;
-        }
-    }
-    else if (feed_event_type_unicode == p_event->e_type)
-    {
-        printf(" c=%lu", p_event->u.o_unicode.i_code);
-    }
-    else if (feed_event_type_key == p_event->e_type)
-    {
-        struct feed_keys_descriptor o_key;
-
         unsigned char a_name[64u];
 
         unsigned int i_name_length;
 
-        o_key.i_code =
-            p_event->u.o_key.i_keycode;
-
-        o_key.i_mods =
-            p_event->u.o_key.i_modmask;
-
         memset(a_name, 0, sizeof(a_name));
 
-        feed_keys_print(
-            &(o_key),
-            a_name,
-            (unsigned int)(sizeof(a_name) - 1u),
-            &(i_name_length));
+        i_name_length =
+            0u;
 
-        printf(" kc=%u mm=%u name=%s",
-            (unsigned int)(p_event->u.o_key.i_keycode),
-            (unsigned int)(p_event->u.o_key.i_modmask),
-            a_name);
+        if (
+            feed_keys_print(
+                p_event->i_code,
+                a_name,
+                (unsigned int)(sizeof(a_name) - 1u),
+                &(i_name_length)))
+        {
+            printf(" <%s>", a_name);
+        }
     }
-    else if (feed_event_type_raw == p_event->e_type)
+
+    if ((unsigned long int)(unsigned char)('q') == p_event->i_code)
     {
-    }
-    else
-    {
-        fprintf(stderr, "error!");
+        *(p_more) =
+            0;
     }
 
     printf("\r\n");

@@ -121,24 +121,19 @@ feed_input_lookup(
     struct feed_input * const
         p_input)
 {
-    struct feed_keys_descriptor
-        o_key;
+    unsigned long int
+        i_code;
 
-    if (
+    i_code =
         feed_keys_lookup(
             p_input->o_event.a_raw,
-            p_input->o_event.i_raw_len,
-            &(
-                o_key)))
+            p_input->o_event.i_raw_len);
+
+    if (
+        i_code)
     {
-        p_input->o_event.e_type =
-            feed_event_type_key;
-
-        p_input->o_event.u.o_key.i_keycode =
-            o_key.i_code;
-
-        p_input->o_event.u.o_key.i_modmask =
-            o_key.i_mods;
+        p_input->o_event.i_code =
+            i_code;
     }
 }
 
@@ -189,6 +184,9 @@ feed_input_write(
         p_input->o_event.i_raw_len =
             1u;
 
+        p_input->o_event.i_code =
+            0ul;
+
         b_result =
             1;
     }
@@ -225,7 +223,7 @@ feed_input_write(
                     p_input->e_state =
                         feed_input_state_unicode;
 
-                    p_input->o_event.u.o_unicode.i_code =
+                    p_input->o_event.i_code =
                         (unsigned long int)(
                             c_data & 0x1Fu);
 
@@ -240,7 +238,7 @@ feed_input_write(
                     p_input->e_state =
                         feed_input_state_unicode;
 
-                    p_input->o_event.u.o_unicode.i_code =
+                    p_input->o_event.i_code =
                         (unsigned long int)(
                             c_data & 0x0Fu);
 
@@ -255,7 +253,7 @@ feed_input_write(
                     p_input->e_state =
                         feed_input_state_unicode;
 
-                    p_input->o_event.u.o_unicode.i_code =
+                    p_input->o_event.i_code =
                         (unsigned long int)(
                             c_data & 0x07u);
 
@@ -284,11 +282,9 @@ feed_input_write(
             }
             else
             {
-                p_input->o_event.e_type =
-                    feed_event_type_ascii;
-
-                p_input->o_event.u.o_ascii.i_code =
-                    c_data;
+                p_input->o_event.i_code =
+                    (unsigned long int)(
+                        c_data);
 
                 feed_input_lookup(
                     p_input);
@@ -311,10 +307,10 @@ feed_input_write(
         {
             if (0x80u == (c_data & 0xC0u))
             {
-                p_input->o_event.u.o_unicode.i_code =
+                p_input->o_event.i_code =
                     (unsigned long int)(
                         (
-                            p_input->o_event.u.o_unicode.i_code << 6u)
+                            p_input->o_event.i_code << 6u)
                         | (unsigned long int)(
                             c_data & 0x3Fu));
 
@@ -323,9 +319,6 @@ feed_input_write(
                     == p_input->i_count)
                 {
                     /* Notify */
-                    p_input->o_event.e_type =
-                        feed_event_type_unicode;
-
                     feed_input_lookup(
                         p_input);
 
@@ -376,10 +369,10 @@ feed_input_write(
             }
             else
             {
-                p_input->o_event.e_type =
-                    feed_event_type_raw;
-
                 /* Lookup for a key */
+                p_input->o_event.i_code =
+                    0x80000000ul;
+
                 feed_input_lookup(
                     p_input);
 
@@ -402,8 +395,8 @@ feed_input_write(
         {
             if (0x40u <= c_data)
             {
-                p_input->o_event.e_type =
-                    feed_event_type_raw;
+                p_input->o_event.i_code =
+                    0x80000000ul;
 
                 /* Lookup for a key */
                 feed_input_lookup(
@@ -431,8 +424,8 @@ feed_input_write(
             feed_input_state_escape_ssx
             == p_input->e_state)
         {
-            p_input->o_event.e_type =
-                feed_event_type_raw;
+            p_input->o_event.i_code =
+                0x80000000ul;
 
             /* Lookup for a key */
             feed_input_lookup(
@@ -465,3 +458,23 @@ feed_input_write(
 
 }
 
+unsigned int
+feed_input_print(
+    struct feed_event const * const
+        p_event,
+    unsigned char * const
+        p_buf,
+    unsigned int const
+        i_buf_len)
+{
+    (void)(
+        p_event);
+    (void)(
+        p_buf);
+    (void)(
+        i_buf_len);
+    return
+        0u;
+}
+
+/* end-of-file: feed_input.c */

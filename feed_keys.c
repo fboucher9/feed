@@ -500,17 +500,15 @@ feed_keys_compare_node(
 
 }
 
-char
+unsigned long int
 feed_keys_lookup(
     unsigned char const * const
         p_data,
     unsigned int const
-        i_data_length,
-    struct feed_keys_descriptor * const
-        p_info)
+        i_data_length)
 {
-    char
-        b_result;
+    unsigned long int
+        i_code;
 
     unsigned int
         i;
@@ -518,34 +516,31 @@ feed_keys_lookup(
     struct feed_keys_node const *
         p_node;
 
-    b_result =
-        0;
+    i_code =
+        0ul;
 
     i =
         0;
 
     while (
-        !(b_result)
+        !(i_code)
         && (
             i < g_feed_keys_lookup_table_length))
     {
         p_node =
             g_feed_keys_lookup_table + i;
 
-        b_result =
+        if (
             feed_keys_compare_node(
                 p_data,
                 i_data_length,
-                p_node);
-
-        if (
-            b_result)
+                p_node))
         {
-            p_info->i_code =
-                p_node->p_name[0u];
-
-            p_info->i_mods =
-                p_node->p_name[1u];
+            i_code =
+                (unsigned long int)(
+                    0x80000000ul
+                    | (unsigned long int)(unsigned char)(p_node->p_name[0u])
+                    | ((unsigned long int)(unsigned char)(p_node->p_name[1u]) << 28u));
         }
         else
         {
@@ -554,7 +549,7 @@ feed_keys_lookup(
     }
 
     return
-        b_result;
+        i_code;
 
 } /* feed_keys_lookup() */
 
@@ -619,8 +614,8 @@ static unsigned int const g_feed_keys_print_table_length =
 
 char
 feed_keys_print(
-    struct feed_keys_descriptor const * const
-        p_info,
+    unsigned long int const
+        i_code,
     unsigned char * const
         p_buf,
     unsigned int const
@@ -653,120 +648,171 @@ feed_keys_print(
         0u;
 
     if (
-        FEED_MOD_SHIFT & p_info->i_mods)
+        0x80000000ul & i_code)
     {
-        if (i_actual <  i_buf_len)
-        {
-            p_buf[i_actual] = 'S';
-            i_actual ++;
-        }
-
-        if (i_actual <  i_buf_len)
-        {
-            p_buf[i_actual] = '-';
-            i_actual ++;
-        }
-    }
-
-    if (
-        FEED_MOD_ALT & p_info->i_mods)
-    {
-        if (i_actual <  i_buf_len)
-        {
-            p_buf[i_actual] = 'A';
-            i_actual ++;
-        }
-
-        if (i_actual <  i_buf_len)
-        {
-            p_buf[i_actual] = '-';
-            i_actual ++;
-        }
-    }
-
-    if (
-        FEED_MOD_CTRL & p_info->i_mods)
-    {
-        if (i_actual <  i_buf_len)
-        {
-            p_buf[i_actual] = 'C';
-            i_actual ++;
-        }
-
-        if (i_actual <  i_buf_len)
-        {
-            p_buf[i_actual] = '-';
-            i_actual ++;
-        }
-    }
-
-    while (
-        (!b_result)
-        && (
-            i < g_feed_keys_print_table_length))
-    {
-        p_node = g_feed_keys_print_table + i;
-
         if (
-            p_info->i_code
-            == p_node->p_name[0u])
+            FEED_MOD_SHIFT & i_code)
         {
-            i_name_length =
-                (unsigned int)(
-                    p_node->i_name_length - 1u);
-
-            if (
-                (i_actual + i_name_length) <= i_buf_len)
+            if (i_actual <  i_buf_len)
             {
-                memcpy(
-                    p_buf + i_actual,
-                    p_node->p_name + 1u,
-                    i_name_length);
-
-                i_actual +=
-                    i_name_length;
+                p_buf[i_actual] = 'S';
+                i_actual ++;
             }
 
-            *(p_actual) =
-                i_actual;
+            if (i_actual <  i_buf_len)
+            {
+                p_buf[i_actual] = '-';
+                i_actual ++;
+            }
+        }
+
+        if (
+            FEED_MOD_ALT & i_code)
+        {
+            if (i_actual <  i_buf_len)
+            {
+                p_buf[i_actual] = 'A';
+                i_actual ++;
+            }
+
+            if (i_actual <  i_buf_len)
+            {
+                p_buf[i_actual] = '-';
+                i_actual ++;
+            }
+        }
+
+        if (
+            FEED_MOD_CTRL & i_code)
+        {
+            if (i_actual <  i_buf_len)
+            {
+                p_buf[i_actual] = 'C';
+                i_actual ++;
+            }
+
+            if (i_actual <  i_buf_len)
+            {
+                p_buf[i_actual] = '-';
+                i_actual ++;
+            }
+        }
+
+        while (
+            (!b_result)
+            && (
+                i < g_feed_keys_print_table_length))
+        {
+            p_node = g_feed_keys_print_table + i;
+
+            if (
+                (i_code & 0xFFul)
+                == p_node->p_name[0u])
+            {
+                i_name_length =
+                    (unsigned int)(
+                        p_node->i_name_length - 1u);
+
+                if (
+                    (i_actual + i_name_length) <= i_buf_len)
+                {
+                    memcpy(
+                        p_buf + i_actual,
+                        p_node->p_name + 1u,
+                        i_name_length);
+
+                    i_actual +=
+                        i_name_length;
+                }
+
+                b_result =
+                    1;
+            }
+            else
+            {
+                i++;
+            }
+        }
+
+#if 0
+        if (!(b_result))
+        {
+            if (i_actual <  i_buf_len)
+            {
+                p_buf[i_actual] =
+                    (unsigned char)(
+                        '0' + (((i_code & 0xFFul) / 100u) % 10u));
+                i_actual ++;
+            }
+
+            if (i_actual <  i_buf_len)
+            {
+                p_buf[i_actual] =
+                    (unsigned char)(
+                        '0' + (((i_code & 0xFFul) / 10u) % 10u));
+                i_actual ++;
+            }
+
+            if (i_actual <  i_buf_len)
+            {
+                p_buf[i_actual] =
+                    (unsigned char)(
+                        '0' + (((i_code & 0xFFul) / 1u) % 10u));
+                i_actual ++;
+            }
+
+            b_result =
+                1;
+        }
+#endif
+    }
+    else
+    {
+        if (i_code < 32)
+        {
+            if (i_actual <  i_buf_len)
+            {
+                p_buf[i_actual] =
+                    '^';
+                i_actual ++;
+            }
+
+            if (i_actual <  i_buf_len)
+            {
+                p_buf[i_actual] =
+                    (unsigned char)(
+                        '@' + i_code);
+                i_actual ++;
+            }
+
+            b_result =
+                1;
+        }
+        else if (i_code < 127)
+        {
+            if (i_actual <  i_buf_len)
+            {
+                p_buf[i_actual] =
+                    (unsigned char)(
+                        i_code & 0x7Ful);
+                i_actual ++;
+            }
 
             b_result =
                 1;
         }
         else
         {
-            i++;
+            b_result =
+                0;
         }
+
     }
 
-    if (!(b_result))
+    if (b_result)
     {
-        if (i_actual <  i_buf_len)
-        {
-            p_buf[i_actual] =
-                (unsigned char)(
-                    '0' + ((p_info->i_code / 100u) % 10u));
-            i_actual ++;
-        }
-
-        if (i_actual <  i_buf_len)
-        {
-            p_buf[i_actual] =
-                (unsigned char)(
-                    '0' + ((p_info->i_code / 10u) % 10u));
-            i_actual ++;
-        }
-
-        if (i_actual <  i_buf_len)
-        {
-            p_buf[i_actual] =
-                (unsigned char)(
-                    '0' + ((p_info->i_code / 1u) % 10u));
-            i_actual ++;
-        }
-
-        b_result =
-            1;
+        *(p_actual) =
+            i_actual;
     }
 
     return

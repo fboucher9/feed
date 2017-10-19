@@ -14,21 +14,11 @@ struct feed_client;
 
 struct feed_input;
 
-enum feed_event_type
-{
-    /* Raw sequence of bytes */
-    feed_event_type_raw = 1,
-
-    /* Single 7-bit ASCII character */
-    feed_event_type_ascii = 2,
-
-    /* Single 32-bit unicode character */
-    feed_event_type_unicode = 3,
-
-    /* Virtual key code and modifier mask */
-    feed_event_type_key = 4
-
-};
+#define FEED_EVENT_KEY_FLAG     0x80000000ul
+#define FEED_EVENT_KEY_SHIFT    0x10000000ul
+#define FEED_EVENT_KEY_ALT      0x20000000ul
+#define FEED_EVENT_KEY_CTRL     0x40000000ul
+#define FEED_EVENT_KEY_MASK     0x000000FFul
 
 /*
 
@@ -40,47 +30,13 @@ Description:
 struct feed_event
 {
     unsigned char
-        e_type;
-
-    unsigned char
         i_raw_len;
 
     unsigned char
-        a_raw[30u];
+        a_raw[31u];
 
-    union feed_event_data
-    {
-        struct feed_event_ascii
-        {
-            unsigned char
-                i_code;
-
-            unsigned char
-                a_padding[7u];
-
-        } o_ascii;
-
-        struct feed_event_unicode
-        {
-            unsigned long int
-                i_code;
-
-        } o_unicode;
-
-        struct feed_event_key
-        {
-            unsigned char
-                i_keycode;
-
-            unsigned char
-                i_modmask;
-
-            unsigned char
-                a_padding[6u];
-
-        } o_key;
-
-    } u;
+    unsigned long int
+        i_code;
 
 }; /* struct feed_event */
 
@@ -107,5 +63,14 @@ feed_input_write(
             p_event),
     void * const
         p_context);
+
+unsigned int
+feed_input_print(
+    struct feed_event const * const
+        p_event,
+    unsigned char * const
+        p_buf,
+    unsigned int const
+        i_buf_len);
 
 /* end-of-file: feed_input.h */
