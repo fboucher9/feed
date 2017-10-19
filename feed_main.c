@@ -86,19 +86,13 @@ feed_main_event_callback(
     {
         unsigned char a_name[64u];
 
-        unsigned int i_name_length;
-
         memset(a_name, 0, sizeof(a_name));
 
-        i_name_length =
-            0u;
-
         if (
-            feed_keys_print(
-                p_event->i_code,
+            feed_input_print(
+                p_event,
                 a_name,
-                (unsigned int)(sizeof(a_name) - 1u),
-                &(i_name_length)))
+                (unsigned int)(sizeof(a_name) - 1u)))
         {
             printf(" <%s>", a_name);
         }

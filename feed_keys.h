@@ -74,15 +74,13 @@ feed_keys_lookup(
     unsigned int const
         i_data_length);
 
-char
+unsigned int
 feed_keys_print(
     unsigned long int const
         i_code,
     unsigned char * const
         p_buf,
     unsigned int const
-        i_buf_len,
-    unsigned int * const
-        p_actual);
+        i_buf_len);
 
 /* end-of-file: feed_keys.h */

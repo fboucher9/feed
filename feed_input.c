@@ -467,14 +467,57 @@ feed_input_print(
     unsigned int const
         i_buf_len)
 {
+    unsigned int
+        i_actual;
+
     (void)(
         p_event);
     (void)(
         p_buf);
     (void)(
         i_buf_len);
-    return
+
+    i_actual =
         0u;
+
+    if (p_event->i_code < 32)
+    {
+        if (i_actual <  i_buf_len)
+        {
+            p_buf[i_actual] =
+                '^';
+            i_actual ++;
+        }
+
+        if (i_actual <  i_buf_len)
+        {
+            p_buf[i_actual] =
+                (unsigned char)(
+                    '@' + p_event->i_code);
+            i_actual ++;
+        }
+    }
+    else if (p_event->i_code < 127)
+    {
+        if (i_actual <  i_buf_len)
+        {
+            p_buf[i_actual] =
+                (unsigned char)(
+                    p_event->i_code & 0x7Ful);
+            i_actual ++;
+        }
+    }
+    else if (0x80000000ul & p_event->i_code)
+    {
+        i_actual =
+            feed_keys_print(
+                p_event->i_code,
+                p_buf,
+                i_buf_len);
+    }
+
+    return
+        i_actual;
 }
 
 /* end-of-file: feed_input.c */
