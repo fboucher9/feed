@@ -93,7 +93,7 @@ char
 feed_buf_write_character_array(
     struct feed_buf * const
         p_this,
-    unsigned char * const
+    unsigned char const * const
         p_buf,
     unsigned int const
         i_buf_len)

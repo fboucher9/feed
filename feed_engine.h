@@ -87,24 +87,8 @@ feed_engine_create(
     struct feed_engine_descriptor const * const
         p_descriptor);
 
-char
-feed_engine_init(
-    struct feed_client * const
-        p_client,
-    struct feed_engine * const
-        p_engine,
-    struct feed_engine_descriptor const * const
-        p_descriptor);
-
 void
 feed_engine_destroy(
-    struct feed_client * const
-        p_client,
-    struct feed_engine * const
-        p_engine);
-
-void
-feed_engine_cleanup(
     struct feed_client * const
         p_client,
     struct feed_engine * const
@@ -121,42 +105,13 @@ feed_engine_set_prompt(
     unsigned int const
         i_prompt_length);
 
-void
-feed_engine_process_input_loop(
-    struct feed_client * const
-        p_client,
-    struct feed_engine * const
-        p_engine);
-
 char
-feed_engine_process_input_array(
+feed_engine_write(
     struct feed_client * const
         p_client,
     struct feed_engine * const
         p_engine,
-    unsigned char const * const
-        p_data,
-    unsigned int const
-        i_count);
-
-char
-feed_engine_process_input_character(
-    struct feed_client * const
-        p_client,
-    struct feed_engine * const
-        p_engine,
-    unsigned char const
-        c_data);
-
-char
-feed_engine_add_completion(
-    struct feed_client * const
-        p_client,
-    struct feed_engine * const
-        p_engine,
-    unsigned char const * const
-        p_data,
-    unsigned int const
-        i_count);
+    struct feed_event * const
+        p_event);
 
 /* end-of-file: feed_engine.h */

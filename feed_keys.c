@@ -13,6 +13,8 @@ Description:
 
 #include "feed_keys.h"
 
+#include "feed_buf.h"
+
 /* Up ^[[A */
 static unsigned char const g_feed_key_up[] =
 { FEED_KEY_UP, 0, 27, '[', 'A' };
@@ -1154,21 +1156,13 @@ static unsigned int const g_feed_keys_print_table_length =
     sizeof(g_feed_keys_print_table)
     / sizeof(g_feed_keys_print_table[0u]));
 
-unsigned int
+void
 feed_keys_print(
     unsigned long int const
         i_code,
-    unsigned char * const
-        p_buf,
-    unsigned int const
-        i_buf_len)
+    struct feed_buf * const
+        p_buf)
 {
-    unsigned int
-        i_actual;
-
-    i_actual =
-        0u;
-
     if (
         0x80000000ul & i_code)
     {
@@ -1202,68 +1196,49 @@ feed_keys_print(
                 == p_node->p_name[0u])
             {
                 if (
-                    FEED_MOD_SHIFT & i_code)
+                    FEED_KEY_SHIFT & i_code)
                 {
-                    if (i_actual <  i_buf_len)
-                    {
-                        p_buf[i_actual] = 'S';
-                        i_actual ++;
-                    }
+                    feed_buf_write_character(
+                        p_buf,
+                        'S');
 
-                    if (i_actual <  i_buf_len)
-                    {
-                        p_buf[i_actual] = '-';
-                        i_actual ++;
-                    }
+                    feed_buf_write_character(
+                        p_buf,
+                        '-');
                 }
 
                 if (
-                    FEED_MOD_ALT & i_code)
+                    FEED_KEY_ALT & i_code)
                 {
-                    if (i_actual <  i_buf_len)
-                    {
-                        p_buf[i_actual] = 'A';
-                        i_actual ++;
-                    }
+                    feed_buf_write_character(
+                        p_buf,
+                        'A');
 
-                    if (i_actual <  i_buf_len)
-                    {
-                        p_buf[i_actual] = '-';
-                        i_actual ++;
-                    }
+                    feed_buf_write_character(
+                        p_buf,
+                        '-');
                 }
 
                 if (
-                    FEED_MOD_CTRL & i_code)
+                    FEED_KEY_CTRL & i_code)
                 {
-                    if (i_actual <  i_buf_len)
-                    {
-                        p_buf[i_actual] = 'C';
-                        i_actual ++;
-                    }
+                    feed_buf_write_character(
+                        p_buf,
+                        'C');
 
-                    if (i_actual <  i_buf_len)
-                    {
-                        p_buf[i_actual] = '-';
-                        i_actual ++;
-                    }
+                    feed_buf_write_character(
+                        p_buf,
+                        '-');
                 }
 
                 i_name_length =
                     (unsigned int)(
                         p_node->i_name_length - 1u);
 
-                if (
-                    (i_actual + i_name_length) <= i_buf_len)
-                {
-                    memcpy(
-                        p_buf + i_actual,
-                        p_node->p_name + 1u,
-                        i_name_length);
-
-                    i_actual +=
-                        i_name_length;
-                }
+                feed_buf_write_character_array(
+                    p_buf,
+                    p_node->p_name + 1u,
+                    i_name_length);
 
                 b_result =
                     1;
@@ -1274,9 +1249,6 @@ feed_keys_print(
             }
         }
     }
-
-    return
-        i_actual;
 
 } /* feed_keys_print() */
 

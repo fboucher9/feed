@@ -15,11 +15,13 @@ Description:
 
 #define INC_FEED_KEYS_H
 
-#define FEED_MOD_SHIFT (1u << 28u)
+/* Definitions for key codes */
 
-#define FEED_MOD_ALT (2u << 28u)
+#define FEED_KEY_SHIFT (1u << 28u)
 
-#define FEED_MOD_CTRL (4u << 28u)
+#define FEED_KEY_ALT (2u << 28u)
+
+#define FEED_KEY_CTRL (4u << 28u)
 
 #define FEED_KEY_UP 130
 
@@ -74,13 +76,13 @@ feed_keys_lookup(
     unsigned int const
         i_data_length);
 
-unsigned int
+struct feed_buf;
+
+void
 feed_keys_print(
     unsigned long int const
         i_code,
-    unsigned char * const
-        p_buf,
-    unsigned int const
-        i_buf_len);
+    struct feed_buf * const
+        p_buf);
 
 /* end-of-file: feed_keys.h */

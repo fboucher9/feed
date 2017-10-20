@@ -14,6 +14,8 @@
 
 #include "feed_keys.h"
 
+#include "feed_buf.h"
+
 static
 void
 #if defined(__GNUC__)
@@ -86,16 +88,23 @@ feed_main_event_callback(
     {
         unsigned char a_name[64u];
 
+        struct feed_buf o_name;
+
         memset(a_name, 0, sizeof(a_name));
 
-        if (
-            feed_input_print(
-                p_event,
-                a_name,
-                (unsigned int)(sizeof(a_name) - 1u)))
-        {
-            printf(" <%s>", a_name);
-        }
+        feed_buf_init(
+            &(
+                o_name),
+            a_name,
+            sizeof(
+                a_name));
+
+        feed_input_print(
+            p_event,
+            &(
+                o_name));
+
+        printf(" <%.*s>", (int)(o_name.i_len), (char const *)(o_name.p_buf));
     }
 
     if ((unsigned long int)(unsigned char)('q') == p_event->i_code)

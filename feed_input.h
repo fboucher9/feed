@@ -22,6 +22,9 @@ struct feed_client;
 /* Predefine module handle */
 struct feed_input;
 
+/* Predefine buffer object */
+struct feed_buf;
+
 /* Flag to indicate that the code is for a special key */
 #define FEED_EVENT_KEY_FLAG     0x80000000ul
 
@@ -83,13 +86,11 @@ feed_input_write(
     void * const
         p_context);
 
-unsigned int
+void
 feed_input_print(
     struct feed_event const * const
         p_event,
-    unsigned char * const
-        p_buf,
-    unsigned int const
-        i_buf_len);
+    struct feed_buf * const
+        p_buf);
 
 /* end-of-file: feed_input.h */

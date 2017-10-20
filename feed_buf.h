@@ -11,6 +11,13 @@ Description:
 
 */
 
+/* Header include protection */
+#if defined(INC_FEED_BUF_H)
+#error include once
+#endif /* #if defined(INC_FEED_BUF_H) */
+
+#define INC_FEED_BUF_H
+
 struct feed_buf
 {
     unsigned char *
@@ -57,7 +64,7 @@ char
 feed_buf_write_character_array(
     struct feed_buf * const
         p_this,
-    unsigned char * const
+    unsigned char const * const
         p_buf,
     unsigned int const
         i_buf_len);

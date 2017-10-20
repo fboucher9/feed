@@ -25,6 +25,9 @@ Description:
 /* Table of key codes */
 #include "feed_keys.h"
 
+/* Buffer */
+#include "feed_buf.h"
+
 /*
 
 Enumeration: feed_input_state
@@ -482,95 +485,42 @@ feed_input_write(
 
 }
 
-unsigned int
+void
 feed_input_print(
     struct feed_event const * const
         p_event,
-    unsigned char * const
-        p_buf,
-    unsigned int const
-        i_buf_len)
+    struct feed_buf * const
+        p_buf)
 {
-    unsigned int
-        i_actual;
-
-    i_actual =
-        0u;
-
     if (p_event->i_code < 32)
     {
         static unsigned char const g_feed_input_ctrl_table[32u] =
         {
-            '@',
-            'A',
-            'B',
-            'C',
-            'D',
-            'E',
-            'F',
-            'G',
-            'H',
-            'I',
-            'J',
-            'K',
-            'L',
-            'M',
-            'N',
-            'O',
-            'P',
-            'Q',
-            'R',
-            'S',
-            'T',
-            'U',
-            'V',
-            'W',
-            'X',
-            'Y',
-            'Z',
-            '[',
-            '\\',
-            ']',
-            '^',
-            '_'
+            '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
+            'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+            'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W',
+            'X', 'Y', 'Z', '[', '\\', ']', '^', '_'
         };
 
-        if (i_actual <  i_buf_len)
-        {
-            p_buf[i_actual] =
-                'C';
-            i_actual ++;
-        }
+        feed_buf_write_character(
+            p_buf,
+            'C');
 
-        if (i_actual <  i_buf_len)
-        {
-            p_buf[i_actual] =
-                '-';
-            i_actual ++;
-        }
+        feed_buf_write_character(
+            p_buf,
+            '-');
 
-        if (i_actual <  i_buf_len)
-        {
-            p_buf[i_actual] =
-                g_feed_input_ctrl_table[
-                    p_event->i_code];
-            i_actual ++;
-        }
+        feed_buf_write_character(
+            p_buf,
+            g_feed_input_ctrl_table[
+                p_event->i_code]);
     }
     else if (p_event->i_code < 0x80000000ul)
     {
-        unsigned char i;
-
-        for (i=0u; i<p_event->i_raw_len; i++)
-        {
-            if (i_actual < i_buf_len)
-            {
-                p_buf[i_actual] =
-                    (unsigned char)(
-                        p_event->i_code & 0x7Ful);
-                i_actual ++;
-            }
-        }
+        feed_buf_write_character_array(
+            p_buf,
+            p_event->a_raw,
+            p_event->i_raw_len);
     }
     else if (0x80000000ul == p_event->i_code)
     {
@@ -578,70 +528,43 @@ feed_input_print(
         if ((2u == p_event->i_raw_len)
             && (27 == p_event->a_raw[0u]))
         {
-            if (i_actual <  i_buf_len)
-            {
-                p_buf[i_actual] =
-                    (unsigned char)(
-                        'A');
-                i_actual ++;
-            }
+            feed_buf_write_character(
+                p_buf,
+                'A');
 
-            if (i_actual <  i_buf_len)
-            {
-                p_buf[i_actual] =
-                    (unsigned char)(
-                        '-');
-                i_actual ++;
-            }
+            feed_buf_write_character(
+                p_buf,
+                '-');
 
             if (p_event->a_raw[1u] < 32u)
             {
-                if (i_actual <  i_buf_len)
-                {
-                    p_buf[i_actual] =
-                        (unsigned char)(
-                            'C');
-                    i_actual ++;
-                }
+                feed_buf_write_character(
+                    p_buf,
+                    'C');
 
-                if (i_actual <  i_buf_len)
-                {
-                    p_buf[i_actual] =
-                        (unsigned char)(
-                            '-');
-                    i_actual ++;
-                }
+                feed_buf_write_character(
+                    p_buf,
+                    '-');
 
-                if (i_actual <  i_buf_len)
-                {
-                    p_buf[i_actual] =
-                        (unsigned char)(
-                            '@' + p_event->a_raw[1u]);
-                    i_actual ++;
-                }
+                feed_buf_write_character(
+                    p_buf,
+                    (unsigned char)(
+                        '@' + p_event->a_raw[1u]));
             }
             else
             {
-                if (i_actual <  i_buf_len)
-                {
-                    p_buf[i_actual] =
-                        p_event->a_raw[1u];
-                    i_actual ++;
-                }
+                feed_buf_write_character(
+                    p_buf,
+                    p_event->a_raw[1u]);
             }
         }
     }
     else if (0x80000000ul & p_event->i_code)
     {
-        i_actual =
-            feed_keys_print(
-                p_event->i_code,
-                p_buf,
-                i_buf_len);
+        feed_keys_print(
+            p_event->i_code,
+            p_buf);
     }
-
-    return
-        i_actual;
 
 } /* feed_input_print() */
 
