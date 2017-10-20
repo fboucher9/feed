@@ -10,15 +10,32 @@ Description:
 
 */
 
+#if defined(INC_FEED_INPUT_H)
+#error include once
+#endif /* #if defined(INC_FEED_INPUT_H) */
+
+#define INC_FEED_INPUT_H
+
+/* Predefine client context */
 struct feed_client;
 
+/* Predefine module handle */
 struct feed_input;
 
+/* Flag to indicate that the code is for a special key */
 #define FEED_EVENT_KEY_FLAG     0x80000000ul
+
+/* Mask of shift modifier */
 #define FEED_EVENT_KEY_SHIFT    0x10000000ul
+
+/* Mask of alt modifier */
 #define FEED_EVENT_KEY_ALT      0x20000000ul
+
+/* Mask of control modifier */
 #define FEED_EVENT_KEY_CTRL     0x40000000ul
-#define FEED_EVENT_KEY_MASK     0x000000FFul
+
+/* Mask of base key code */
+#define FEED_EVENT_KEY_MASK     0x7FFFFFFFul
 
 /*
 
@@ -29,16 +46,18 @@ Description:
 */
 struct feed_event
 {
+    unsigned long int
+        i_code;
+
     unsigned char
         i_raw_len;
 
     unsigned char
         a_raw[31u];
 
-    unsigned long int
-        i_code;
-
 }; /* struct feed_event */
+
+/* --- Interface --- */
 
 struct feed_input *
 feed_input_create(

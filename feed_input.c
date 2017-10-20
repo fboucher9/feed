@@ -1,15 +1,39 @@
 /* See LICENSE for license details */
 
+/*
+
+Module: feed_input.c
+
+Description:
+
+    Parser for tty input, convert input raw data to keyboard events.
+
+*/
+
+/* Operating system specific header files */
 #include "feed_os.h"
 
+/* Module */
 #include "feed_input.h"
 
+/* Client context */
 #include "feed_client.h"
 
+/* Heap */
 #include "feed_heap.h"
 
+/* Table of key codes */
 #include "feed_keys.h"
 
+/*
+
+Enumeration: feed_input_state
+
+Description:
+
+    States for tty input parser.
+
+*/
 enum feed_input_state
 {
     feed_input_state_idle = 1,
@@ -470,41 +494,141 @@ feed_input_print(
     unsigned int
         i_actual;
 
-    (void)(
-        p_event);
-    (void)(
-        p_buf);
-    (void)(
-        i_buf_len);
-
     i_actual =
         0u;
 
     if (p_event->i_code < 32)
     {
+        static unsigned char const g_feed_input_ctrl_table[32u] =
+        {
+            '@',
+            'A',
+            'B',
+            'C',
+            'D',
+            'E',
+            'F',
+            'G',
+            'H',
+            'I',
+            'J',
+            'K',
+            'L',
+            'M',
+            'N',
+            'O',
+            'P',
+            'Q',
+            'R',
+            'S',
+            'T',
+            'U',
+            'V',
+            'W',
+            'X',
+            'Y',
+            'Z',
+            '[',
+            '\\',
+            ']',
+            '^',
+            '_'
+        };
+
         if (i_actual <  i_buf_len)
         {
             p_buf[i_actual] =
-                '^';
+                'C';
             i_actual ++;
         }
 
         if (i_actual <  i_buf_len)
         {
             p_buf[i_actual] =
-                (unsigned char)(
-                    '@' + p_event->i_code);
+                '-';
             i_actual ++;
         }
-    }
-    else if (p_event->i_code < 127)
-    {
+
         if (i_actual <  i_buf_len)
         {
             p_buf[i_actual] =
-                (unsigned char)(
-                    p_event->i_code & 0x7Ful);
+                g_feed_input_ctrl_table[
+                    p_event->i_code];
             i_actual ++;
+        }
+    }
+    else if (p_event->i_code < 0x80000000ul)
+    {
+        unsigned char i;
+
+        for (i=0u; i<p_event->i_raw_len; i++)
+        {
+            if (i_actual < i_buf_len)
+            {
+                p_buf[i_actual] =
+                    (unsigned char)(
+                        p_event->i_code & 0x7Ful);
+                i_actual ++;
+            }
+        }
+    }
+    else if (0x80000000ul == p_event->i_code)
+    {
+        /* code that has no key equivalent */
+        if ((2u == p_event->i_raw_len)
+            && (27 == p_event->a_raw[0u]))
+        {
+            if (i_actual <  i_buf_len)
+            {
+                p_buf[i_actual] =
+                    (unsigned char)(
+                        'A');
+                i_actual ++;
+            }
+
+            if (i_actual <  i_buf_len)
+            {
+                p_buf[i_actual] =
+                    (unsigned char)(
+                        '-');
+                i_actual ++;
+            }
+
+            if (p_event->a_raw[1u] < 32u)
+            {
+                if (i_actual <  i_buf_len)
+                {
+                    p_buf[i_actual] =
+                        (unsigned char)(
+                            'C');
+                    i_actual ++;
+                }
+
+                if (i_actual <  i_buf_len)
+                {
+                    p_buf[i_actual] =
+                        (unsigned char)(
+                            '-');
+                    i_actual ++;
+                }
+
+                if (i_actual <  i_buf_len)
+                {
+                    p_buf[i_actual] =
+                        (unsigned char)(
+                            '@' + p_event->a_raw[1u]);
+                    i_actual ++;
+                }
+            }
+            else
+            {
+                if (i_actual <  i_buf_len)
+                {
+                    p_buf[i_actual] =
+                        p_event->a_raw[1u];
+                    i_actual ++;
+                }
+            }
         }
     }
     else if (0x80000000ul & p_event->i_code)
@@ -518,6 +642,7 @@ feed_input_print(
 
     return
         i_actual;
-}
+
+} /* feed_input_print() */
 
 /* end-of-file: feed_input.c */

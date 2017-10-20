@@ -263,17 +263,307 @@ static unsigned char const g_feed_key_pagedown_a_c[] =
 static unsigned char const g_feed_key_pagedown_s_a_c[] =
 { FEED_KEY_PAGEDOWN, 7, 27, '[', '6', ';', '8', '~' };
 
-/* Note: Fn keys support only one modifier at a time */
+/* Note: Fn keys do not support ctrl+alt combination */
 
-/* F1 ^[[OP */
+/* F1 ^[OP */
+static unsigned char const g_feed_key_f1[] =
+{ FEED_KEY_F1, 0, 27, 'O', 'P' };
 
-/* F2 ^[[OQ */
+static unsigned char const g_feed_key_f1_s[] =
+{ FEED_KEY_F1, 1, 27, '[', '1', ';', '2', 'P' };
 
-/* F3 ^[[OR */
+static unsigned char const g_feed_key_f1_a[] =
+{ FEED_KEY_F1, 2, 27, '[', '1', ';', '3', 'P' };
 
-/* F4 ^[[OS */
+static unsigned char const g_feed_key_f1_s_a[] =
+{ FEED_KEY_F1, 3, 27, '[', '1', ';', '4', 'P' };
+
+static unsigned char const g_feed_key_f1_c[] =
+{ FEED_KEY_F1, 4, 27, '[', '1', ';', '5', 'P' };
+
+static unsigned char const g_feed_key_f1_s_c[] =
+{ FEED_KEY_F1, 5, 27, '[', '1', ';', '6', 'P' };
+
+static unsigned char const g_feed_key_f1_a_c[] =
+{ FEED_KEY_F1, 6, 27, '[', '1', ';', '7', 'P' };
+
+static unsigned char const g_feed_key_f1_s_a_c[] =
+{ FEED_KEY_F1, 7, 27, '[', '1', ';', '8', 'P' };
+
+/* F2 ^[OQ */
+static unsigned char const g_feed_key_f2[] =
+{ FEED_KEY_F2, 0, 27, 'O', 'Q' };
+
+static unsigned char const g_feed_key_f2_s[] =
+{ FEED_KEY_F2, 1, 27, '[', '1', ';', '2', 'Q' };
+
+static unsigned char const g_feed_key_f2_a[] =
+{ FEED_KEY_F2, 2, 27, '[', '1', ';', '3', 'Q' };
+
+static unsigned char const g_feed_key_f2_s_a[] =
+{ FEED_KEY_F2, 3, 27, '[', '1', ';', '4', 'Q' };
+
+static unsigned char const g_feed_key_f2_c[] =
+{ FEED_KEY_F2, 4, 27, '[', '1', ';', '5', 'Q' };
+
+static unsigned char const g_feed_key_f2_s_c[] =
+{ FEED_KEY_F2, 5, 27, '[', '1', ';', '6', 'Q' };
+
+static unsigned char const g_feed_key_f2_a_c[] =
+{ FEED_KEY_F2, 6, 27, '[', '1', ';', '7', 'Q' };
+
+static unsigned char const g_feed_key_f2_s_a_c[] =
+{ FEED_KEY_F2, 7, 27, '[', '1', ';', '8', 'Q' };
+
+/* F3 ^[OR */
+static unsigned char const g_feed_key_f3[] =
+{ FEED_KEY_F3, 0, 27, 'O', 'R' };
+
+static unsigned char const g_feed_key_f3_s[] =
+{ FEED_KEY_F3, 1, 27, '[', '1', ';', '2', 'R' };
+
+static unsigned char const g_feed_key_f3_a[] =
+{ FEED_KEY_F3, 2, 27, '[', '1', ';', '3', 'R' };
+
+static unsigned char const g_feed_key_f3_s_a[] =
+{ FEED_KEY_F3, 3, 27, '[', '1', ';', '4', 'R' };
+
+static unsigned char const g_feed_key_f3_c[] =
+{ FEED_KEY_F3, 4, 27, '[', '1', ';', '5', 'R' };
+
+static unsigned char const g_feed_key_f3_s_c[] =
+{ FEED_KEY_F3, 5, 27, '[', '1', ';', '6', 'R' };
+
+static unsigned char const g_feed_key_f3_a_c[] =
+{ FEED_KEY_F3, 6, 27, '[', '1', ';', '7', 'R' };
+
+static unsigned char const g_feed_key_f3_s_a_c[] =
+{ FEED_KEY_F3, 7, 27, '[', '1', ';', '8', 'R' };
+
+/* F4 ^[OS */
+static unsigned char const g_feed_key_f4[] =
+{ FEED_KEY_F4, 0, 27, 'O', 'S' };
+
+static unsigned char const g_feed_key_f4_s[] =
+{ FEED_KEY_F4, 1, 27, '[', '1', ';', '2', 'S' };
+
+static unsigned char const g_feed_key_f4_a[] =
+{ FEED_KEY_F4, 2, 27, '[', '1', ';', '3', 'S' };
+
+static unsigned char const g_feed_key_f4_s_a[] =
+{ FEED_KEY_F4, 3, 27, '[', '1', ';', '4', 'S' };
+
+static unsigned char const g_feed_key_f4_c[] =
+{ FEED_KEY_F4, 4, 27, '[', '1', ';', '5', 'S' };
+
+static unsigned char const g_feed_key_f4_s_c[] =
+{ FEED_KEY_F4, 5, 27, '[', '1', ';', '6', 'S' };
+
+static unsigned char const g_feed_key_f4_a_c[] =
+{ FEED_KEY_F4, 6, 27, '[', '1', ';', '7', 'S' };
+
+static unsigned char const g_feed_key_f4_s_a_c[] =
+{ FEED_KEY_F4, 7, 27, '[', '1', ';', '8', 'S' };
 
 /* F5 ^[[15;1~ */
+static unsigned char const g_feed_key_f5[] =
+{ FEED_KEY_F5, 0, 27, '[', '1', '5', '~' };
+
+static unsigned char const g_feed_key_f5_s[] =
+{ FEED_KEY_F5, 1, 27, '[', '1', '5', ';', '2', '~' };
+
+static unsigned char const g_feed_key_f5_a[] =
+{ FEED_KEY_F5, 2, 27, '[', '1', '5', ';', '3', '~' };
+
+static unsigned char const g_feed_key_f5_s_a[] =
+{ FEED_KEY_F5, 3, 27, '[', '1', '5', ';', '4', '~' };
+
+static unsigned char const g_feed_key_f5_c[] =
+{ FEED_KEY_F5, 4, 27, '[', '1', '5', ';', '5', '~' };
+
+static unsigned char const g_feed_key_f5_s_c[] =
+{ FEED_KEY_F5, 5, 27, '[', '1', '5', ';', '6', '~' };
+
+static unsigned char const g_feed_key_f5_a_c[] =
+{ FEED_KEY_F5, 6, 27, '[', '1', '5', ';', '7', '~' };
+
+static unsigned char const g_feed_key_f5_s_a_c[] =
+{ FEED_KEY_F5, 7, 27, '[', '1', '5', ';', '8', '~' };
+
+/* F6 ^[[17;1~ */
+static unsigned char const g_feed_key_f6[] =
+{ FEED_KEY_F6, 0, 27, '[', '1', '7', '~' };
+
+static unsigned char const g_feed_key_f6_s[] =
+{ FEED_KEY_F6, 1, 27, '[', '1', '7', ';', '2', '~' };
+
+static unsigned char const g_feed_key_f6_a[] =
+{ FEED_KEY_F6, 2, 27, '[', '1', '7', ';', '3', '~' };
+
+static unsigned char const g_feed_key_f6_s_a[] =
+{ FEED_KEY_F6, 3, 27, '[', '1', '7', ';', '4', '~' };
+
+static unsigned char const g_feed_key_f6_c[] =
+{ FEED_KEY_F6, 4, 27, '[', '1', '7', ';', '5', '~' };
+
+static unsigned char const g_feed_key_f6_s_c[] =
+{ FEED_KEY_F6, 5, 27, '[', '1', '7', ';', '6', '~' };
+
+static unsigned char const g_feed_key_f6_a_c[] =
+{ FEED_KEY_F6, 6, 27, '[', '1', '7', ';', '7', '~' };
+
+static unsigned char const g_feed_key_f6_s_a_c[] =
+{ FEED_KEY_F6, 7, 27, '[', '1', '7', ';', '8', '~' };
+
+/* F7 ^[[18;1~ */
+static unsigned char const g_feed_key_f7[] =
+{ FEED_KEY_F7, 0, 27, '[', '1', '8', '~' };
+
+static unsigned char const g_feed_key_f7_s[] =
+{ FEED_KEY_F7, 1, 27, '[', '1', '8', ';', '2', '~' };
+
+static unsigned char const g_feed_key_f7_a[] =
+{ FEED_KEY_F7, 2, 27, '[', '1', '8', ';', '3', '~' };
+
+static unsigned char const g_feed_key_f7_s_a[] =
+{ FEED_KEY_F7, 3, 27, '[', '1', '8', ';', '4', '~' };
+
+static unsigned char const g_feed_key_f7_c[] =
+{ FEED_KEY_F7, 4, 27, '[', '1', '8', ';', '5', '~' };
+
+static unsigned char const g_feed_key_f7_s_c[] =
+{ FEED_KEY_F7, 5, 27, '[', '1', '8', ';', '6', '~' };
+
+static unsigned char const g_feed_key_f7_a_c[] =
+{ FEED_KEY_F7, 6, 27, '[', '1', '8', ';', '7', '~' };
+
+static unsigned char const g_feed_key_f7_s_a_c[] =
+{ FEED_KEY_F7, 7, 27, '[', '1', '8', ';', '8', '~' };
+
+/* F8 ^[[19;1~ */
+static unsigned char const g_feed_key_f8[] =
+{ FEED_KEY_F8, 0, 27, '[', '1', '9', '~' };
+
+static unsigned char const g_feed_key_f8_s[] =
+{ FEED_KEY_F8, 1, 27, '[', '1', '9', ';', '2', '~' };
+
+static unsigned char const g_feed_key_f8_a[] =
+{ FEED_KEY_F8, 2, 27, '[', '1', '9', ';', '3', '~' };
+
+static unsigned char const g_feed_key_f8_s_a[] =
+{ FEED_KEY_F8, 3, 27, '[', '1', '9', ';', '4', '~' };
+
+static unsigned char const g_feed_key_f8_c[] =
+{ FEED_KEY_F8, 4, 27, '[', '1', '9', ';', '5', '~' };
+
+static unsigned char const g_feed_key_f8_s_c[] =
+{ FEED_KEY_F8, 5, 27, '[', '1', '9', ';', '6', '~' };
+
+static unsigned char const g_feed_key_f8_a_c[] =
+{ FEED_KEY_F8, 6, 27, '[', '1', '9', ';', '7', '~' };
+
+static unsigned char const g_feed_key_f8_s_a_c[] =
+{ FEED_KEY_F8, 7, 27, '[', '1', '9', ';', '8', '~' };
+
+/* F9 ^[[20;1~ */
+static unsigned char const g_feed_key_f9[] =
+{ FEED_KEY_F9, 0, 27, '[', '2', '0', '~' };
+
+static unsigned char const g_feed_key_f9_s[] =
+{ FEED_KEY_F9, 1, 27, '[', '2', '0', ';', '2', '~' };
+
+static unsigned char const g_feed_key_f9_a[] =
+{ FEED_KEY_F9, 2, 27, '[', '2', '0', ';', '3', '~' };
+
+static unsigned char const g_feed_key_f9_s_a[] =
+{ FEED_KEY_F9, 3, 27, '[', '2', '0', ';', '4', '~' };
+
+static unsigned char const g_feed_key_f9_c[] =
+{ FEED_KEY_F9, 4, 27, '[', '2', '0', ';', '5', '~' };
+
+static unsigned char const g_feed_key_f9_s_c[] =
+{ FEED_KEY_F9, 5, 27, '[', '2', '0', ';', '6', '~' };
+
+static unsigned char const g_feed_key_f9_a_c[] =
+{ FEED_KEY_F9, 6, 27, '[', '2', '0', ';', '7', '~' };
+
+static unsigned char const g_feed_key_f9_s_a_c[] =
+{ FEED_KEY_F9, 7, 27, '[', '2', '0', ';', '8', '~' };
+
+/* F10 ^[[21;1~ */
+static unsigned char const g_feed_key_f10[] =
+{ FEED_KEY_F10, 0, 27, '[', '2', '1', '~' };
+
+static unsigned char const g_feed_key_f10_s[] =
+{ FEED_KEY_F10, 1, 27, '[', '2', '1', ';', '2', '~' };
+
+static unsigned char const g_feed_key_f10_a[] =
+{ FEED_KEY_F10, 2, 27, '[', '2', '1', ';', '3', '~' };
+
+static unsigned char const g_feed_key_f10_s_a[] =
+{ FEED_KEY_F10, 3, 27, '[', '2', '1', ';', '4', '~' };
+
+static unsigned char const g_feed_key_f10_c[] =
+{ FEED_KEY_F10, 4, 27, '[', '2', '1', ';', '5', '~' };
+
+static unsigned char const g_feed_key_f10_s_c[] =
+{ FEED_KEY_F10, 5, 27, '[', '2', '1', ';', '6', '~' };
+
+static unsigned char const g_feed_key_f10_a_c[] =
+{ FEED_KEY_F10, 6, 27, '[', '2', '1', ';', '7', '~' };
+
+static unsigned char const g_feed_key_f10_s_a_c[] =
+{ FEED_KEY_F10, 7, 27, '[', '2', '1', ';', '8', '~' };
+
+/* F11 ^[[23;1~ */
+static unsigned char const g_feed_key_f11[] =
+{ FEED_KEY_F11, 0, 27, '[', '2', '3', '~' };
+
+static unsigned char const g_feed_key_f11_s[] =
+{ FEED_KEY_F11, 1, 27, '[', '2', '3', ';', '2', '~' };
+
+static unsigned char const g_feed_key_f11_a[] =
+{ FEED_KEY_F11, 2, 27, '[', '2', '3', ';', '3', '~' };
+
+static unsigned char const g_feed_key_f11_s_a[] =
+{ FEED_KEY_F11, 3, 27, '[', '2', '3', ';', '4', '~' };
+
+static unsigned char const g_feed_key_f11_c[] =
+{ FEED_KEY_F11, 4, 27, '[', '2', '3', ';', '5', '~' };
+
+static unsigned char const g_feed_key_f11_s_c[] =
+{ FEED_KEY_F11, 5, 27, '[', '2', '3', ';', '6', '~' };
+
+static unsigned char const g_feed_key_f11_a_c[] =
+{ FEED_KEY_F11, 6, 27, '[', '2', '3', ';', '7', '~' };
+
+static unsigned char const g_feed_key_f11_s_a_c[] =
+{ FEED_KEY_F11, 7, 27, '[', '2', '3', ';', '8', '~' };
+
+/* F12 ^[[24;1~ */
+static unsigned char const g_feed_key_f12[] =
+{ FEED_KEY_F12, 0, 27, '[', '2', '4', '~' };
+
+static unsigned char const g_feed_key_f12_s[] =
+{ FEED_KEY_F12, 1, 27, '[', '2', '4', ';', '2', '~' };
+
+static unsigned char const g_feed_key_f12_a[] =
+{ FEED_KEY_F12, 2, 27, '[', '2', '4', ';', '3', '~' };
+
+static unsigned char const g_feed_key_f12_s_a[] =
+{ FEED_KEY_F12, 3, 27, '[', '2', '4', ';', '4', '~' };
+
+static unsigned char const g_feed_key_f12_c[] =
+{ FEED_KEY_F12, 4, 27, '[', '2', '4', ';', '5', '~' };
+
+static unsigned char const g_feed_key_f12_s_c[] =
+{ FEED_KEY_F12, 5, 27, '[', '2', '4', ';', '6', '~' };
+
+static unsigned char const g_feed_key_f12_a_c[] =
+{ FEED_KEY_F12, 6, 27, '[', '2', '4', ';', '7', '~' };
+
+static unsigned char const g_feed_key_f12_s_a_c[] =
+{ FEED_KEY_F12, 7, 27, '[', '2', '4', ';', '8', '~' };
 
 /* etc. */
 
@@ -449,6 +739,198 @@ static struct feed_keys_node const g_feed_keys_lookup_table[] =
 
     { g_feed_key_pagedown_s_a_c, sizeof(g_feed_key_pagedown_s_a_c) },
 
+    { g_feed_key_f1, sizeof(g_feed_key_f1) },
+
+    { g_feed_key_f1_s, sizeof(g_feed_key_f1_s) },
+
+    { g_feed_key_f1_a, sizeof(g_feed_key_f1_a) },
+
+    { g_feed_key_f1_s_a, sizeof(g_feed_key_f1_s_a) },
+
+    { g_feed_key_f1_c, sizeof(g_feed_key_f1_c) },
+
+    { g_feed_key_f1_s_c, sizeof(g_feed_key_f1_s_c) },
+
+    { g_feed_key_f1_a_c, sizeof(g_feed_key_f1_a_c) },
+
+    { g_feed_key_f1_s_a_c, sizeof(g_feed_key_f1_s_a_c) },
+
+    { g_feed_key_f2, sizeof(g_feed_key_f2) },
+
+    { g_feed_key_f2_s, sizeof(g_feed_key_f2_s) },
+
+    { g_feed_key_f2_a, sizeof(g_feed_key_f2_a) },
+
+    { g_feed_key_f2_s_a, sizeof(g_feed_key_f2_s_a) },
+
+    { g_feed_key_f2_c, sizeof(g_feed_key_f2_c) },
+
+    { g_feed_key_f2_s_c, sizeof(g_feed_key_f2_s_c) },
+
+    { g_feed_key_f2_a_c, sizeof(g_feed_key_f2_a_c) },
+
+    { g_feed_key_f2_s_a_c, sizeof(g_feed_key_f2_s_a_c) },
+
+    { g_feed_key_f3, sizeof(g_feed_key_f3) },
+
+    { g_feed_key_f3_s, sizeof(g_feed_key_f3_s) },
+
+    { g_feed_key_f3_a, sizeof(g_feed_key_f3_a) },
+
+    { g_feed_key_f3_s_a, sizeof(g_feed_key_f3_s_a) },
+
+    { g_feed_key_f3_c, sizeof(g_feed_key_f3_c) },
+
+    { g_feed_key_f3_s_c, sizeof(g_feed_key_f3_s_c) },
+
+    { g_feed_key_f3_a_c, sizeof(g_feed_key_f3_a_c) },
+
+    { g_feed_key_f3_s_a_c, sizeof(g_feed_key_f3_s_a_c) },
+
+    { g_feed_key_f4, sizeof(g_feed_key_f4) },
+
+    { g_feed_key_f4_s, sizeof(g_feed_key_f4_s) },
+
+    { g_feed_key_f4_a, sizeof(g_feed_key_f4_a) },
+
+    { g_feed_key_f4_s_a, sizeof(g_feed_key_f4_s_a) },
+
+    { g_feed_key_f4_c, sizeof(g_feed_key_f4_c) },
+
+    { g_feed_key_f4_s_c, sizeof(g_feed_key_f4_s_c) },
+
+    { g_feed_key_f4_a_c, sizeof(g_feed_key_f4_a_c) },
+
+    { g_feed_key_f4_s_a_c, sizeof(g_feed_key_f4_s_a_c) },
+
+    { g_feed_key_f5, sizeof(g_feed_key_f5) },
+
+    { g_feed_key_f5_s, sizeof(g_feed_key_f5_s) },
+
+    { g_feed_key_f5_a, sizeof(g_feed_key_f5_a) },
+
+    { g_feed_key_f5_s_a, sizeof(g_feed_key_f5_s_a) },
+
+    { g_feed_key_f5_c, sizeof(g_feed_key_f5_c) },
+
+    { g_feed_key_f5_s_c, sizeof(g_feed_key_f5_s_c) },
+
+    { g_feed_key_f5_a_c, sizeof(g_feed_key_f5_a_c) },
+
+    { g_feed_key_f5_s_a_c, sizeof(g_feed_key_f5_s_a_c) },
+
+    { g_feed_key_f6, sizeof(g_feed_key_f6) },
+
+    { g_feed_key_f6_s, sizeof(g_feed_key_f6_s) },
+
+    { g_feed_key_f6_a, sizeof(g_feed_key_f6_a) },
+
+    { g_feed_key_f6_s_a, sizeof(g_feed_key_f6_s_a) },
+
+    { g_feed_key_f6_c, sizeof(g_feed_key_f6_c) },
+
+    { g_feed_key_f6_s_c, sizeof(g_feed_key_f6_s_c) },
+
+    { g_feed_key_f6_a_c, sizeof(g_feed_key_f6_a_c) },
+
+    { g_feed_key_f6_s_a_c, sizeof(g_feed_key_f6_s_a_c) },
+
+    { g_feed_key_f7, sizeof(g_feed_key_f7) },
+
+    { g_feed_key_f7_s, sizeof(g_feed_key_f7_s) },
+
+    { g_feed_key_f7_a, sizeof(g_feed_key_f7_a) },
+
+    { g_feed_key_f7_s_a, sizeof(g_feed_key_f7_s_a) },
+
+    { g_feed_key_f7_c, sizeof(g_feed_key_f7_c) },
+
+    { g_feed_key_f7_s_c, sizeof(g_feed_key_f7_s_c) },
+
+    { g_feed_key_f7_a_c, sizeof(g_feed_key_f7_a_c) },
+
+    { g_feed_key_f7_s_a_c, sizeof(g_feed_key_f7_s_a_c) },
+
+    { g_feed_key_f8, sizeof(g_feed_key_f8) },
+
+    { g_feed_key_f8_s, sizeof(g_feed_key_f8_s) },
+
+    { g_feed_key_f8_a, sizeof(g_feed_key_f8_a) },
+
+    { g_feed_key_f8_s_a, sizeof(g_feed_key_f8_s_a) },
+
+    { g_feed_key_f8_c, sizeof(g_feed_key_f8_c) },
+
+    { g_feed_key_f8_s_c, sizeof(g_feed_key_f8_s_c) },
+
+    { g_feed_key_f8_a_c, sizeof(g_feed_key_f8_a_c) },
+
+    { g_feed_key_f8_s_a_c, sizeof(g_feed_key_f8_s_a_c) },
+
+    { g_feed_key_f9, sizeof(g_feed_key_f9) },
+
+    { g_feed_key_f9_s, sizeof(g_feed_key_f9_s) },
+
+    { g_feed_key_f9_a, sizeof(g_feed_key_f9_a) },
+
+    { g_feed_key_f9_s_a, sizeof(g_feed_key_f9_s_a) },
+
+    { g_feed_key_f9_c, sizeof(g_feed_key_f9_c) },
+
+    { g_feed_key_f9_s_c, sizeof(g_feed_key_f9_s_c) },
+
+    { g_feed_key_f9_a_c, sizeof(g_feed_key_f9_a_c) },
+
+    { g_feed_key_f9_s_a_c, sizeof(g_feed_key_f9_s_a_c) },
+
+    { g_feed_key_f10, sizeof(g_feed_key_f10) },
+
+    { g_feed_key_f10_s, sizeof(g_feed_key_f10_s) },
+
+    { g_feed_key_f10_a, sizeof(g_feed_key_f10_a) },
+
+    { g_feed_key_f10_s_a, sizeof(g_feed_key_f10_s_a) },
+
+    { g_feed_key_f10_c, sizeof(g_feed_key_f10_c) },
+
+    { g_feed_key_f10_s_c, sizeof(g_feed_key_f10_s_c) },
+
+    { g_feed_key_f10_a_c, sizeof(g_feed_key_f10_a_c) },
+
+    { g_feed_key_f10_s_a_c, sizeof(g_feed_key_f10_s_a_c) },
+
+    { g_feed_key_f11, sizeof(g_feed_key_f11) },
+
+    { g_feed_key_f11_s, sizeof(g_feed_key_f11_s) },
+
+    { g_feed_key_f11_a, sizeof(g_feed_key_f11_a) },
+
+    { g_feed_key_f11_s_a, sizeof(g_feed_key_f11_s_a) },
+
+    { g_feed_key_f11_c, sizeof(g_feed_key_f11_c) },
+
+    { g_feed_key_f11_s_c, sizeof(g_feed_key_f11_s_c) },
+
+    { g_feed_key_f11_a_c, sizeof(g_feed_key_f11_a_c) },
+
+    { g_feed_key_f11_s_a_c, sizeof(g_feed_key_f11_s_a_c) },
+
+    { g_feed_key_f12, sizeof(g_feed_key_f12) },
+
+    { g_feed_key_f12_s, sizeof(g_feed_key_f12_s) },
+
+    { g_feed_key_f12_a, sizeof(g_feed_key_f12_a) },
+
+    { g_feed_key_f12_s_a, sizeof(g_feed_key_f12_s_a) },
+
+    { g_feed_key_f12_c, sizeof(g_feed_key_f12_c) },
+
+    { g_feed_key_f12_s_c, sizeof(g_feed_key_f12_s_c) },
+
+    { g_feed_key_f12_a_c, sizeof(g_feed_key_f12_a_c) },
+
+    { g_feed_key_f12_s_a_c, sizeof(g_feed_key_f12_s_a_c) },
+
 };
 
 static unsigned int const g_feed_keys_lookup_table_length =
@@ -583,6 +1065,42 @@ static unsigned char const g_feed_key_print_pageup[] =
 static unsigned char const g_feed_key_print_pagedown[] =
 { FEED_KEY_PAGEDOWN, 'P', 'a', 'g', 'e', 'D', 'o', 'w', 'n' };
 
+static unsigned char const g_feed_key_print_f1[] =
+{ FEED_KEY_F1, 'F', '1' };
+
+static unsigned char const g_feed_key_print_f2[] =
+{ FEED_KEY_F2, 'F', '2' };
+
+static unsigned char const g_feed_key_print_f3[] =
+{ FEED_KEY_F3, 'F', '3' };
+
+static unsigned char const g_feed_key_print_f4[] =
+{ FEED_KEY_F4, 'F', '4' };
+
+static unsigned char const g_feed_key_print_f5[] =
+{ FEED_KEY_F5, 'F', '5' };
+
+static unsigned char const g_feed_key_print_f6[] =
+{ FEED_KEY_F6, 'F', '6' };
+
+static unsigned char const g_feed_key_print_f7[] =
+{ FEED_KEY_F7, 'F', '7' };
+
+static unsigned char const g_feed_key_print_f8[] =
+{ FEED_KEY_F8, 'F', '8' };
+
+static unsigned char const g_feed_key_print_f9[] =
+{ FEED_KEY_F9, 'F', '9' };
+
+static unsigned char const g_feed_key_print_f10[] =
+{ FEED_KEY_F10, 'F', '1', '0' };
+
+static unsigned char const g_feed_key_print_f11[] =
+{ FEED_KEY_F11, 'F', '1', '1' };
+
+static unsigned char const g_feed_key_print_f12[] =
+{ FEED_KEY_F12, 'F', '1', '2' };
+
 static struct feed_keys_node const g_feed_keys_print_table[] =
 {
     { g_feed_key_print_up, sizeof(g_feed_key_print_up) },
@@ -604,6 +1122,30 @@ static struct feed_keys_node const g_feed_keys_print_table[] =
     { g_feed_key_print_pageup, sizeof(g_feed_key_print_pageup) },
 
     { g_feed_key_print_pagedown, sizeof(g_feed_key_print_pagedown) },
+
+    { g_feed_key_print_f1, sizeof(g_feed_key_print_f1) },
+
+    { g_feed_key_print_f2, sizeof(g_feed_key_print_f2) },
+
+    { g_feed_key_print_f3, sizeof(g_feed_key_print_f3) },
+
+    { g_feed_key_print_f4, sizeof(g_feed_key_print_f4) },
+
+    { g_feed_key_print_f5, sizeof(g_feed_key_print_f5) },
+
+    { g_feed_key_print_f6, sizeof(g_feed_key_print_f6) },
+
+    { g_feed_key_print_f7, sizeof(g_feed_key_print_f7) },
+
+    { g_feed_key_print_f8, sizeof(g_feed_key_print_f8) },
+
+    { g_feed_key_print_f9, sizeof(g_feed_key_print_f9) },
+
+    { g_feed_key_print_f10, sizeof(g_feed_key_print_f10) },
+
+    { g_feed_key_print_f11, sizeof(g_feed_key_print_f11) },
+
+    { g_feed_key_print_f12, sizeof(g_feed_key_print_f12) },
 
 };
 
