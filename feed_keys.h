@@ -17,11 +17,21 @@ Description:
 
 /* Definitions for key codes */
 
-#define FEED_KEY_SHIFT (1u << 28u)
+#define FEED_KEY_SHIFT (1ul << 28u)
 
-#define FEED_KEY_ALT (2u << 28u)
+#define FEED_KEY_ALT (2ul << 28u)
 
-#define FEED_KEY_CTRL (4u << 28u)
+#define FEED_KEY_CTRL (4ul << 28u)
+
+/* Ctrl combinations */
+
+/* 0 : ctrl-@, ctrl-2 */
+/* 1-26 : ctrl-a -> ctrl-z */
+/* 27 : ctrl-[ ctrl-3 */
+/* 28 : ctrl-\ ctrl-4 */
+/* 29 : ctrl-] ctrl-5 */
+/* 30 : ctrl-^, ctrl-6 */
+/* 31 : ctrl-_, ctrl-7 */
 
 #define FEED_KEY_UP 130
 

@@ -567,6 +567,14 @@ static unsigned char const g_feed_key_f12_a_c[] =
 static unsigned char const g_feed_key_f12_s_a_c[] =
 { FEED_KEY_F12, 7, 27, '[', '2', '4', ';', '8', '~' };
 
+/* Backspace */
+static unsigned char const g_feed_key_backspace[] =
+{ 'H', 4, 127 };
+
+/* Shift + Tab */
+static unsigned char const g_feed_key_I_s_c[] =
+{ 'I', 5, 27, '[', 'Z' };
+
 /* etc. */
 
 struct feed_keys_node
@@ -933,6 +941,10 @@ static struct feed_keys_node const g_feed_keys_lookup_table[] =
 
     { g_feed_key_f12_s_a_c, sizeof(g_feed_key_f12_s_a_c) },
 
+    { g_feed_key_I_s_c, sizeof(g_feed_key_I_s_c) },
+
+    { g_feed_key_backspace, sizeof(g_feed_key_backspace) },
+
 };
 
 static unsigned int const g_feed_keys_lookup_table_length =
@@ -1032,6 +1044,76 @@ feed_keys_lookup(
         }
     }
 
+    if (!i_code)
+    {
+        static unsigned char const g_feed_keys_control_table[32u] =
+        {
+            '@', 'A', 'B', 'C',
+            'D', 'E', 'F', 'G',
+            'H', 'I', 'J', 'K',
+            'L', 'M', 'N', 'O',
+            'P', 'Q', 'R', 'S',
+            'T', 'U', 'V', 'W',
+            'X', 'Y', 'Z', '[',
+            '4', ']', '^', '7'
+        };
+
+        /* TODO: Detect simple ctrl and alt sequences */
+
+        if ((i_data_length == 1u) && (p_data[0u] < 32))
+        {
+            /* ctrl+@ */
+            i_code =
+                (unsigned long int)(
+                    0x80000000ul
+                    | (unsigned long int)(unsigned char)(g_feed_keys_control_table[p_data[0u]])
+                    | FEED_KEY_CTRL);
+        }
+        else if ((i_data_length == 2u) && (p_data[0u] == 27) && (p_data[1u] < 32))
+        {
+            /* alt+ctrl+@ */
+            i_code =
+                (unsigned long int)(
+                    0x80000000ul
+                    | (unsigned long int)(unsigned char)(g_feed_keys_control_table[p_data[1u]])
+                    | FEED_KEY_CTRL
+                    | FEED_KEY_ALT);
+        }
+        else if ((i_data_length == 2u) && (p_data[0u] == 27) && (p_data[1u] >= 'a') && (p_data[1u] <= 'z'))
+        {
+            /* alt+A */
+            i_code =
+                (unsigned long int)(
+                    0x80000000ul
+                    | ((unsigned long int)(unsigned char)(p_data[1u]) + 'A' - 'a')
+                    | FEED_KEY_ALT);
+
+        }
+        else if ((i_data_length == 2u) && (p_data[0u] == 27) && (p_data[1u] >= 'A') && (p_data[1u] <= 'Z'))
+        {
+            /* alt+shift+A */
+            i_code =
+                (unsigned long int)(
+                    0x80000000ul
+                    | (unsigned long int)(unsigned char)(p_data[1u])
+                    | FEED_KEY_SHIFT
+                    | FEED_KEY_ALT);
+        }
+        else if ((i_data_length == 2u) && (p_data[0u] == 27) && (p_data[1u] < 127))
+        {
+            /* alt+key */
+            i_code =
+                (unsigned long int)(
+                    0x80000000ul
+                    | (unsigned long int)(unsigned char)(p_data[1u])
+                    | FEED_KEY_ALT);
+        }
+        else
+        {
+            /* ? */
+        }
+    }
+
     return
         i_code;
 
@@ -1103,6 +1185,9 @@ static unsigned char const g_feed_key_print_f11[] =
 static unsigned char const g_feed_key_print_f12[] =
 { FEED_KEY_F12, 'F', '1', '2' };
 
+static unsigned char const g_feed_key_print_I[] =
+{ 'I', 'I' };
+
 static struct feed_keys_node const g_feed_keys_print_table[] =
 {
     { g_feed_key_print_up, sizeof(g_feed_key_print_up) },
@@ -1148,6 +1233,8 @@ static struct feed_keys_node const g_feed_keys_print_table[] =
     { g_feed_key_print_f11, sizeof(g_feed_key_print_f11) },
 
     { g_feed_key_print_f12, sizeof(g_feed_key_print_f12) },
+
+    { g_feed_key_print_I, sizeof(g_feed_key_print_I) },
 
 };
 
@@ -1247,6 +1334,49 @@ feed_keys_print(
             {
                 i++;
             }
+        }
+
+        if (!(b_result))
+        {
+            if (
+                FEED_KEY_SHIFT & i_code)
+            {
+                feed_buf_write_character(
+                    p_buf,
+                    'S');
+
+                feed_buf_write_character(
+                    p_buf,
+                    '-');
+            }
+
+            if (
+                FEED_KEY_ALT & i_code)
+            {
+                feed_buf_write_character(
+                    p_buf,
+                    'A');
+
+                feed_buf_write_character(
+                    p_buf,
+                    '-');
+            }
+
+            if (
+                FEED_KEY_CTRL & i_code)
+            {
+                feed_buf_write_character(
+                    p_buf,
+                    'C');
+
+                feed_buf_write_character(
+                    p_buf,
+                    '-');
+            }
+
+            feed_buf_write_character(
+                p_buf,
+                (unsigned char)(i_code & 0x7Ful));
         }
     }
 

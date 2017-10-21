@@ -551,6 +551,21 @@ feed_input_print(
                     (unsigned char)(
                         '@' + p_event->a_raw[1u]));
             }
+            else if ((p_event->a_raw[1u] >= 'a') && (p_event->a_raw[1u] <= 'z'))
+            {
+                feed_buf_write_character(
+                    p_buf,
+                    'C');
+
+                feed_buf_write_character(
+                    p_buf,
+                    '-');
+
+                feed_buf_write_character(
+                    p_buf,
+                    (unsigned char)(
+                        p_event->a_raw[1u] + 'A' - 'a'));
+            }
             else
             {
                 feed_buf_write_character(
