@@ -10,6 +10,14 @@ Description:
 
 */
 
+/* Reverse include guard */
+#if defined(INC_FEED_OS_H)
+#error include feed_os.h once
+#endif /* #if defined(INC_FEED_OS_H) */
+
+/* Mark this header files as included */
+#define INC_FEED_OS_H
+
 #include <stdarg.h>
 
 #include <stdio.h>
