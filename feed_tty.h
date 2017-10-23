@@ -14,14 +14,24 @@ struct feed_client;
 
 struct feed_tty
 {
-    struct termios
-        o_termios;
+    union termios_aligned
+    {
+        struct termios
+            o_termios;
+
+        unsigned char
+            a_aligned[(sizeof(struct termios) + 7u) & ~7u];
+
+    } u;
 
     int
         i_output_file;
 
     int
         i_input_file;
+
+    int
+        a_padding1[2u];
 
     char
         b_enabled;

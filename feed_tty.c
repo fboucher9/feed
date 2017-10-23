@@ -123,13 +123,13 @@ feed_tty_enable(
             tcgetattr(
                 p_tty->i_input_file,
                 &(
-                    p_tty->o_termios));
+                    p_tty->u.o_termios));
 
         if (
             0 <= i_term_status)
         {
             o_termios =
-                p_tty->o_termios;
+                p_tty->u.o_termios;
 
             feed_tty_set_raw_options(
                 &(
@@ -198,7 +198,7 @@ feed_tty_disable(
                 p_tty->i_input_file,
                 TCSADRAIN,
                 &(
-                    p_tty->o_termios));
+                    p_tty->u.o_termios));
 
         if (
             0 <= i_term_status)

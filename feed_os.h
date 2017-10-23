@@ -42,6 +42,8 @@ Description:
 #if defined(__GNUC__)
 #if defined(__SSP_STRONG__)
 #endif
+#if defined(INC_FEED_OS_H)
+#endif
 #endif
 
 /* end-of-file: feed_os.h */

@@ -140,5 +140,13 @@ $(FEED_DST_PATH)/testfeed.exe : $(FEED_SRC_PATH)/feed_project.mak
 # Indicate dependency on makefile
 $(FEED_SRCS): $(FEED_SRC_PATH)/feed_project.mak
 
+# Clean temporary files
+.PHONY: clean
+clean :
+	-rm -f $(FEED_DST_PATH)/_obj_*
+	-rm -f $(FEED_DST_PATH)/feed_os.h.gch
+	-rm -f $(FEED_DST_PATH)/feed_os.h.gch.oxx
+	-rm -f $(FEED_DST_PATH)/testfeed.exe
+
 # Include header dependency files
 -include $(FEED_DST_PATH)/_obj_*.o.d
