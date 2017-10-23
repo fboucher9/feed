@@ -236,11 +236,13 @@ feed_body_char_write_event(
     p_body_char->i_raw_length =
         p_event->i_raw_len;
 
-    p_body_char->a_visible[0u] =
-        ' ';
+    memcpy(
+        p_body_char->a_visible,
+        p_event->a_raw,
+        p_event->i_raw_len);
 
     p_body_char->i_visible_length =
-        0u;
+        p_event->i_raw_len;
 
     p_body_char->i_visible_width =
         1u;
@@ -610,6 +612,80 @@ feed_body_text_write_event(
 }
 
 
+static
+void
+feed_body_text_refresh(
+    struct feed_body_text * const
+        p_body_text)
+{
+    /* Grow size of drawing region */
+
+    /* Move cursor to beginning of drawing region */
+
+    /* Print state of body text */
+    {
+        struct feed_list *
+            p_line_iterator;
+
+        struct feed_list *
+            p_char_iterator;
+
+        /* For all lines in body text */
+        p_line_iterator =
+            p_body_text->o_lines.p_next;
+
+        while (
+            p_line_iterator
+            != &(
+                p_body_text->o_lines))
+        {
+            struct feed_body_line *
+                p_body_line;
+
+            p_body_line =
+                (struct feed_body_line *)(
+                    p_line_iterator);
+
+            /* If line is within refresh window */
+
+            /* For all chars in line */
+            p_char_iterator =
+                p_body_line->o_chars.p_next;
+
+            while (
+                p_char_iterator
+                != &(
+                    p_body_line->o_chars))
+            {
+                struct feed_body_char const *
+                    p_body_char;
+
+                p_body_char =
+                    (struct feed_body_char const *)(
+                        p_char_iterator);
+
+                /* If char is within refresh window */
+
+                printf(" [%.*s] <%.*s>",
+                    (int)(p_body_char->i_raw_length),
+                    p_body_char->a_raw,
+                    (int)(p_body_char->i_visible_length),
+                    p_body_char->a_visible);
+
+                p_char_iterator =
+                    p_char_iterator->p_next;
+            }
+
+            printf("\r\n");
+
+            p_line_iterator =
+                p_line_iterator->p_next;
+        }
+    }
+
+}
+
+
 struct feed_main_context
 {
     struct feed_client *
@@ -702,9 +778,45 @@ feed_main_event_callback(
 
     printf("\r\n");
 
-    feed_body_text_write_event(
-        p_main_context->p_body_text,
-        p_event);
+    if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'H') == p_event->i_code)
+    {
+        struct feed_body_line *
+            p_body_line;
+
+        struct feed_body_char *
+            p_body_char;
+
+        /* Find last line */
+        if (p_main_context->p_body_text->o_lines.p_prev !=
+            &(p_main_context->p_body_text->o_lines))
+        {
+            p_body_line =
+                (struct feed_body_line *)(
+                    p_main_context->p_body_text->o_lines.p_prev);
+
+            /* Find last char */
+            if (p_body_line->o_chars.p_prev !=
+                &(p_body_line->o_chars))
+            {
+                /* Delete the selected char */
+                p_body_char =
+                    (struct feed_body_char *)(
+                        p_body_line->o_chars.p_prev);
+
+                feed_body_char_destroy(
+                    p_body_char);
+            }
+        }
+    }
+    else
+    {
+        feed_body_text_write_event(
+            p_main_context->p_body_text,
+            p_event);
+    }
+
+    feed_body_text_refresh(
+        p_main_context->p_body_text);
 
 }
 
@@ -1067,61 +1179,6 @@ feed_main(
     {
         feed_dbg_print(
             "init error!");
-    }
-
-    /* Print state of body text */
-    {
-        struct feed_list *
-            p_line_iterator;
-
-        struct feed_list *
-            p_char_iterator;
-
-        /* For all lines in body text */
-        p_line_iterator =
-            p_main_context->p_body_text->o_lines.p_next;
-
-        while (
-            p_line_iterator
-            != &(
-                p_main_context->p_body_text->o_lines))
-        {
-            struct feed_body_line *
-                p_body_line;
-
-            p_body_line =
-                (struct feed_body_line *)(
-                    p_line_iterator);
-
-            /* For all chars in line */
-            p_char_iterator =
-                p_body_line->o_chars.p_next;
-
-            while (
-                p_char_iterator
-                != &(
-                    p_body_line->o_chars))
-            {
-                struct feed_body_char const *
-                    p_body_char;
-
-                p_body_char =
-                    (struct feed_body_char const *)(
-                        p_char_iterator);
-
-                printf(" [%.*s]",
-                    (int)(p_body_char->i_raw_length),
-                    p_body_char->a_raw);
-
-                p_char_iterator =
-                    p_char_iterator->p_next;
-            }
-
-            printf("\n");
-
-            p_line_iterator =
-                p_line_iterator->p_next;
-        }
     }
 
     feed_body_text_destroy(
