@@ -106,7 +106,17 @@ struct feed_body_text
     struct feed_list
         o_lines;
 
+    struct feed_event
+        o_last_event;
+
     /* Number of lines */
+
+    /* Cursor */
+    int
+        i_cursor_line_index;
+
+    int
+        i_cursor_char_index;
 
 }; /* struct feed_body_text */
 
@@ -441,6 +451,12 @@ feed_body_text_init(
         &(
             p_body_text->o_lines));
 
+    p_body_text->i_cursor_line_index =
+        0;
+
+    p_body_text->i_cursor_char_index =
+        0;
+
 }
 
 
@@ -606,11 +622,60 @@ feed_body_text_write_event(
                 p_body_line,
                 p_event);
 
+            p_body_text->i_cursor_char_index ++;
         }
     }
 
 }
 
+static
+void
+feed_main_print_status(
+    struct feed_event const * const
+        p_event)
+{
+    unsigned char i;
+    unsigned char c;
+
+    printf("%08lx: [", p_event->i_code);
+    for (i=0u; i<p_event->i_raw_len; i++)
+    {
+        c = p_event->a_raw[i];
+
+        if ((c >= 32) && (c < 127))
+        {
+            printf(" '%c'", (char)(c));
+        }
+        else
+        {
+            printf(" %3u", (unsigned int)(p_event->a_raw[i]));
+        }
+    }
+    printf(" ]");
+
+    {
+        unsigned char a_name[64u];
+
+        struct feed_buf o_name;
+
+        memset(a_name, 0, sizeof(a_name));
+
+        feed_buf_init(
+            &(
+                o_name),
+            a_name,
+            sizeof(
+                a_name));
+
+        feed_input_print(
+            p_event,
+            &(
+                o_name));
+
+        printf(" <%.*s>", (int)(o_name.i_len), (char const *)(o_name.p_buf));
+    }
+    printf("\033[0K");
+}
 
 static
 void
@@ -630,6 +695,7 @@ feed_body_text_refresh(
         struct feed_list *
             p_char_iterator;
 
+        /* Return to home position */
         printf("\r");
 
         /* For all lines in body text */
@@ -680,8 +746,22 @@ feed_body_text_refresh(
                 p_line_iterator->p_next;
         }
 
+        /* Erase to end-of-line */
         printf("\033[0K");
-        fflush(stdout);
+
+        /* Draw status line */
+        printf("\r\nstatus: ");
+
+        feed_main_print_status(
+            &(
+                p_body_text->o_last_event));
+
+        /* Position the cursor */
+        printf("\r\033[A");
+        if (p_body_text->i_cursor_char_index)
+        {
+            printf("\033[%dC", p_body_text->i_cursor_char_index);
+        }
     }
 
 }
@@ -735,58 +815,12 @@ feed_main_event_callback(
     struct feed_main_context *
         p_main_context;
 
-    unsigned char
-        i;
-
-    unsigned char
-        c;
+    struct feed_body_text *
+        p_body_text;
 
     p_main_context =
         (struct feed_main_context *)(
             p_context);
-
-    if (0)
-    {
-        printf("%08lx: [", p_event->i_code);
-        for (i=0u; i<p_event->i_raw_len; i++)
-        {
-            c = p_event->a_raw[i];
-
-            if ((c >= 32) && (c < 127))
-            {
-                printf(" '%c'", (char)(c));
-            }
-            else
-            {
-                printf(" %3u", (unsigned int)(p_event->a_raw[i]));
-            }
-        }
-        printf(" ]");
-
-        {
-            unsigned char a_name[64u];
-
-            struct feed_buf o_name;
-
-            memset(a_name, 0, sizeof(a_name));
-
-            feed_buf_init(
-                &(
-                    o_name),
-                a_name,
-                sizeof(
-                    a_name));
-
-            feed_input_print(
-                p_event,
-                &(
-                    o_name));
-
-            printf(" <%.*s>", (int)(o_name.i_len), (char const *)(o_name.p_buf));
-        }
-
-        printf("\r\n");
-    }
 
     /* ((unsigned long int)(unsigned char)('q') == p_event->i_code) */
     if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'D') == p_event->i_code)
@@ -794,6 +828,13 @@ feed_main_event_callback(
         p_main_context->b_more =
             0;
     }
+
+    p_body_text =
+        p_main_context->p_body_text;
+
+    p_body_text->o_last_event =
+        *(
+            p_event);
 
     if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'H') == p_event->i_code)
     {
@@ -804,12 +845,12 @@ feed_main_event_callback(
             p_body_char;
 
         /* Find last line */
-        if (p_main_context->p_body_text->o_lines.p_prev !=
-            &(p_main_context->p_body_text->o_lines))
+        if (p_body_text->o_lines.p_prev !=
+            &(p_body_text->o_lines))
         {
             p_body_line =
                 (struct feed_body_line *)(
-                    p_main_context->p_body_text->o_lines.p_prev);
+                    p_body_text->o_lines.p_prev);
 
             /* Find last char */
             if (p_body_line->o_chars.p_prev !=
@@ -822,18 +863,31 @@ feed_main_event_callback(
 
                 feed_body_char_destroy(
                     p_body_char);
+
+                p_body_text->i_cursor_char_index --;
             }
         }
+    }
+    else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_LEFT) == p_event->i_code)
+    {
+        if (p_body_text->i_cursor_char_index)
+        {
+            p_body_text->i_cursor_char_index --;
+        }
+    }
+    else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_RIGHT) == p_event->i_code)
+    {
+        p_body_text->i_cursor_char_index ++;
     }
     else
     {
         feed_body_text_write_event(
-            p_main_context->p_body_text,
+            p_body_text,
             p_event);
     }
 
     feed_body_text_refresh(
-        p_main_context->p_body_text);
+        p_body_text);
 
 }
 
@@ -1152,6 +1206,9 @@ feed_main(
                 p_main_context->b_more =
                     1;
 
+                /* Reserve an extra line on screen */
+                printf("\r\n\033[A");
+
                 p_input =
                     feed_input_create(
                         p_main_context->p_client,
@@ -1189,6 +1246,8 @@ feed_main(
                             0;
                     }
                 }
+
+                printf("\r\n\n");
 
                 feed_input_destroy(
                     p_input);
