@@ -38,7 +38,7 @@ struct feed_buf;
 #define FEED_EVENT_KEY_CTRL     0x40000000ul
 
 /* Mask of base key code */
-#define FEED_EVENT_KEY_MASK     0x7FFFFFFFul
+#define FEED_EVENT_KEY_MASK     0x0FFFFFFFul
 
 /*
 

@@ -1108,6 +1108,16 @@ feed_keys_lookup(
                     | (unsigned long int)(unsigned char)(p_data[1u])
                     | FEED_KEY_ALT);
         }
+        else if ((i_data_length == 2u) && (p_data[0u] == 27) && (p_data[1u] == 127))
+        {
+            /* alt+backspace */
+            i_code =
+                (unsigned long int)(
+                    0x80000000ul
+                    | (unsigned long int)(unsigned char)('H')
+                    | FEED_KEY_ALT
+                    | FEED_KEY_CTRL);
+        }
         else
         {
             /* ? */
