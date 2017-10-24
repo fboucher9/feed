@@ -112,10 +112,10 @@ struct feed_body_text
     /* Number of lines */
 
     /* Cursor */
-    int
+    unsigned int
         i_cursor_line_index;
 
-    int
+    unsigned int
         i_cursor_char_index;
 
 }; /* struct feed_body_text */
@@ -246,13 +246,54 @@ feed_body_char_write_event(
     p_body_char->i_raw_length =
         p_event->i_raw_len;
 
-    memcpy(
-        p_body_char->a_visible,
-        p_event->a_raw,
-        p_event->i_raw_len);
+    if (
+        FEED_EVENT_KEY_FLAG & p_event->i_code)
+    {
+        struct feed_buf
+            o_buf;
 
-    p_body_char->i_visible_length =
-        p_event->i_raw_len;
+        memset(
+            p_body_char->a_visible,
+            0u,
+            sizeof(
+                p_body_char->a_visible));
+
+        p_body_char->a_visible[0u] =
+            '<';
+
+        feed_buf_init(
+            &(
+                o_buf),
+            p_body_char->a_visible + 1u,
+            sizeof(
+                p_body_char->a_visible) - 1u);
+
+        feed_input_print(
+            p_event,
+            &(
+                o_buf));
+
+        p_body_char->a_visible[1u + o_buf.i_len] =
+            '>';
+
+        p_body_char->i_visible_length =
+            (unsigned char)(
+                o_buf.i_len + 2u);
+
+        p_body_char->i_visible_width =
+            (unsigned char)(
+                o_buf.i_len + 2u);
+    }
+    else
+    {
+        memcpy(
+            p_body_char->a_visible,
+            p_event->a_raw,
+            p_event->i_raw_len);
+
+        p_body_char->i_visible_length =
+            p_event->i_raw_len;
+    }
 
     p_body_char->i_visible_width =
         1u;
@@ -410,28 +451,25 @@ feed_body_line_write_event(
     p_client =
         p_body_line->p_client;
 
-    if (0ul == (0x80000000ul & p_event->i_code))
+    /* Create a character */
+    p_body_char =
+        feed_body_char_create(
+            p_client);
+
+    if (
+        p_body_char)
     {
-        /* Create a character */
-        p_body_char =
-            feed_body_char_create(
-                p_client);
+        /* Set char information */
+        feed_body_char_write_event(
+            p_body_char,
+            p_event);
 
-        if (
-            p_body_char)
-        {
-            /* Set char information */
-            feed_body_char_write_event(
-                p_body_char,
-                p_event);
-
-            /* Store the char into the list */
-            feed_list_join(
-                &(
-                    p_body_char->o_list),
-                &(
-                    p_body_line->o_chars));
-        }
+        /* Store the char into the list */
+        feed_list_join(
+            &(
+                p_body_char->o_list),
+            &(
+                p_body_line->o_chars));
     }
 }
 
@@ -582,48 +620,45 @@ feed_body_text_write_event(
     p_client =
         p_body_text->p_client;
 
-    if (0ul == (0x80000000ul & p_event->i_code))
+    /* Store the character into the body */
+    if (p_body_text->o_lines.p_next
+        == &(p_body_text->o_lines))
     {
-        /* Store the character into the body */
-        if (p_body_text->o_lines.p_next
-            == &(p_body_text->o_lines))
+        struct feed_body_line *
+            p_body_line;
+
+        /* Create a line */
+        p_body_line =
+            feed_body_line_create(
+                p_client);
+
+        /* Store the line into the list */
+        if (p_body_line)
         {
-            struct feed_body_line *
-                p_body_line;
-
-            /* Create a line */
-            p_body_line =
-                feed_body_line_create(
-                    p_client);
-
-            /* Store the line into the list */
-            if (p_body_line)
-            {
-                feed_list_join(
-                    &(
-                        p_body_line->o_list),
-                    &(
-                        p_body_text->o_lines));
-            }
+            feed_list_join(
+                &(
+                    p_body_line->o_list),
+                &(
+                    p_body_text->o_lines));
         }
+    }
 
-        /* Get last line */
-        if (p_body_text->o_lines.p_prev
-            != &(p_body_text->o_lines))
-        {
-            struct feed_body_line *
-                p_body_line;
+    /* Get last line */
+    if (p_body_text->o_lines.p_prev
+        != &(p_body_text->o_lines))
+    {
+        struct feed_body_line *
+            p_body_line;
 
-            p_body_line =
-                (struct feed_body_line *)(
-                    p_body_text->o_lines.p_prev);
+        p_body_line =
+            (struct feed_body_line *)(
+                p_body_text->o_lines.p_prev);
 
-            feed_body_line_write_event(
-                p_body_line,
-                p_event);
+        feed_body_line_write_event(
+            p_body_line,
+            p_event);
 
-            p_body_text->i_cursor_char_index ++;
-        }
+        p_body_text->i_cursor_char_index ++;
     }
 
 }
@@ -681,8 +716,33 @@ static
 void
 feed_body_text_refresh(
     struct feed_body_text * const
-        p_body_text)
+        p_body_text,
+    unsigned int const
+        i_screen_height,
+    unsigned int const
+        i_screen_width)
 {
+    unsigned int
+        i_width;
+
+    unsigned int
+        i_cursor_visible_x;
+
+    unsigned int
+        i_cursor_char_iterator;
+
+    (void)(
+        i_screen_height);
+
+    i_width =
+        0u;
+
+    i_cursor_visible_x =
+        0u;
+
+    i_cursor_char_iterator =
+        0u;
+
     /* Grow size of drawing region */
 
     /* Move cursor to beginning of drawing region */
@@ -734,9 +794,21 @@ feed_body_text_refresh(
 
                 /* If char is within refresh window */
 
-                printf("%.*s",
-                    (int)(p_body_char->i_visible_length),
-                    p_body_char->a_visible);
+                if ((i_width + p_body_char->i_visible_length) < i_screen_width)
+                {
+                    printf("%.*s",
+                        (int)(p_body_char->i_visible_length),
+                        p_body_char->a_visible);
+                }
+
+                i_width += p_body_char->i_visible_length;
+
+                if (i_cursor_char_iterator < p_body_text->i_cursor_char_index)
+                {
+                    i_cursor_visible_x += p_body_char->i_visible_length;
+                }
+
+                i_cursor_char_iterator ++;
 
                 p_char_iterator =
                     p_char_iterator->p_next;
@@ -758,9 +830,9 @@ feed_body_text_refresh(
 
         /* Position the cursor */
         printf("\r\033[A");
-        if (p_body_text->i_cursor_char_index)
+        if (i_cursor_visible_x)
         {
-            printf("\033[%dC", p_body_text->i_cursor_char_index);
+            printf("\033[%dC", i_cursor_visible_x);
         }
     }
 
@@ -784,16 +856,16 @@ struct feed_main_context
     struct feed_tty
         o_tty;
 
-    int
+    unsigned int
         i_ocx;
 
-    int
+    unsigned int
         i_ocy;
 
-    int
+    unsigned int
         i_wx;
 
-    int
+    unsigned int
         i_wy;
 
     char
@@ -828,66 +900,70 @@ feed_main_event_callback(
         p_main_context->b_more =
             0;
     }
-
-    p_body_text =
-        p_main_context->p_body_text;
-
-    p_body_text->o_last_event =
-        *(
-            p_event);
-
-    if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'H') == p_event->i_code)
+    else
     {
-        struct feed_body_line *
-            p_body_line;
+        p_body_text =
+            p_main_context->p_body_text;
 
-        struct feed_body_char *
-            p_body_char;
+        p_body_text->o_last_event =
+            *(
+                p_event);
 
-        /* Find last line */
-        if (p_body_text->o_lines.p_prev !=
-            &(p_body_text->o_lines))
+        if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'H') == p_event->i_code)
         {
-            p_body_line =
-                (struct feed_body_line *)(
-                    p_body_text->o_lines.p_prev);
+            struct feed_body_line *
+                p_body_line;
 
-            /* Find last char */
-            if (p_body_line->o_chars.p_prev !=
-                &(p_body_line->o_chars))
+            struct feed_body_char *
+                p_body_char;
+
+            /* Find last line */
+            if (p_body_text->o_lines.p_prev !=
+                &(p_body_text->o_lines))
             {
-                /* Delete the selected char */
-                p_body_char =
-                    (struct feed_body_char *)(
-                        p_body_line->o_chars.p_prev);
+                p_body_line =
+                    (struct feed_body_line *)(
+                        p_body_text->o_lines.p_prev);
 
-                feed_body_char_destroy(
-                    p_body_char);
+                /* Find last char */
+                if (p_body_line->o_chars.p_prev !=
+                    &(p_body_line->o_chars))
+                {
+                    /* Delete the selected char */
+                    p_body_char =
+                        (struct feed_body_char *)(
+                            p_body_line->o_chars.p_prev);
 
+                    feed_body_char_destroy(
+                        p_body_char);
+
+                    p_body_text->i_cursor_char_index --;
+                }
+            }
+        }
+        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_LEFT) == p_event->i_code)
+        {
+            if (p_body_text->i_cursor_char_index)
+            {
                 p_body_text->i_cursor_char_index --;
             }
         }
-    }
-    else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_LEFT) == p_event->i_code)
-    {
-        if (p_body_text->i_cursor_char_index)
+        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_RIGHT) == p_event->i_code)
         {
-            p_body_text->i_cursor_char_index --;
+            p_body_text->i_cursor_char_index ++;
         }
-    }
-    else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_RIGHT) == p_event->i_code)
-    {
-        p_body_text->i_cursor_char_index ++;
-    }
-    else
-    {
-        feed_body_text_write_event(
-            p_body_text,
-            p_event);
-    }
+        else
+        {
+            feed_body_text_write_event(
+                p_body_text,
+                p_event);
+        }
 
-    feed_body_text_refresh(
-        p_body_text);
+        feed_body_text_refresh(
+            p_body_text,
+            p_main_context->i_wy,
+            p_main_context->i_wx);
+    }
 
 }
 
@@ -966,10 +1042,12 @@ feed_main(
                 }
 
                 p_main_context->i_ocx =
-                    x;
+                    (unsigned int)(
+                        x);
 
                 p_main_context->i_ocy =
-                    y;
+                    (unsigned int)(
+                        y);
             }
             else
             {
@@ -996,10 +1074,12 @@ feed_main(
                 }
 
                 p_main_context->i_wx =
-                    x;
+                    (unsigned int)(
+                        x);
 
                 p_main_context->i_wy =
-                    y;
+                    (unsigned int)(
+                        y);
             }
             else
             {
