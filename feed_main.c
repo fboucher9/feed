@@ -630,6 +630,8 @@ feed_body_text_refresh(
         struct feed_list *
             p_char_iterator;
 
+        printf("\r");
+
         /* For all lines in body text */
         p_line_iterator =
             p_body_text->o_lines.p_next;
@@ -666,9 +668,7 @@ feed_body_text_refresh(
 
                 /* If char is within refresh window */
 
-                printf(" [%.*s] <%.*s>",
-                    (int)(p_body_char->i_raw_length),
-                    p_body_char->a_raw,
+                printf("%.*s",
                     (int)(p_body_char->i_visible_length),
                     p_body_char->a_visible);
 
@@ -676,11 +676,12 @@ feed_body_text_refresh(
                     p_char_iterator->p_next;
             }
 
-            printf("\r\n");
-
             p_line_iterator =
                 p_line_iterator->p_next;
         }
+
+        printf("\033[0K");
+        fflush(stdout);
     }
 
 }
@@ -702,6 +703,18 @@ struct feed_main_context
 
     struct feed_tty
         o_tty;
+
+    int
+        i_ocx;
+
+    int
+        i_ocy;
+
+    int
+        i_wx;
+
+    int
+        i_wy;
 
     char
         b_more;
@@ -732,51 +745,55 @@ feed_main_event_callback(
         (struct feed_main_context *)(
             p_context);
 
-    printf("%08lx: [", p_event->i_code);
-    for (i=0u; i<p_event->i_raw_len; i++)
+    if (0)
     {
-        c = p_event->a_raw[i];
-
-        if ((c >= 32) && (c < 127))
+        printf("%08lx: [", p_event->i_code);
+        for (i=0u; i<p_event->i_raw_len; i++)
         {
-            printf(" '%c'", (char)(c));
+            c = p_event->a_raw[i];
+
+            if ((c >= 32) && (c < 127))
+            {
+                printf(" '%c'", (char)(c));
+            }
+            else
+            {
+                printf(" %3u", (unsigned int)(p_event->a_raw[i]));
+            }
         }
-        else
+        printf(" ]");
+
         {
-            printf(" %3u", (unsigned int)(p_event->a_raw[i]));
+            unsigned char a_name[64u];
+
+            struct feed_buf o_name;
+
+            memset(a_name, 0, sizeof(a_name));
+
+            feed_buf_init(
+                &(
+                    o_name),
+                a_name,
+                sizeof(
+                    a_name));
+
+            feed_input_print(
+                p_event,
+                &(
+                    o_name));
+
+            printf(" <%.*s>", (int)(o_name.i_len), (char const *)(o_name.p_buf));
         }
-    }
-    printf(" ]");
 
-    {
-        unsigned char a_name[64u];
-
-        struct feed_buf o_name;
-
-        memset(a_name, 0, sizeof(a_name));
-
-        feed_buf_init(
-            &(
-                o_name),
-            a_name,
-            sizeof(
-                a_name));
-
-        feed_input_print(
-            p_event,
-            &(
-                o_name));
-
-        printf(" <%.*s>", (int)(o_name.i_len), (char const *)(o_name.p_buf));
+        printf("\r\n");
     }
 
-    if ((unsigned long int)(unsigned char)('q') == p_event->i_code)
+    /* ((unsigned long int)(unsigned char)('q') == p_event->i_code) */
+    if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'D') == p_event->i_code)
     {
         p_main_context->b_more =
             0;
     }
-
-    printf("\r\n");
 
     if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'H') == p_event->i_code)
     {
@@ -882,14 +899,23 @@ feed_main(
                     &(
                         p_main_context->o_tty),
                     &(
-                        x),
+                        y),
                     &(
-                        y)))
+                        x)))
             {
-                feed_dbg_print(
-                    "pos = %d , %d",
-                    x,
-                    y);
+                if (0)
+                {
+                    feed_dbg_print(
+                        "pos = %d , %d",
+                        x,
+                        y);
+                }
+
+                p_main_context->i_ocx =
+                    x;
+
+                p_main_context->i_ocy =
+                    y;
             }
             else
             {
@@ -903,14 +929,23 @@ feed_main(
                     &(
                         p_main_context->o_tty),
                     &(
-                        x),
+                        y),
                     &(
-                        y)))
+                        x)))
             {
-                feed_dbg_print(
-                    "winsize = %d , %d",
-                    x,
-                    y);
+                if (0)
+                {
+                    feed_dbg_print(
+                        "winsize = %d , %d",
+                        x,
+                        y);
+                }
+
+                p_main_context->i_wx =
+                    x;
+
+                p_main_context->i_wy =
+                    y;
             }
             else
             {
@@ -1119,7 +1154,10 @@ feed_main(
 
                 p_input =
                     feed_input_create(
-                        p_main_context->p_client);
+                        p_main_context->p_client,
+                        &(
+                            feed_main_event_callback),
+                        p_main_context);
 
                 while (
                     p_main_context->b_more)
@@ -1136,10 +1174,7 @@ feed_main(
                             feed_input_write(
                                 p_input,
                                 (unsigned char)(
-                                    c),
-                                &(
-                                    feed_main_event_callback),
-                                p_main_context))
+                                    c)))
                         {
                         }
                         else

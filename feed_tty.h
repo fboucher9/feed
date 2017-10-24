@@ -191,9 +191,9 @@ feed_tty_get_window_size(
     struct feed_tty * const
         p_tty,
     int * const
-        p_width,
+        p_rows,
     int * const
-        p_height);
+        p_columns);
 
 /* use FEED_CSI_ED_ constants for count */
 char

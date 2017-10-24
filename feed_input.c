@@ -53,6 +53,15 @@ enum feed_input_state
 
 struct feed_input
 {
+    void (* p_callback)(
+        void * const
+            p_context,
+        struct feed_event const * const
+            p_event);
+
+    void *
+        p_context;
+
     struct feed_client *
         p_client;
 
@@ -79,7 +88,14 @@ struct feed_input
 struct feed_input *
 feed_input_create(
     struct feed_client * const
-        p_client)
+        p_client,
+    void (* const p_callback)(
+        void * const
+            p_context,
+        struct feed_event const * const
+            p_event),
+    void * const
+        p_context)
 {
     struct feed_input *
         p_input;
@@ -101,6 +117,12 @@ feed_input_create(
     if (
         p_input)
     {
+        p_input->p_callback =
+            p_callback;
+
+        p_input->p_context =
+            p_context;
+
         p_input->p_client =
             p_client;
 
@@ -168,39 +190,32 @@ static
 void
 feed_input_notify(
     struct feed_input * const
-        p_input,
-    void (* const p_callback)(
-        void * const
-            p_context,
-        struct feed_event const * const
-            p_event),
-    void * const
-        p_context)
+        p_input)
 {
-    (*(p_callback))(
-        p_context,
+    feed_input_lookup(
+        p_input);
+
+    (*(p_input->p_callback))(
+        p_input->p_context,
         &(
             p_input->o_event));
+
+    p_input->e_state =
+        feed_input_state_idle;
+
 }
 
+static
 char
-feed_input_write(
+feed_input_store_data(
     struct feed_input * const
         p_input,
     unsigned char const
-        c_data,
-    void (* const p_callback)(
-        void * const
-            p_context,
-        struct feed_event const * const
-            p_event),
-    void * const
-        p_context)
+        c_data)
 {
     char
         b_result;
 
-    /* Store into raw */
     if (
         feed_input_state_idle
         == p_input->e_state)
@@ -236,236 +251,65 @@ feed_input_write(
         }
     }
 
-    if (
-        b_result)
+    return
+        b_result;
+
+}
+
+static
+char
+feed_input_process_idle_state(
+    struct feed_input * const
+        p_input,
+    unsigned char const
+        c_data)
+{
+    char
+        b_result;
+
+    if (0xC0u <= c_data)
     {
-        if (
-            feed_input_state_idle
-            == p_input->e_state)
+        if (0xC0u == (c_data & 0xE0u))
         {
-            if (0xC0u <= c_data)
-            {
-                if (0xC0u == (c_data & 0xE0u))
-                {
-                    p_input->e_state =
-                        feed_input_state_unicode;
-
-                    p_input->o_event.i_code =
-                        (unsigned long int)(
-                            c_data & 0x1Fu);
-
-                    p_input->i_count =
-                        2u;
-
-                    b_result =
-                        1;
-                }
-                else if (0xE0u == (c_data & 0xF0u))
-                {
-                    p_input->e_state =
-                        feed_input_state_unicode;
-
-                    p_input->o_event.i_code =
-                        (unsigned long int)(
-                            c_data & 0x0Fu);
-
-                    p_input->i_count =
-                        3u;
-
-                    b_result =
-                        1;
-                }
-                else if (0xF0u == (c_data & 0xF8u))
-                {
-                    p_input->e_state =
-                        feed_input_state_unicode;
-
-                    p_input->o_event.i_code =
-                        (unsigned long int)(
-                            c_data & 0x07u);
-
-                    p_input->i_count =
-                        4u;
-
-                    b_result =
-                        1;
-                }
-                else
-                {
-                    p_input->e_state =
-                        feed_input_state_idle;
-
-                    b_result =
-                        0;
-                }
-            }
-            else if (27u == c_data)
-            {
-                p_input->e_state =
-                    feed_input_state_escape;
-
-                b_result =
-                    1;
-            }
-            else
-            {
-                p_input->o_event.i_code =
-                    (unsigned long int)(
-                        c_data);
-
-                feed_input_lookup(
-                    p_input);
-
-                feed_input_notify(
-                    p_input,
-                    p_callback,
-                    p_context);
-
-                p_input->e_state =
-                    feed_input_state_idle;
-
-                b_result =
-                    1;
-            }
-        }
-        else if (
-            feed_input_state_unicode
-            == p_input->e_state)
-        {
-            if (0x80u == (c_data & 0xC0u))
-            {
-                p_input->o_event.i_code =
-                    (unsigned long int)(
-                        (
-                            p_input->o_event.i_code << 6u)
-                        | (unsigned long int)(
-                            c_data & 0x3Fu));
-
-                if (
-                    p_input->o_event.i_raw_len
-                    == p_input->i_count)
-                {
-                    /* Notify */
-                    feed_input_lookup(
-                        p_input);
-
-                    feed_input_notify(
-                        p_input,
-                        p_callback,
-                        p_context);
-
-                    p_input->e_state =
-                        feed_input_state_idle;
-                }
-
-                b_result = 1;
-            }
-            else
-            {
-                p_input->e_state =
-                    feed_input_state_idle;
-
-                b_result =
-                    0;
-            }
-        }
-        else if (
-            feed_input_state_escape
-            == p_input->e_state)
-        {
-            if (
-                '[' == c_data)
-            {
-                p_input->e_state =
-                    feed_input_state_escape_csi;
-
-                b_result =
-                    1;
-            }
-            else if (
-                (
-                    'O' == c_data)
-                || (
-                    'N' == c_data))
-            {
-                p_input->e_state =
-                    feed_input_state_escape_ssx;
-
-                b_result =
-                    1;
-            }
-            else
-            {
-                /* Lookup for a key */
-                p_input->o_event.i_code =
-                    0x80000000ul;
-
-                feed_input_lookup(
-                    p_input);
-
-                /* Notify */
-                feed_input_notify(
-                    p_input,
-                    p_callback,
-                    p_context);
-
-                p_input->e_state =
-                    feed_input_state_idle;
-
-                b_result =
-                    1;
-            }
-        }
-        else if (
-            feed_input_state_escape_csi
-            == p_input->e_state)
-        {
-            if (0x40u <= c_data)
-            {
-                p_input->o_event.i_code =
-                    0x80000000ul;
-
-                /* Lookup for a key */
-                feed_input_lookup(
-                    p_input);
-
-                /* Notify */
-                feed_input_notify(
-                    p_input,
-                    p_callback,
-                    p_context);
-
-                p_input->e_state =
-                    feed_input_state_idle;
-
-                b_result =
-                    1;
-            }
-            else
-            {
-                b_result =
-                    1;
-            }
-        }
-        else if (
-            feed_input_state_escape_ssx
-            == p_input->e_state)
-        {
-            p_input->o_event.i_code =
-                0x80000000ul;
-
-            /* Lookup for a key */
-            feed_input_lookup(
-                p_input);
-
-            /* Notify */
-            feed_input_notify(
-                p_input,
-                p_callback,
-                p_context);
-
             p_input->e_state =
-                feed_input_state_idle;
+                feed_input_state_unicode;
+
+            p_input->o_event.i_code =
+                (unsigned long int)(
+                    c_data & 0x1Fu);
+
+            p_input->i_count =
+                2u;
+
+            b_result =
+                1;
+        }
+        else if (0xE0u == (c_data & 0xF0u))
+        {
+            p_input->e_state =
+                feed_input_state_unicode;
+
+            p_input->o_event.i_code =
+                (unsigned long int)(
+                    c_data & 0x0Fu);
+
+            p_input->i_count =
+                3u;
+
+            b_result =
+                1;
+        }
+        else if (0xF0u == (c_data & 0xF8u))
+        {
+            p_input->e_state =
+                feed_input_state_unicode;
+
+            p_input->o_event.i_code =
+                (unsigned long int)(
+                    c_data & 0x07u);
+
+            p_input->i_count =
+                4u;
 
             b_result =
                 1;
@@ -478,6 +322,286 @@ feed_input_write(
             b_result =
                 0;
         }
+    }
+    else if (27u == c_data)
+    {
+        p_input->e_state =
+            feed_input_state_escape;
+
+        b_result =
+            1;
+    }
+    else
+    {
+        p_input->o_event.i_code =
+            (unsigned long int)(
+                c_data);
+
+        feed_input_notify(
+            p_input);
+
+        b_result =
+            1;
+    }
+
+    return
+        b_result;
+
+}
+
+static
+char
+feed_input_process_unicode_state(
+    struct feed_input * const
+        p_input,
+    unsigned char const
+        c_data)
+{
+    char
+        b_result;
+
+    if (0x80u == (c_data & 0xC0u))
+    {
+        p_input->o_event.i_code =
+            (unsigned long int)(
+                (
+                    p_input->o_event.i_code << 6u)
+                | (unsigned long int)(
+                    c_data & 0x3Fu));
+
+        if (
+            p_input->o_event.i_raw_len
+            == p_input->i_count)
+        {
+            /* Notify */
+            feed_input_notify(
+                p_input);
+        }
+
+        b_result = 1;
+    }
+    else
+    {
+        p_input->e_state =
+            feed_input_state_idle;
+
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+}
+
+static
+char
+feed_input_process_escape_state(
+    struct feed_input * const
+        p_input,
+    unsigned char const
+        c_data)
+{
+    char
+        b_result;
+
+    if (
+        '[' == c_data)
+    {
+        p_input->e_state =
+            feed_input_state_escape_csi;
+
+        b_result =
+            1;
+    }
+    else if (
+        (
+            'O' == c_data)
+        || (
+            'N' == c_data))
+    {
+        p_input->e_state =
+            feed_input_state_escape_ssx;
+
+        b_result =
+            1;
+    }
+    else
+    {
+        /* Lookup for a key */
+        p_input->o_event.i_code =
+            FEED_EVENT_KEY_FLAG;
+
+        /* Notify */
+        feed_input_notify(
+            p_input);
+
+        b_result =
+            1;
+    }
+
+    return
+        b_result;
+
+}
+
+static
+char
+feed_input_process_csi_state(
+    struct feed_input * const
+        p_input,
+    unsigned char const
+        c_data)
+{
+    char
+        b_result;
+
+    if (0x40u <= c_data)
+    {
+        p_input->o_event.i_code =
+            FEED_EVENT_KEY_FLAG;
+
+        /* Notify */
+        feed_input_notify(
+            p_input);
+
+        b_result =
+            1;
+    }
+    else
+    {
+        b_result =
+            1;
+    }
+
+    return
+        b_result;
+
+}
+
+
+static
+char
+feed_input_process_ssx_state(
+    struct feed_input * const
+        p_input,
+    unsigned char const
+        c_data)
+{
+    char
+        b_result;
+
+    (void)(
+        c_data);
+
+    p_input->o_event.i_code =
+        FEED_EVENT_KEY_FLAG;
+
+    /* Notify */
+    feed_input_notify(
+        p_input);
+
+    b_result =
+        1;
+
+    return
+        b_result;
+
+}
+
+static
+char
+feed_input_process_data(
+    struct feed_input * const
+        p_input,
+    unsigned char const
+        c_data)
+{
+    char
+        b_result;
+
+    if (
+        feed_input_state_idle
+        == p_input->e_state)
+    {
+        b_result =
+            feed_input_process_idle_state(
+                p_input,
+                c_data);
+    }
+    else if (
+        feed_input_state_unicode
+        == p_input->e_state)
+    {
+        b_result =
+            feed_input_process_unicode_state(
+                p_input,
+                c_data);
+    }
+    else if (
+        feed_input_state_escape
+        == p_input->e_state)
+    {
+        b_result =
+            feed_input_process_escape_state(
+                p_input,
+                c_data);
+    }
+    else if (
+        feed_input_state_escape_csi
+        == p_input->e_state)
+    {
+        b_result =
+            feed_input_process_csi_state(
+                p_input,
+                c_data);
+    }
+    else if (
+        feed_input_state_escape_ssx
+        == p_input->e_state)
+    {
+        b_result =
+            feed_input_process_ssx_state(
+                p_input,
+                c_data);
+    }
+    else
+    {
+        p_input->e_state =
+            feed_input_state_idle;
+
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+}
+
+char
+feed_input_write(
+    struct feed_input * const
+        p_input,
+    unsigned char const
+        c_data)
+{
+    char
+        b_result;
+
+    /* Store into raw */
+    b_result =
+        feed_input_store_data(
+            p_input,
+            c_data);
+
+    if (
+        b_result)
+    {
+        b_result =
+            feed_input_process_data(
+                p_input,
+                c_data);
     }
 
     return
@@ -515,14 +639,14 @@ feed_input_print(
             g_feed_input_ctrl_table[
                 p_event->i_code]);
     }
-    else if (p_event->i_code < 0x80000000ul)
+    else if (p_event->i_code < FEED_EVENT_KEY_FLAG)
     {
         feed_buf_write_character_array(
             p_buf,
             p_event->a_raw,
             p_event->i_raw_len);
     }
-    else if (0x80000000ul == p_event->i_code)
+    else if (FEED_EVENT_KEY_FLAG == p_event->i_code)
     {
         /* code that has no key equivalent */
         if ((2u == p_event->i_raw_len)
@@ -574,7 +698,7 @@ feed_input_print(
             }
         }
     }
-    else if (0x80000000ul & p_event->i_code)
+    else if (FEED_EVENT_KEY_FLAG & p_event->i_code)
     {
         feed_keys_print(
             p_event->i_code,

@@ -65,7 +65,14 @@ struct feed_event
 struct feed_input *
 feed_input_create(
     struct feed_client * const
-        p_client);
+        p_client,
+    void (* const p_callback)(
+        void * const
+            p_context,
+        struct feed_event const * const
+            p_event),
+    void * const
+        p_context);
 
 void
 feed_input_destroy(
@@ -77,14 +84,7 @@ feed_input_write(
     struct feed_input * const
         p_input,
     unsigned char const
-        c_data,
-    void (* const p_event)(
-        void * const
-            p_context,
-        struct feed_event const * const
-            p_event),
-    void * const
-        p_context);
+        c_data);
 
 void
 feed_input_print(

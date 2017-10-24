@@ -1143,9 +1143,9 @@ feed_tty_get_window_size(
     struct feed_tty * const
         p_tty,
     int * const
-        p_width,
+        p_rows,
     int * const
-        p_height)
+        p_columns)
 {
     char
         b_result;
@@ -1170,11 +1170,11 @@ feed_tty_get_window_size(
         0 <= i_result)
     {
         *(
-            p_width) =
+            p_columns) =
             o_winsize.ws_col;
 
         *(
-            p_height) =
+            p_rows) =
             o_winsize.ws_row;
 
         b_result =
@@ -1241,11 +1241,11 @@ feed_tty_get_window_size(
                         b_result)
                     {
                         *(
-                            p_width) =
+                            p_columns) =
                             i_last_col;
 
                         *(
-                            p_height) =
+                            p_rows) =
                             i_last_row;
                     }
                 }
