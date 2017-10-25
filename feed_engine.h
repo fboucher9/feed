@@ -38,11 +38,7 @@ struct feed_engine_descriptor
         void * const
             p_application_context,
         unsigned char * const
-            p_data,
-        unsigned int const
-            i_count,
-        unsigned int * const
-            p_actual);
+            p_data);
 
     /* Request application to refresh the display by writing to output device */
     /* Display of prompt and refresh of lines */
@@ -89,21 +85,35 @@ feed_engine_create(
 
 void
 feed_engine_destroy(
-    struct feed_client * const
-        p_client,
     struct feed_engine * const
         p_engine);
 
 char
 feed_engine_set_prompt(
-    struct feed_client * const
-        p_client,
     struct feed_engine * const
         p_engine,
     unsigned char const * const
         p_prompt,
     unsigned int const
         i_prompt_length);
+
+char
+feed_engine_set_text(
+    struct feed_engine * const
+        p_engine,
+    unsigned char const * const
+        p_data,
+    unsigned int const
+        i_count);
+
+char
+feed_engine_add_completion(
+    struct feed_engine * const
+        p_engine,
+    unsigned char const * const
+        p_data,
+    unsigned int const
+        i_count);
 
 char
 feed_engine_write(

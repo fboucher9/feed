@@ -94,6 +94,11 @@ struct feed_body_line
         o_chars;
 
     /* Number of characters */
+    unsigned int
+        i_char_count;
+
+    unsigned int
+        a_padding[3u];
 
 }; /* struct feed_body_line */
 
@@ -110,6 +115,8 @@ struct feed_body_text
         o_last_event;
 
     /* Number of lines */
+    unsigned int
+        i_line_count;
 
     /* Cursor */
     unsigned int
@@ -117,6 +124,9 @@ struct feed_body_text
 
     unsigned int
         i_cursor_char_index;
+
+    unsigned int
+        a_padding[1u];
 
 }; /* struct feed_body_text */
 
@@ -320,6 +330,9 @@ feed_body_line_init(
         &(
             p_body_line->o_chars));
 
+    p_body_line->i_char_count =
+        0u;
+
 }
 
 static
@@ -470,6 +483,8 @@ feed_body_line_write_event(
                 p_body_char->o_list),
             &(
                 p_body_line->o_chars));
+
+        p_body_line->i_char_count ++;
     }
 }
 
@@ -489,11 +504,36 @@ feed_body_text_init(
         &(
             p_body_text->o_lines));
 
+    p_body_text->i_line_count =
+        0;
+
     p_body_text->i_cursor_line_index =
         0;
 
     p_body_text->i_cursor_char_index =
         0;
+
+    {
+        struct feed_body_line *
+            p_body_line;
+
+        /* Create a line */
+        p_body_line =
+            feed_body_line_create(
+                p_client);
+
+        /* Store the line into the list */
+        if (p_body_line)
+        {
+            feed_list_join(
+                &(
+                    p_body_line->o_list),
+                &(
+                    p_body_text->o_lines));
+
+            p_body_text->i_line_count ++;
+        }
+    }
 
 }
 
@@ -614,18 +654,19 @@ feed_body_text_write_event(
     struct feed_event const * const
         p_event)
 {
-    struct feed_client *
-        p_client;
-
-    p_client =
-        p_body_text->p_client;
-
+#if 0
     /* Store the character into the body */
     if (p_body_text->o_lines.p_next
         == &(p_body_text->o_lines))
     {
+        struct feed_client *
+            p_client;
+
         struct feed_body_line *
             p_body_line;
+
+        p_client =
+            p_body_text->p_client;
 
         /* Create a line */
         p_body_line =
@@ -642,6 +683,7 @@ feed_body_text_write_event(
                     p_body_text->o_lines));
         }
     }
+#endif
 
     /* Get last line */
     if (p_body_text->o_lines.p_prev
@@ -726,6 +768,9 @@ feed_body_text_refresh(
         i_width;
 
     unsigned int
+        i_height;
+
+    unsigned int
         i_cursor_visible_x;
 
     unsigned int
@@ -735,6 +780,9 @@ feed_body_text_refresh(
         i_screen_height);
 
     i_width =
+        0u;
+
+    i_height =
         0u;
 
     i_cursor_visible_x =
@@ -755,9 +803,6 @@ feed_body_text_refresh(
         struct feed_list *
             p_char_iterator;
 
-        /* Return to home position */
-        printf("\r");
-
         /* For all lines in body text */
         p_line_iterator =
             p_body_text->o_lines.p_next;
@@ -775,6 +820,27 @@ feed_body_text_refresh(
                     p_line_iterator);
 
             /* If line is within refresh window */
+
+            /* Return to home position */
+            printf("\r");
+
+            i_width = 0;
+
+            if (0u == i_height)
+            {
+                /* Draw a prompt on first line */
+                printf("prompt$ ");
+
+                i_width += 8;
+
+                i_cursor_visible_x =
+                    i_width;
+            }
+            else
+            {
+                printf("\n");
+            }
+
 
             /* For all chars in line */
             p_char_iterator =
@@ -805,7 +871,7 @@ feed_body_text_refresh(
 
                 if (i_cursor_char_iterator < p_body_text->i_cursor_char_index)
                 {
-                    i_cursor_visible_x += p_body_char->i_visible_length;
+                    i_cursor_visible_x = i_width;
                 }
 
                 i_cursor_char_iterator ++;
@@ -814,12 +880,14 @@ feed_body_text_refresh(
                     p_char_iterator->p_next;
             }
 
+            /* Erase to end-of-line */
+            printf("\033[0K");
+
+            i_height ++;
+
             p_line_iterator =
                 p_line_iterator->p_next;
         }
-
-        /* Erase to end-of-line */
-        printf("\033[0K");
 
         /* Draw status line */
         printf("\r\nstatus: ");
@@ -937,8 +1005,62 @@ feed_main_event_callback(
                     feed_body_char_destroy(
                         p_body_char);
 
-                    p_body_text->i_cursor_char_index --;
+                    if (p_body_text->i_cursor_char_index)
+                    {
+                        p_body_text->i_cursor_char_index --;
+                    }
+
+                    if (p_body_line->i_char_count)
+                    {
+                        p_body_line->i_char_count --;
+                    }
                 }
+            }
+        }
+        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_HOME) == p_event->i_code)
+        {
+            p_body_text->i_cursor_char_index =
+                0;
+        }
+        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_END) == p_event->i_code)
+        {
+            struct feed_body_line *
+                p_body_line;
+
+            /* Find last line */
+            if (p_body_text->o_lines.p_prev !=
+                &(p_body_text->o_lines))
+            {
+                p_body_line =
+                    (struct feed_body_line *)(
+                        p_body_text->o_lines.p_prev);
+
+                p_body_text->i_cursor_char_index =
+                    p_body_line->i_char_count;
+
+#if 0
+                struct feed_list *
+                    p_iterator;
+
+                p_body_text->i_cursor_char_index =
+                    0;
+
+                    p_iterator =
+                        p_body_line->o_chars.p_next;
+
+                    while (
+                        p_iterator
+                        != &(
+                            p_body_line->o_chars))
+                    {
+                        p_body_text->i_cursor_char_index ++;
+
+                        p_iterator =
+                            p_iterator->p_next;
+                    }
+                }
+#endif
+
             }
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_LEFT) == p_event->i_code)
@@ -1288,6 +1410,11 @@ feed_main(
 
                 /* Reserve an extra line on screen */
                 printf("\r\n\033[A");
+
+                feed_body_text_refresh(
+                    p_main_context->p_body_text,
+                    p_main_context->i_wy,
+                    p_main_context->i_wx);
 
                 p_input =
                     feed_input_create(
