@@ -15,14 +15,10 @@ Description:
 
 #define INC_FEED_HEAP_H
 
-struct feed_client;
-
 struct feed_heap;
 
 struct feed_heap *
-feed_heap_create(
-    struct feed_client * const
-        p_client);
+feed_heap_create(void);
 
 void
 feed_heap_destroy(

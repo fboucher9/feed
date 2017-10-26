@@ -8,9 +8,6 @@
 
 struct feed_heap
 {
-    struct feed_client *
-        p_client;
-
     signed long int
         i_leak_count;
 
@@ -29,9 +26,7 @@ struct feed_heap
 };
 
 struct feed_heap *
-feed_heap_create(
-    struct feed_client * const
-        p_client)
+feed_heap_create(void)
 {
     struct feed_heap *
         p_heap;
@@ -45,12 +40,6 @@ feed_heap_create(
     if (
         p_heap)
     {
-        p_heap->p_client =
-            p_client;
-
-        p_client->p_heap =
-            p_heap;
-
         p_heap->i_leak_count =
             0l;
 
@@ -92,10 +81,6 @@ feed_heap_destroy(
             stderr,
             "*** no memory leaks ***\n");
     }
-
-    p_heap->p_client->p_heap =
-        (struct feed_heap *)(
-            0);
 
     free(
         (void *)(

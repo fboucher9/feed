@@ -117,8 +117,6 @@ feed_engine_add_completion(
 
 char
 feed_engine_write(
-    struct feed_client * const
-        p_client,
     struct feed_engine * const
         p_engine,
     struct feed_event * const

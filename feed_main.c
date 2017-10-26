@@ -1120,8 +1120,10 @@ feed_main(
         p_main_context->p_client);
 
     p_main_context->p_heap =
-        feed_heap_create(
-            p_main_context->p_client);
+        feed_heap_create();
+
+    p_main_context->p_client->p_heap =
+        p_main_context->p_heap;
 
     p_main_context->p_body_text =
         feed_body_text_create(

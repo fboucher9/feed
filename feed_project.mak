@@ -102,7 +102,8 @@ FEED_SRCS = \
     $(FEED_DST_PATH)/_obj_feed_keys.o \
     $(FEED_DST_PATH)/_obj_feed_input.o \
     $(FEED_DST_PATH)/_obj_feed_list.o \
-    $(FEED_DST_PATH)/_obj_feed_esc.o
+    $(FEED_DST_PATH)/_obj_feed_esc.o \
+    $(FEED_DST_PATH)/_obj_feed.o
 
 # Default target
 .PHONY: all
