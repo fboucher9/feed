@@ -1,3 +1,15 @@
+/* See LICENSE for license details */
+
+/*
+
+Module: feed.c
+
+Description:
+
+    Implementation of feed library API.
+
+*/
+
 #include "feed_os.h"
 
 #include "feed.h"
@@ -24,11 +36,11 @@ struct feed_handle
 
     /* -- */
 
-    struct feed_body_text *
-        p_body_text;
-
     unsigned char *
         p_prompt;
+
+    void *
+        a_padding_void[1u];
 
     /* -- */
 
@@ -38,27 +50,10 @@ struct feed_handle
     struct feed_client
         o_client;
 
-    struct feed_tty
-        o_tty;
-
     /* -- */
 
     unsigned int
         i_prompt_len;
-
-    unsigned int
-        i_ocx;
-
-    unsigned int
-        i_ocy;
-
-    unsigned int
-        i_wx;
-
-    /* -- */
-
-    unsigned int
-        i_wy;
 
     unsigned int
         a_padding_int[3u];
@@ -66,7 +61,7 @@ struct feed_handle
     /* -- */
 
     char
-        b_more;
+        b_started;
 
     unsigned char
         a_padding[7u];
@@ -110,6 +105,9 @@ feed_init(
         *(
             p_feed_descriptor);
 
+    p_this->b_started =
+        0;
+
     b_result =
         1;
 
@@ -139,16 +137,16 @@ feed_cleanup(
             0u;
     }
 
-    feed_client_cleanup(
-        p_this->p_client);
+    if (
+        p_this->p_client)
+    {
+        feed_client_cleanup(
+            p_this->p_client);
 
-    p_this->p_client =
-        (struct feed_client *)(
-            0);
-
-    p_this->p_heap =
-        (struct feed_heap *)(
-            0);
+        p_this->p_client =
+            (struct feed_client *)(
+                0);
+    }
 
 } /* feed_cleanup() */
 
@@ -217,18 +215,30 @@ feed_destroy(
     struct feed_handle * const
         p_this)
 {
-    struct feed_heap *
-        p_heap;
+    if (
+        p_this)
+    {
+        struct feed_heap *
+            p_heap;
 
-    p_heap =
-        p_this->p_heap;
+        p_heap =
+            p_this->p_heap;
 
-    feed_cleanup(
-        p_this);
+        if (
+            p_heap)
+        {
+            feed_cleanup(
+                p_this);
 
-    feed_heap_free(
-        p_heap,
-        p_this);
+            p_this->p_heap =
+                (struct feed_heap *)(
+                    0);
+
+            feed_heap_free(
+                p_heap,
+                p_this);
+        }
+    }
 
 } /* feed_destroy() */
 
@@ -304,11 +314,35 @@ feed_start(
     struct feed_handle * const
         p_this)
 {
-    (void)(
-        p_this);
+    int
+        i_result;
+
+    if (
+        p_this)
+    {
+        if (
+            !(p_this->b_started))
+        {
+            p_this->b_started =
+                1;
+
+            i_result =
+                0;
+        }
+        else
+        {
+            i_result =
+                -1;
+        }
+    }
+    else
+    {
+        i_result =
+            -1;
+    }
 
     return
-        -1;
+        i_result;
 
 } /* feed_start() */
 
