@@ -18,6 +18,8 @@
 
 #include "feed_list.h"
 
+#include "feed_glyph.h"
+
 static
 void
 #if defined(__GNUC__)
@@ -49,37 +51,6 @@ feed_dbg_print(
     va_end(
         o_args);
 }
-
-
-struct feed_glyph
-{
-    struct feed_list
-        o_list;
-
-    struct feed_client *
-        p_client;
-
-    /* Raw representation of character */
-    unsigned char
-        a_raw[7u];
-
-    /* Length in bytes of raw character */
-    unsigned char
-        i_raw_length;
-
-    /* Visible representation of character */
-    unsigned char
-        a_visible[30u];
-
-    /* Length in bytes of visible character */
-    unsigned char
-        i_visible_length;
-
-    /* Width in columns of visible character */
-    unsigned char
-        i_visible_width;
-
-}; /* struct feed_glyph */
 
 
 struct feed_line
@@ -132,187 +103,6 @@ struct feed_text
         a_padding[1u];
 
 }; /* struct feed_text */
-
-
-static
-void
-feed_glyph_init(
-    struct feed_glyph * const
-        p_glyph,
-    struct feed_client * const
-        p_client)
-{
-    feed_list_init(
-        &(
-            p_glyph->o_list));
-
-    p_glyph->p_client =
-        p_client;
-
-    p_glyph->i_raw_length =
-        0u;
-
-    p_glyph->i_visible_length =
-        0u;
-
-    p_glyph->i_visible_width =
-        0u;
-
-} /* feed_glyph_init() */
-
-
-static
-void
-feed_glyph_cleanup(
-    struct feed_glyph * const
-        p_glyph)
-{
-    feed_list_join(
-        &(
-            p_glyph->o_list),
-        &(
-            p_glyph->o_list));
-
-} /* feed_glyph_cleanup() */
-
-
-static
-struct feed_glyph *
-feed_glyph_create(
-    struct feed_client * const
-        p_client)
-{
-    struct feed_glyph *
-        p_glyph;
-
-    struct feed_heap *
-        p_heap;
-
-    p_heap =
-        feed_client_get_heap(
-            p_client);
-
-    p_glyph =
-        (struct feed_glyph *)(
-            feed_heap_alloc(
-                p_heap,
-                sizeof(
-                    struct feed_glyph)));
-
-    if (
-        p_glyph)
-    {
-        feed_glyph_init(
-            p_glyph,
-            p_client);
-    }
-
-    return
-        p_glyph;
-
-}
-
-
-static
-void
-feed_glyph_destroy(
-    struct feed_glyph * const
-        p_glyph)
-{
-    struct feed_client *
-        p_client;
-
-    struct feed_heap *
-        p_heap;
-
-    p_client =
-        p_glyph->p_client;
-
-    p_heap =
-        feed_client_get_heap(
-            p_client);
-
-    feed_glyph_cleanup(
-        p_glyph);
-
-    feed_heap_free(
-        p_heap,
-        (void *)(
-            p_glyph));
-
-}
-
-
-static
-void
-feed_glyph_write_event(
-    struct feed_glyph * const
-        p_glyph,
-    struct feed_event const * const
-        p_event)
-{
-    memcpy(
-        p_glyph->a_raw,
-        p_event->a_raw,
-        p_event->i_raw_len);
-
-    p_glyph->i_raw_length =
-        p_event->i_raw_len;
-
-    if (
-        FEED_EVENT_KEY_FLAG & p_event->i_code)
-    {
-        struct feed_buf
-            o_buf;
-
-        memset(
-            p_glyph->a_visible,
-            0u,
-            sizeof(
-                p_glyph->a_visible));
-
-        p_glyph->a_visible[0u] =
-            '<';
-
-        feed_buf_init(
-            &(
-                o_buf),
-            p_glyph->a_visible + 1u,
-            sizeof(
-                p_glyph->a_visible) - 1u);
-
-        feed_input_print(
-            p_event,
-            &(
-                o_buf));
-
-        p_glyph->a_visible[1u + o_buf.i_len] =
-            '>';
-
-        p_glyph->i_visible_length =
-            (unsigned char)(
-                o_buf.i_len + 2u);
-
-        p_glyph->i_visible_width =
-            (unsigned char)(
-                o_buf.i_len + 2u);
-    }
-    else
-    {
-        memcpy(
-            p_glyph->a_visible,
-            p_event->a_raw,
-            p_event->i_raw_len);
-
-        p_glyph->i_visible_length =
-            p_event->i_raw_len;
-
-        p_glyph->i_visible_width =
-            1u;
-
-    }
-
-}
 
 
 static
@@ -485,18 +275,15 @@ feed_line_write_event(
         p_line->p_client;
 
     /* Create a character */
+    /* Set char information */
     p_glyph =
         feed_glyph_create(
-            p_client);
+            p_client,
+            p_event);
 
     if (
         p_glyph)
     {
-        /* Set char information */
-        feed_glyph_write_event(
-            p_glyph,
-            p_event);
-
         /* Store the char into the list */
         feed_list_join(
             &(

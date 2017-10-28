@@ -1,5 +1,6 @@
 # feed
 
+
 Editor library for command-line utilities
 
 
@@ -19,6 +20,7 @@ or text based applications.
 - Detect terminal window size
 - Use callbacks for terminal input and output
 - Use callbacks for custom completion
+- Customizable prompt
 
 
 ## Install
