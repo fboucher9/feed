@@ -289,6 +289,10 @@ feed_prompt(
             p_this->i_prompt_len =
                 i_data_length;
 
+            /* Pass each character into input parser */
+
+            /* Store produced events into a character list */
+
             i_result =
                 0;
         }

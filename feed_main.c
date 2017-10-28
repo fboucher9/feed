@@ -51,7 +51,7 @@ feed_dbg_print(
 }
 
 
-struct feed_body_char
+struct feed_glyph
 {
     struct feed_list
         o_list;
@@ -79,10 +79,10 @@ struct feed_body_char
     unsigned char
         i_visible_width;
 
-}; /* struct feed_body_char */
+}; /* struct feed_glyph */
 
 
-struct feed_body_line
+struct feed_line
 {
     struct feed_list
         o_list;
@@ -91,25 +91,28 @@ struct feed_body_line
         p_client;
 
     struct feed_list
-        o_chars;
+        o_glyphs;
 
     /* Number of characters */
     unsigned int
-        i_char_count;
+        i_glyph_count;
 
     unsigned int
         a_padding[3u];
 
-}; /* struct feed_body_line */
+}; /* struct feed_line */
 
 
-struct feed_body_text
+struct feed_text
 {
     struct feed_client *
         p_client;
 
     struct feed_list
         o_lines;
+
+    struct feed_line *
+        p_prompt;
 
     struct feed_event
         o_last_event;
@@ -123,64 +126,64 @@ struct feed_body_text
         i_cursor_line_index;
 
     unsigned int
-        i_cursor_char_index;
+        i_cursor_glyph_index;
 
     unsigned int
         a_padding[1u];
 
-}; /* struct feed_body_text */
+}; /* struct feed_text */
 
 
 static
 void
-feed_body_char_init(
-    struct feed_body_char * const
-        p_body_char,
+feed_glyph_init(
+    struct feed_glyph * const
+        p_glyph,
     struct feed_client * const
         p_client)
 {
     feed_list_init(
         &(
-            p_body_char->o_list));
+            p_glyph->o_list));
 
-    p_body_char->p_client =
+    p_glyph->p_client =
         p_client;
 
-    p_body_char->i_raw_length =
+    p_glyph->i_raw_length =
         0u;
 
-    p_body_char->i_visible_length =
+    p_glyph->i_visible_length =
         0u;
 
-    p_body_char->i_visible_width =
+    p_glyph->i_visible_width =
         0u;
 
-} /* feed_body_char_init() */
+} /* feed_glyph_init() */
 
 
 static
 void
-feed_body_char_cleanup(
-    struct feed_body_char * const
-        p_body_char)
+feed_glyph_cleanup(
+    struct feed_glyph * const
+        p_glyph)
 {
     feed_list_join(
         &(
-            p_body_char->o_list),
+            p_glyph->o_list),
         &(
-            p_body_char->o_list));
+            p_glyph->o_list));
 
-} /* feed_body_char_cleanup() */
+} /* feed_glyph_cleanup() */
 
 
 static
-struct feed_body_char *
-feed_body_char_create(
+struct feed_glyph *
+feed_glyph_create(
     struct feed_client * const
         p_client)
 {
-    struct feed_body_char *
-        p_body_char;
+    struct feed_glyph *
+        p_glyph;
 
     struct feed_heap *
         p_heap;
@@ -189,32 +192,32 @@ feed_body_char_create(
         feed_client_get_heap(
             p_client);
 
-    p_body_char =
-        (struct feed_body_char *)(
+    p_glyph =
+        (struct feed_glyph *)(
             feed_heap_alloc(
                 p_heap,
                 sizeof(
-                    struct feed_body_char)));
+                    struct feed_glyph)));
 
     if (
-        p_body_char)
+        p_glyph)
     {
-        feed_body_char_init(
-            p_body_char,
+        feed_glyph_init(
+            p_glyph,
             p_client);
     }
 
     return
-        p_body_char;
+        p_glyph;
 
 }
 
 
 static
 void
-feed_body_char_destroy(
-    struct feed_body_char * const
-        p_body_char)
+feed_glyph_destroy(
+    struct feed_glyph * const
+        p_glyph)
 {
     struct feed_client *
         p_client;
@@ -223,37 +226,37 @@ feed_body_char_destroy(
         p_heap;
 
     p_client =
-        p_body_char->p_client;
+        p_glyph->p_client;
 
     p_heap =
         feed_client_get_heap(
             p_client);
 
-    feed_body_char_cleanup(
-        p_body_char);
+    feed_glyph_cleanup(
+        p_glyph);
 
     feed_heap_free(
         p_heap,
         (void *)(
-            p_body_char));
+            p_glyph));
 
 }
 
 
 static
 void
-feed_body_char_write_event(
-    struct feed_body_char * const
-        p_body_char,
+feed_glyph_write_event(
+    struct feed_glyph * const
+        p_glyph,
     struct feed_event const * const
         p_event)
 {
     memcpy(
-        p_body_char->a_raw,
+        p_glyph->a_raw,
         p_event->a_raw,
         p_event->i_raw_len);
 
-    p_body_char->i_raw_length =
+    p_glyph->i_raw_length =
         p_event->i_raw_len;
 
     if (
@@ -263,83 +266,84 @@ feed_body_char_write_event(
             o_buf;
 
         memset(
-            p_body_char->a_visible,
+            p_glyph->a_visible,
             0u,
             sizeof(
-                p_body_char->a_visible));
+                p_glyph->a_visible));
 
-        p_body_char->a_visible[0u] =
+        p_glyph->a_visible[0u] =
             '<';
 
         feed_buf_init(
             &(
                 o_buf),
-            p_body_char->a_visible + 1u,
+            p_glyph->a_visible + 1u,
             sizeof(
-                p_body_char->a_visible) - 1u);
+                p_glyph->a_visible) - 1u);
 
         feed_input_print(
             p_event,
             &(
                 o_buf));
 
-        p_body_char->a_visible[1u + o_buf.i_len] =
+        p_glyph->a_visible[1u + o_buf.i_len] =
             '>';
 
-        p_body_char->i_visible_length =
+        p_glyph->i_visible_length =
             (unsigned char)(
                 o_buf.i_len + 2u);
 
-        p_body_char->i_visible_width =
+        p_glyph->i_visible_width =
             (unsigned char)(
                 o_buf.i_len + 2u);
     }
     else
     {
         memcpy(
-            p_body_char->a_visible,
+            p_glyph->a_visible,
             p_event->a_raw,
             p_event->i_raw_len);
 
-        p_body_char->i_visible_length =
+        p_glyph->i_visible_length =
             p_event->i_raw_len;
-    }
 
-    p_body_char->i_visible_width =
-        1u;
+        p_glyph->i_visible_width =
+            1u;
+
+    }
 
 }
 
 
 static
 void
-feed_body_line_init(
-    struct feed_body_line * const
-        p_body_line,
+feed_line_init(
+    struct feed_line * const
+        p_line,
     struct feed_client * const
         p_client)
 {
     feed_list_init(
         &(
-            p_body_line->o_list));
+            p_line->o_list));
 
-    p_body_line->p_client =
+    p_line->p_client =
         p_client;
 
     feed_list_init(
         &(
-            p_body_line->o_chars));
+            p_line->o_glyphs));
 
-    p_body_line->i_char_count =
+    p_line->i_glyph_count =
         0u;
 
 }
 
 static
 void
-feed_body_line_cleanup(
-    struct feed_body_line * const
-        p_body_line)
+feed_line_reset(
+    struct feed_line * const
+        p_line)
 {
     struct feed_list *
         p_iterator;
@@ -347,47 +351,63 @@ feed_body_line_cleanup(
     struct feed_list *
         p_next;
 
-    struct feed_body_char *
-        p_body_char;
-
-    feed_list_join(
-        &(
-            p_body_line->o_list),
-        &(
-            p_body_line->o_list));
+    struct feed_glyph *
+        p_glyph;
 
     /* Free all characters... */
     p_iterator =
-        p_body_line->o_chars.p_next;
+        p_line->o_glyphs.p_next;
 
     while (
-        p_iterator != &(p_body_line->o_chars))
+        p_iterator != &(p_line->o_glyphs))
     {
         p_next =
             p_iterator->p_next;
 
-        p_body_char =
-            (struct feed_body_char *)(
+        p_glyph =
+            (struct feed_glyph *)(
                 p_iterator);
 
-        feed_body_char_destroy(
-            p_body_char);
+        feed_glyph_destroy(
+            p_glyph);
 
         p_iterator =
             p_next;
 
     }
+
+    p_line->i_glyph_count =
+        0u;
+
+}
+
+static
+void
+feed_line_cleanup(
+    struct feed_line * const
+        p_line)
+{
+    feed_list_join(
+        &(
+            p_line->o_list),
+        &(
+            p_line->o_list));
+
+    /* Free all characters... */
+    feed_line_reset(
+        p_line);
+
 }
 
 
 static
-struct feed_body_line *
-feed_body_line_create(
+struct feed_line *
+feed_line_create(
     struct feed_client * const
         p_client)
 {
-    struct feed_body_line *
-        p_body_line;
+    struct feed_line *
+        p_line;
 
     struct feed_heap *
         p_heap;
@@ -396,32 +416,32 @@ feed_body_line_create(
         feed_client_get_heap(
             p_client);
 
-    p_body_line =
-        (struct feed_body_line *)(
+    p_line =
+        (struct feed_line *)(
             feed_heap_alloc(
                 p_heap,
                 sizeof(
-                    struct feed_body_line)));
+                    struct feed_line)));
 
     if (
-        p_body_line)
+        p_line)
     {
-        feed_body_line_init(
-            p_body_line,
+        feed_line_init(
+            p_line,
             p_client);
     }
 
     return
-        p_body_line;
+        p_line;
 
 }
 
 
 static
 void
-feed_body_line_destroy(
-    struct feed_body_line * const
-        p_body_line)
+feed_line_destroy(
+    struct feed_line * const
+        p_line)
 {
     struct feed_client *
         p_client;
@@ -430,163 +450,207 @@ feed_body_line_destroy(
         p_heap;
 
     p_client =
-        p_body_line->p_client;
+        p_line->p_client;
 
     p_heap =
         feed_client_get_heap(
             p_client);
 
-    feed_body_line_cleanup(
-        p_body_line);
+    feed_line_cleanup(
+        p_line);
 
     feed_heap_free(
         p_heap,
         (void *)(
-            p_body_line));
+            p_line));
 
 }
 
 
 static
 void
-feed_body_line_write_event(
-    struct feed_body_line * const
-        p_body_line,
+feed_line_write_event(
+    struct feed_line * const
+        p_line,
     struct feed_event const * const
         p_event)
 {
     struct feed_client *
         p_client;
 
-    struct feed_body_char *
-        p_body_char;
+    struct feed_glyph *
+        p_glyph;
 
     p_client =
-        p_body_line->p_client;
+        p_line->p_client;
 
     /* Create a character */
-    p_body_char =
-        feed_body_char_create(
+    p_glyph =
+        feed_glyph_create(
             p_client);
 
     if (
-        p_body_char)
+        p_glyph)
     {
         /* Set char information */
-        feed_body_char_write_event(
-            p_body_char,
+        feed_glyph_write_event(
+            p_glyph,
             p_event);
 
         /* Store the char into the list */
         feed_list_join(
             &(
-                p_body_char->o_list),
+                p_glyph->o_list),
             &(
-                p_body_line->o_chars));
+                p_line->o_glyphs));
 
-        p_body_line->i_char_count ++;
+        p_line->i_glyph_count ++;
     }
 }
 
 
 static
-void
-feed_body_text_init(
-    struct feed_body_text * const
-        p_body_text,
+char
+feed_text_init(
+    struct feed_text * const
+        p_text,
     struct feed_client * const
         p_client)
 {
-    p_body_text->p_client =
+    char
+        b_result;
+
+    memset(
+        p_text,
+        0x00u,
+        sizeof(
+            struct feed_text));
+
+    p_text->p_client =
         p_client;
 
     feed_list_init(
         &(
-            p_body_text->o_lines));
+            p_text->o_lines));
 
-    p_body_text->i_line_count =
+    p_text->i_line_count =
         0;
 
-    p_body_text->i_cursor_line_index =
+    p_text->i_cursor_line_index =
         0;
 
-    p_body_text->i_cursor_char_index =
+    p_text->i_cursor_glyph_index =
         0;
+
+    p_text->p_prompt =
+        feed_line_create(
+            p_client);
+
+    if (
+        p_text->p_prompt)
 
     {
-        struct feed_body_line *
-            p_body_line;
+        struct feed_line *
+            p_line;
 
         /* Create a line */
-        p_body_line =
-            feed_body_line_create(
+        p_line =
+            feed_line_create(
                 p_client);
 
         /* Store the line into the list */
-        if (p_body_line)
+        if (p_line)
         {
             feed_list_join(
                 &(
-                    p_body_line->o_list),
+                    p_line->o_list),
                 &(
-                    p_body_text->o_lines));
+                    p_text->o_lines));
 
-            p_body_text->i_line_count ++;
+            p_text->i_line_count ++;
+
+            b_result =
+                1;
+        }
+        else
+        {
+            b_result =
+                0;
         }
     }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
 
 }
 
 
 static
 void
-feed_body_text_cleanup(
-    struct feed_body_text * const
-        p_body_text)
+feed_text_cleanup(
+    struct feed_text * const
+        p_text)
 {
     /* Delete all the lines */
     struct feed_list *
         p_iterator;
 
     p_iterator =
-        p_body_text->o_lines.p_next;
+        p_text->o_lines.p_next;
 
     while (
         p_iterator
         != &(
-            p_body_text->o_lines))
+            p_text->o_lines))
     {
         struct feed_list *
             p_next;
 
-        struct feed_body_line *
-            p_body_line;
+        struct feed_line *
+            p_line;
 
         p_next =
             p_iterator->p_next;
 
-        p_body_line =
-            (struct feed_body_line *)(
+        p_line =
+            (struct feed_line *)(
                 p_iterator);
 
-        feed_body_line_destroy(
-            p_body_line);
+        feed_line_destroy(
+            p_line);
 
         p_iterator =
             p_next;
 
     }
-}
+
+    if (
+        p_text->p_prompt)
+    {
+        feed_line_destroy(
+            p_text->p_prompt);
+
+        p_text->p_prompt =
+            (struct feed_line *)(
+                0);
+    }
+
+} /* feed_text_cleanup() */
 
 
 static
-struct feed_body_text *
-feed_body_text_create(
+struct feed_text *
+feed_text_create(
     struct feed_client * const
         p_client)
 {
-    struct feed_body_text *
-        p_body_text;
+    struct feed_text *
+        p_text;
 
     struct feed_heap *
         p_heap;
@@ -595,32 +659,46 @@ feed_body_text_create(
         feed_client_get_heap(
             p_client);
 
-    p_body_text =
-        (struct feed_body_text *)(
+    p_text =
+        (struct feed_text *)(
             feed_heap_alloc(
                 p_heap,
                 sizeof(
-                    struct feed_body_text)));
+                    struct feed_text)));
 
     if (
-        p_body_text)
+        p_text)
     {
-        feed_body_text_init(
-            p_body_text,
-            p_client);
+        if (
+            feed_text_init(
+                p_text,
+                p_client))
+        {
+        }
+        else
+        {
+            feed_heap_free(
+                p_heap,
+                (void *)(
+                    p_text));
+
+            p_text =
+                (struct feed_text *)(
+                    0);
+        }
     }
 
     return
-        p_body_text;
+        p_text;
 
 }
 
 
 static
 void
-feed_body_text_destroy(
-    struct feed_body_text * const
-        p_body_text)
+feed_text_destroy(
+    struct feed_text * const
+        p_text)
 {
     struct feed_client *
         p_client;
@@ -629,79 +707,191 @@ feed_body_text_destroy(
         p_heap;
 
     p_client =
-        p_body_text->p_client;
+        p_text->p_client;
 
     p_heap =
         feed_client_get_heap(
             p_client);
 
-    feed_body_text_cleanup(
-        p_body_text);
+    feed_text_cleanup(
+        p_text);
 
     feed_heap_free(
         p_heap,
         (void *)(
-            p_body_text));
+            p_text));
 
 }
 
 
 static
 void
-feed_body_text_write_event(
-    struct feed_body_text * const
-        p_body_text,
+feed_text_write_event(
+    struct feed_text * const
+        p_text,
     struct feed_event const * const
         p_event)
 {
 #if 0
     /* Store the character into the body */
-    if (p_body_text->o_lines.p_next
-        == &(p_body_text->o_lines))
+    if (p_text->o_lines.p_next
+        == &(p_text->o_lines))
     {
         struct feed_client *
             p_client;
 
-        struct feed_body_line *
-            p_body_line;
+        struct feed_line *
+            p_line;
 
         p_client =
-            p_body_text->p_client;
+            p_text->p_client;
 
         /* Create a line */
-        p_body_line =
-            feed_body_line_create(
+        p_line =
+            feed_line_create(
                 p_client);
 
         /* Store the line into the list */
-        if (p_body_line)
+        if (p_line)
         {
             feed_list_join(
                 &(
-                    p_body_line->o_list),
+                    p_line->o_list),
                 &(
-                    p_body_text->o_lines));
+                    p_text->o_lines));
         }
     }
 #endif
 
     /* Get last line */
-    if (p_body_text->o_lines.p_prev
-        != &(p_body_text->o_lines))
+    if (p_text->o_lines.p_prev
+        != &(p_text->o_lines))
     {
-        struct feed_body_line *
-            p_body_line;
+        struct feed_line *
+            p_line;
 
-        p_body_line =
-            (struct feed_body_line *)(
-                p_body_text->o_lines.p_prev);
+        p_line =
+            (struct feed_line *)(
+                p_text->o_lines.p_prev);
 
-        feed_body_line_write_event(
-            p_body_line,
+        feed_line_write_event(
+            p_line,
             p_event);
 
-        p_body_text->i_cursor_char_index ++;
+        p_text->i_cursor_glyph_index ++;
     }
+
+}
+
+
+/* Create a char and add to prompt line */
+static
+void
+feed_text_prompt_callback(
+    void * const
+        p_context,
+    struct feed_event const * const
+        p_event)
+{
+    if (
+        p_context)
+    {
+        struct feed_text *
+            p_text;
+
+        p_text =
+            (struct feed_text *)(
+                p_context);
+
+        if (
+            p_text->p_prompt)
+        {
+            feed_line_write_event(
+                p_text->p_prompt,
+                p_event);
+        }
+    }
+
+} /* feed_text_prompt_callback() */
+
+static
+char
+feed_text_prompt(
+    struct feed_text * const
+        p_text,
+    unsigned char const * const
+        p_data,
+    unsigned int const
+        i_data_length)
+{
+    char
+        b_result;
+
+    /* Delete the previous prompt */
+    if (p_text->p_prompt)
+    {
+        struct feed_input *
+            p_input;
+
+        feed_line_reset(
+            p_text->p_prompt);
+
+        p_input =
+            feed_input_create(
+                p_text->p_client,
+                &(
+                    feed_text_prompt_callback),
+                p_text);
+
+        if (
+            p_input)
+        {
+            unsigned int
+                i_data_iterator;
+
+            i_data_iterator =
+                0u;
+
+            b_result =
+                1;
+
+            while (
+                b_result
+                && (
+                    i_data_iterator
+                    < i_data_length))
+            {
+                if (
+                    feed_input_write(
+                        p_input,
+                        p_data[i_data_iterator]))
+                {
+                    i_data_iterator ++;
+                }
+                else
+                {
+                    b_result =
+                        0;
+                }
+            }
+
+            feed_input_destroy(
+                p_input);
+        }
+        else
+        {
+            b_result =
+                0;
+        }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
 
 }
 
@@ -756,9 +946,9 @@ feed_main_print_status(
 
 static
 void
-feed_body_text_refresh(
-    struct feed_body_text * const
-        p_body_text,
+feed_text_refresh(
+    struct feed_text * const
+        p_text,
     unsigned int const
         i_screen_height,
     unsigned int const
@@ -774,7 +964,7 @@ feed_body_text_refresh(
         i_cursor_visible_x;
 
     unsigned int
-        i_cursor_char_iterator;
+        i_cursor_glyph_iterator;
 
     (void)(
         i_screen_height);
@@ -788,7 +978,7 @@ feed_body_text_refresh(
     i_cursor_visible_x =
         0u;
 
-    i_cursor_char_iterator =
+    i_cursor_glyph_iterator =
         0u;
 
     /* Grow size of drawing region */
@@ -801,22 +991,22 @@ feed_body_text_refresh(
             p_line_iterator;
 
         struct feed_list *
-            p_char_iterator;
+            p_glyph_iterator;
 
         /* For all lines in body text */
         p_line_iterator =
-            p_body_text->o_lines.p_next;
+            p_text->o_lines.p_next;
 
         while (
             p_line_iterator
             != &(
-                p_body_text->o_lines))
+                p_text->o_lines))
         {
-            struct feed_body_line *
-                p_body_line;
+            struct feed_line *
+                p_line;
 
-            p_body_line =
-                (struct feed_body_line *)(
+            p_line =
+                (struct feed_line *)(
                     p_line_iterator);
 
             /* If line is within refresh window */
@@ -829,9 +1019,39 @@ feed_body_text_refresh(
             if (0u == i_height)
             {
                 /* Draw a prompt on first line */
+                /*
                 printf("prompt$ ");
+                */
 
-                i_width += 8;
+                p_glyph_iterator =
+                    p_text->p_prompt->o_glyphs.p_next;
+
+                while (
+                    p_glyph_iterator
+                    != &(
+                        p_text->p_prompt->o_glyphs))
+                {
+                    struct feed_glyph const *
+                        p_glyph;
+
+                    p_glyph =
+                        (struct feed_glyph const *)(
+                            p_glyph_iterator);
+
+                    /* If char is within refresh window */
+
+                    if ((i_width + p_glyph->i_visible_width) < i_screen_width)
+                    {
+                        printf("%.*s",
+                            (int)(p_glyph->i_visible_width),
+                            p_glyph->a_visible);
+                    }
+
+                    i_width += p_glyph->i_visible_width;
+
+                    p_glyph_iterator =
+                        p_glyph_iterator->p_next;
+                }
 
                 i_cursor_visible_x =
                     i_width;
@@ -843,41 +1063,41 @@ feed_body_text_refresh(
 
 
             /* For all chars in line */
-            p_char_iterator =
-                p_body_line->o_chars.p_next;
+            p_glyph_iterator =
+                p_line->o_glyphs.p_next;
 
             while (
-                p_char_iterator
+                p_glyph_iterator
                 != &(
-                    p_body_line->o_chars))
+                    p_line->o_glyphs))
             {
-                struct feed_body_char const *
-                    p_body_char;
+                struct feed_glyph const *
+                    p_glyph;
 
-                p_body_char =
-                    (struct feed_body_char const *)(
-                        p_char_iterator);
+                p_glyph =
+                    (struct feed_glyph const *)(
+                        p_glyph_iterator);
 
                 /* If char is within refresh window */
 
-                if ((i_width + p_body_char->i_visible_length) < i_screen_width)
+                if ((i_width + p_glyph->i_visible_width) < i_screen_width)
                 {
                     printf("%.*s",
-                        (int)(p_body_char->i_visible_length),
-                        p_body_char->a_visible);
+                        (int)(p_glyph->i_visible_width),
+                        p_glyph->a_visible);
                 }
 
-                i_width += p_body_char->i_visible_length;
+                i_width += p_glyph->i_visible_width;
 
-                if (i_cursor_char_iterator < p_body_text->i_cursor_char_index)
+                if (i_cursor_glyph_iterator < p_text->i_cursor_glyph_index)
                 {
                     i_cursor_visible_x = i_width;
                 }
 
-                i_cursor_char_iterator ++;
+                i_cursor_glyph_iterator ++;
 
-                p_char_iterator =
-                    p_char_iterator->p_next;
+                p_glyph_iterator =
+                    p_glyph_iterator->p_next;
             }
 
             /* Erase to end-of-line */
@@ -894,7 +1114,7 @@ feed_body_text_refresh(
 
         feed_main_print_status(
             &(
-                p_body_text->o_last_event));
+                p_text->o_last_event));
 
         /* Position the cursor */
         printf("\r\033[A");
@@ -915,8 +1135,8 @@ struct feed_main_context
     struct feed_heap *
         p_heap;
 
-    struct feed_body_text *
-        p_body_text;
+    struct feed_text *
+        p_text;
 
     struct feed_client
         o_client;
@@ -955,8 +1175,8 @@ feed_main_event_callback(
     struct feed_main_context *
         p_main_context;
 
-    struct feed_body_text *
-        p_body_text;
+    struct feed_text *
+        p_text;
 
     p_main_context =
         (struct feed_main_context *)(
@@ -970,90 +1190,90 @@ feed_main_event_callback(
     }
     else
     {
-        p_body_text =
-            p_main_context->p_body_text;
+        p_text =
+            p_main_context->p_text;
 
-        p_body_text->o_last_event =
+        p_text->o_last_event =
             *(
                 p_event);
 
         if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'H') == p_event->i_code)
         {
-            struct feed_body_line *
-                p_body_line;
+            struct feed_line *
+                p_line;
 
-            struct feed_body_char *
-                p_body_char;
+            struct feed_glyph *
+                p_glyph;
 
             /* Find last line */
-            if (p_body_text->o_lines.p_prev !=
-                &(p_body_text->o_lines))
+            if (p_text->o_lines.p_prev !=
+                &(p_text->o_lines))
             {
-                p_body_line =
-                    (struct feed_body_line *)(
-                        p_body_text->o_lines.p_prev);
+                p_line =
+                    (struct feed_line *)(
+                        p_text->o_lines.p_prev);
 
                 /* Find last char */
-                if (p_body_line->o_chars.p_prev !=
-                    &(p_body_line->o_chars))
+                if (p_line->o_glyphs.p_prev !=
+                    &(p_line->o_glyphs))
                 {
                     /* Delete the selected char */
-                    p_body_char =
-                        (struct feed_body_char *)(
-                            p_body_line->o_chars.p_prev);
+                    p_glyph =
+                        (struct feed_glyph *)(
+                            p_line->o_glyphs.p_prev);
 
-                    feed_body_char_destroy(
-                        p_body_char);
+                    feed_glyph_destroy(
+                        p_glyph);
 
-                    if (p_body_text->i_cursor_char_index)
+                    if (p_text->i_cursor_glyph_index)
                     {
-                        p_body_text->i_cursor_char_index --;
+                        p_text->i_cursor_glyph_index --;
                     }
 
-                    if (p_body_line->i_char_count)
+                    if (p_line->i_glyph_count)
                     {
-                        p_body_line->i_char_count --;
+                        p_line->i_glyph_count --;
                     }
                 }
             }
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_HOME) == p_event->i_code)
         {
-            p_body_text->i_cursor_char_index =
+            p_text->i_cursor_glyph_index =
                 0;
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_END) == p_event->i_code)
         {
-            struct feed_body_line *
-                p_body_line;
+            struct feed_line *
+                p_line;
 
             /* Find last line */
-            if (p_body_text->o_lines.p_prev !=
-                &(p_body_text->o_lines))
+            if (p_text->o_lines.p_prev !=
+                &(p_text->o_lines))
             {
-                p_body_line =
-                    (struct feed_body_line *)(
-                        p_body_text->o_lines.p_prev);
+                p_line =
+                    (struct feed_line *)(
+                        p_text->o_lines.p_prev);
 
-                p_body_text->i_cursor_char_index =
-                    p_body_line->i_char_count;
+                p_text->i_cursor_glyph_index =
+                    p_line->i_glyph_count;
 
 #if 0
                 struct feed_list *
                     p_iterator;
 
-                p_body_text->i_cursor_char_index =
+                p_text->i_cursor_glyph_index =
                     0;
 
                     p_iterator =
-                        p_body_line->o_chars.p_next;
+                        p_line->o_glyphs.p_next;
 
                     while (
                         p_iterator
                         != &(
-                            p_body_line->o_chars))
+                            p_line->o_glyphs))
                     {
-                        p_body_text->i_cursor_char_index ++;
+                        p_text->i_cursor_glyph_index ++;
 
                         p_iterator =
                             p_iterator->p_next;
@@ -1065,24 +1285,24 @@ feed_main_event_callback(
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_LEFT) == p_event->i_code)
         {
-            if (p_body_text->i_cursor_char_index)
+            if (p_text->i_cursor_glyph_index)
             {
-                p_body_text->i_cursor_char_index --;
+                p_text->i_cursor_glyph_index --;
             }
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_RIGHT) == p_event->i_code)
         {
-            p_body_text->i_cursor_char_index ++;
+            p_text->i_cursor_glyph_index ++;
         }
         else
         {
-            feed_body_text_write_event(
-                p_body_text,
+            feed_text_write_event(
+                p_text,
                 p_event);
         }
 
-        feed_body_text_refresh(
-            p_body_text,
+        feed_text_refresh(
+            p_text,
             p_main_context->i_wy,
             p_main_context->i_wx);
     }
@@ -1125,9 +1345,22 @@ feed_main(
     p_main_context->p_client->p_heap =
         p_main_context->p_heap;
 
-    p_main_context->p_body_text =
-        feed_body_text_create(
+    p_main_context->p_text =
+        feed_text_create(
             p_main_context->p_client);
+
+    {
+        static unsigned char const s_prompt[] =
+        {
+            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' '
+        };
+
+        feed_text_prompt(
+            p_main_context->p_text,
+            s_prompt,
+            sizeof(
+                s_prompt));
+    }
 
     if (
         feed_tty_init(
@@ -1413,8 +1646,8 @@ feed_main(
                 /* Reserve an extra line on screen */
                 printf("\r\n\033[A");
 
-                feed_body_text_refresh(
-                    p_main_context->p_body_text,
+                feed_text_refresh(
+                    p_main_context->p_text,
                     p_main_context->i_wy,
                     p_main_context->i_wx);
 
@@ -1484,8 +1717,8 @@ feed_main(
             "init error!");
     }
 
-    feed_body_text_destroy(
-        p_main_context->p_body_text);
+    feed_text_destroy(
+        p_main_context->p_text);
 
     feed_heap_destroy(
         p_main_context->p_heap);
