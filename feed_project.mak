@@ -104,6 +104,7 @@ FEED_SRCS = \
     $(FEED_DST_PATH)/_obj_feed_list.o \
     $(FEED_DST_PATH)/_obj_feed_esc.o \
     $(FEED_DST_PATH)/_obj_feed_glyph.o \
+    $(FEED_DST_PATH)/_obj_feed_line.o \
     $(FEED_DST_PATH)/_obj_feed.o
 
 # Default target

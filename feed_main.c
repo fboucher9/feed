@@ -20,6 +20,8 @@
 
 #include "feed_glyph.h"
 
+#include "feed_line.h"
+
 static
 void
 #if defined(__GNUC__)
@@ -52,27 +54,69 @@ feed_dbg_print(
         o_args);
 }
 
+/*
 
-struct feed_line
+Module: feed_screen.h
+
+Description:
+
+    Manager for refresh of visible characters on terminal screen.
+
+Comments:
+
+    Handling of limited screen width and height.
+
+    Avoid writing on last character of screen
+
+    Handle grow of region, which may do a vertical scroll
+
+    Backbuffer and front buffer
+
+    Wrap of wide characters
+
+    Do relative movements for cursor, so that region may grow.
+
+    When cursor y > region height, then grow region height or clip or scroll.
+
+    When cursor x > region width, then grow or clip or wrap or scroll.
+
+*/
+struct feed_screen
 {
-    struct feed_list
-        o_list;
-
-    struct feed_client *
-        p_client;
-
-    struct feed_list
-        o_glyphs;
-
-    /* Number of characters */
     unsigned int
-        i_glyph_count;
+        i_screen_width;
 
     unsigned int
-        a_padding[3u];
+        i_screen_height;
 
-}; /* struct feed_line */
+    unsigned int
+        i_region_x;
 
+    unsigned int
+        i_region_y;
+
+    unsigned int
+        i_region_width;
+
+    unsigned int
+        i_region_height;
+
+    unsigned int
+        i_cursor_x;
+
+    unsigned int
+        i_cursor_y;
+
+}; /* struct feed_screen */
+
+/*
+feed_screen_create
+feed_screen_destroy
+feed_screen_cursor
+feed_screen_write_glyph
+feed_screen_write_line
+feed_screen_write_text
+*/
 
 struct feed_text
 {
@@ -103,197 +147,6 @@ struct feed_text
         a_padding[1u];
 
 }; /* struct feed_text */
-
-
-static
-void
-feed_line_init(
-    struct feed_line * const
-        p_line,
-    struct feed_client * const
-        p_client)
-{
-    feed_list_init(
-        &(
-            p_line->o_list));
-
-    p_line->p_client =
-        p_client;
-
-    feed_list_init(
-        &(
-            p_line->o_glyphs));
-
-    p_line->i_glyph_count =
-        0u;
-
-}
-
-static
-void
-feed_line_reset(
-    struct feed_line * const
-        p_line)
-{
-    struct feed_list *
-        p_iterator;
-
-    struct feed_list *
-        p_next;
-
-    struct feed_glyph *
-        p_glyph;
-
-    /* Free all characters... */
-    p_iterator =
-        p_line->o_glyphs.p_next;
-
-    while (
-        p_iterator != &(p_line->o_glyphs))
-    {
-        p_next =
-            p_iterator->p_next;
-
-        p_glyph =
-            (struct feed_glyph *)(
-                p_iterator);
-
-        feed_glyph_destroy(
-            p_glyph);
-
-        p_iterator =
-            p_next;
-
-    }
-
-    p_line->i_glyph_count =
-        0u;
-
-}
-
-static
-void
-feed_line_cleanup(
-    struct feed_line * const
-        p_line)
-{
-    feed_list_join(
-        &(
-            p_line->o_list),
-        &(
-            p_line->o_list));
-
-    /* Free all characters... */
-    feed_line_reset(
-        p_line);
-
-}
-
-
-static
-struct feed_line *
-feed_line_create(
-    struct feed_client * const
-        p_client)
-{
-    struct feed_line *
-        p_line;
-
-    struct feed_heap *
-        p_heap;
-
-    p_heap =
-        feed_client_get_heap(
-            p_client);
-
-    p_line =
-        (struct feed_line *)(
-            feed_heap_alloc(
-                p_heap,
-                sizeof(
-                    struct feed_line)));
-
-    if (
-        p_line)
-    {
-        feed_line_init(
-            p_line,
-            p_client);
-    }
-
-    return
-        p_line;
-
-}
-
-
-static
-void
-feed_line_destroy(
-    struct feed_line * const
-        p_line)
-{
-    struct feed_client *
-        p_client;
-
-    struct feed_heap *
-        p_heap;
-
-    p_client =
-        p_line->p_client;
-
-    p_heap =
-        feed_client_get_heap(
-            p_client);
-
-    feed_line_cleanup(
-        p_line);
-
-    feed_heap_free(
-        p_heap,
-        (void *)(
-            p_line));
-
-}
-
-
-static
-void
-feed_line_write_event(
-    struct feed_line * const
-        p_line,
-    struct feed_event const * const
-        p_event)
-{
-    struct feed_client *
-        p_client;
-
-    struct feed_glyph *
-        p_glyph;
-
-    p_client =
-        p_line->p_client;
-
-    /* Create a character */
-    /* Set char information */
-    p_glyph =
-        feed_glyph_create(
-            p_client,
-            p_event);
-
-    if (
-        p_glyph)
-    {
-        /* Store the char into the list */
-        feed_list_join(
-            &(
-                p_glyph->o_list),
-            &(
-                p_line->o_glyphs));
-
-        p_line->i_glyph_count ++;
-    }
-}
 
 
 static
@@ -335,7 +188,6 @@ feed_text_init(
 
     if (
         p_text->p_prompt)
-
     {
         struct feed_line *
             p_line;
