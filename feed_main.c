@@ -120,6 +120,49 @@ feed_screen_write_line
 feed_screen_write_text
 */
 
+struct feed_main_context
+{
+    struct feed_client *
+        p_client;
+
+    struct feed_heap *
+        p_heap;
+
+    struct feed_text *
+        p_text;
+
+    struct feed_client
+        o_client;
+
+    struct feed_tty
+        o_tty;
+
+    unsigned int
+        i_ocx;
+
+    unsigned int
+        i_ocy;
+
+    unsigned int
+        i_wx;
+
+    unsigned int
+        i_wy;
+
+    unsigned int
+        i_cy;
+
+    unsigned int
+        a_padding_int[3u];
+
+    char
+        b_more;
+
+    unsigned char
+        a_padding[7u];
+
+};
+
 static
 void
 feed_main_print_status(
@@ -166,24 +209,33 @@ feed_main_print_status(
 
         printf(" <%.*s>", (int)(o_name.i_len), (char const *)(o_name.p_buf));
     }
+
     printf("\033[0K");
 }
 
 static
 void
 feed_text_refresh(
-    struct feed_text * const
-        p_text,
-    unsigned int const
-        i_screen_height,
-    unsigned int const
-        i_screen_width)
+    struct feed_main_context * const
+        p_main_context)
 {
+    struct feed_text *
+        p_text;
+
+    unsigned int
+        i_screen_height;
+
+    unsigned int
+        i_screen_width;
+
     unsigned int
         i_width;
 
     unsigned int
         i_height;
+
+    unsigned int
+        i_cursor_visible_y;
 
     unsigned int
         i_cursor_visible_x;
@@ -194,10 +246,22 @@ feed_text_refresh(
     (void)(
         i_screen_height);
 
+    p_text =
+        p_main_context->p_text;
+
+    i_screen_width =
+        p_main_context->i_wx;
+
+    i_screen_height =
+        p_main_context->i_wy;
+
     i_width =
         0u;
 
     i_height =
+        0u;
+
+    i_cursor_visible_y =
         0u;
 
     i_cursor_visible_x =
@@ -209,6 +273,11 @@ feed_text_refresh(
     /* Grow size of drawing region */
 
     /* Move cursor to beginning of drawing region */
+    printf("\r");
+    if (p_main_context->i_cy)
+    {
+        printf("\033[%dA", p_main_context->i_cy);
+    }
 
     /* Print state of body text */
     {
@@ -271,6 +340,16 @@ feed_text_refresh(
                             (int)(p_glyph->i_visible_width),
                             p_glyph->a_visible);
                     }
+                    else
+                    {
+                        i_height ++;
+
+                        i_width = 0;
+
+                        printf("\033[0K\r\n%.*s",
+                            (int)(p_glyph->i_visible_width),
+                            p_glyph->a_visible);
+                    }
 
                     i_width += p_glyph->i_visible_width;
 
@@ -280,6 +359,9 @@ feed_text_refresh(
 
                 i_cursor_visible_x =
                     i_width;
+
+                i_cursor_visible_y =
+                    i_height;
             }
             else
             {
@@ -311,12 +393,26 @@ feed_text_refresh(
                         (int)(p_glyph->i_visible_width),
                         p_glyph->a_visible);
                 }
+                else
+                {
+                    i_height ++;
+
+                    i_width = 0;
+
+                    printf("\033[0K\r\n%.*s",
+                        (int)(p_glyph->i_visible_width),
+                        p_glyph->a_visible);
+                }
 
                 i_width += p_glyph->i_visible_width;
 
                 if (i_cursor_glyph_iterator < p_text->i_cursor_glyph_index)
                 {
-                    i_cursor_visible_x = i_width;
+                    i_cursor_visible_x =
+                        i_width;
+
+                    i_cursor_visible_y =
+                        i_height;
                 }
 
                 i_cursor_glyph_iterator ++;
@@ -335,59 +431,38 @@ feed_text_refresh(
         }
 
         /* Draw status line */
-        printf("\r\nstatus: ");
+        if (i_screen_width > 40)
+        {
+            printf("\r\nstatus: ");
 
-        feed_main_print_status(
-            &(
-                p_text->o_last_event));
+            feed_main_print_status(
+                &(
+                    p_text->o_last_event));
+
+            i_height ++;
+        }
 
         /* Position the cursor */
-        printf("\r\033[A");
+        printf("\r");
+        if (i_height > 1u)
+        {
+            printf("\033[%dA", i_height - 1u);
+        }
+        if (i_cursor_visible_y)
+        {
+            printf("\033[%dB", i_cursor_visible_y);
+        }
         if (i_cursor_visible_x)
         {
             printf("\033[%dC", i_cursor_visible_x);
         }
+
+        p_main_context->i_cy =
+            i_cursor_visible_y;
     }
 
 }
 
-
-struct feed_main_context
-{
-    struct feed_client *
-        p_client;
-
-    struct feed_heap *
-        p_heap;
-
-    struct feed_text *
-        p_text;
-
-    struct feed_client
-        o_client;
-
-    struct feed_tty
-        o_tty;
-
-    unsigned int
-        i_ocx;
-
-    unsigned int
-        i_ocy;
-
-    unsigned int
-        i_wx;
-
-    unsigned int
-        i_wy;
-
-    char
-        b_more;
-
-    unsigned char
-        a_padding[7u];
-
-};
 
 static
 void
@@ -527,9 +602,7 @@ feed_main_event_callback(
         }
 
         feed_text_refresh(
-            p_text,
-            p_main_context->i_wy,
-            p_main_context->i_wx);
+            p_main_context);
     }
 
 }
@@ -577,7 +650,13 @@ feed_main(
     {
         static unsigned char const s_prompt[] =
         {
-            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' '
+            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
         };
 
         feed_text_prompt(
@@ -662,6 +741,9 @@ feed_main(
                 p_main_context->i_wy =
                     (unsigned int)(
                         y);
+
+                p_main_context->i_cy =
+                    0u;
             }
             else
             {
@@ -872,9 +954,7 @@ feed_main(
                 printf("\r\n\033[A");
 
                 feed_text_refresh(
-                    p_main_context->p_text,
-                    p_main_context->i_wy,
-                    p_main_context->i_wx);
+                    p_main_context);
 
                 p_input =
                     feed_input_create(
