@@ -164,29 +164,49 @@ struct feed_main_context
 };
 
 static
-void
+unsigned int
 feed_main_print_status(
     struct feed_event const * const
-        p_event)
+        p_event,
+    unsigned int const
+        i_screen_width)
 {
+    unsigned int i_width;
     unsigned char i;
     unsigned char c;
 
-    printf("%08lx: [", p_event->i_code);
+    i_width = 0u;
+    if (i_width + 11u < i_screen_width)
+    {
+        printf("%08lx: [", p_event->i_code);
+        i_width += 11u;
+    }
     for (i=0u; i<p_event->i_raw_len; i++)
     {
         c = p_event->a_raw[i];
 
         if ((c >= 32) && (c < 127))
         {
-            printf(" '%c'", (char)(c));
+            if (i_width + 4u < i_screen_width)
+            {
+                printf(" '%c'", (char)(c));
+                i_width += 4u;
+            }
         }
         else
         {
-            printf(" %3u", (unsigned int)(p_event->a_raw[i]));
+            if (i_width + 4u < i_screen_width)
+            {
+                printf(" %3u", (unsigned int)(p_event->a_raw[i]));
+                i_width += 4u;
+            }
         }
     }
-    printf(" ]");
+    if (i_width + 2u < i_screen_width)
+    {
+        printf(" ]");
+        i_width += 2u;
+    }
 
     {
         unsigned char a_name[64u];
@@ -207,10 +227,17 @@ feed_main_print_status(
             &(
                 o_name));
 
-        printf(" <%.*s>", (int)(o_name.i_len), (char const *)(o_name.p_buf));
+        if (i_width + 3u + o_name.i_len < i_screen_width)
+        {
+            printf(" <%.*s>", (int)(o_name.i_len), (char const *)(o_name.p_buf));
+            i_width += 3u + o_name.i_len;
+        }
     }
 
     printf("\033[0K");
+
+    return
+        i_width;
 }
 
 static
@@ -431,13 +458,21 @@ feed_text_refresh(
         }
 
         /* Draw status line */
-        if (i_screen_width > 40)
         {
-            printf("\r\nstatus: ");
+            i_width = 0u;
 
-            feed_main_print_status(
-                &(
-                    p_text->o_last_event));
+            if ((i_width + 8u) < i_screen_width)
+            {
+                printf("\r\nstatus: ");
+
+                i_width += 8u;
+            }
+
+            i_width +=
+                feed_main_print_status(
+                    &(
+                        p_text->o_last_event),
+                    i_screen_width - i_width);
 
             i_height ++;
         }
