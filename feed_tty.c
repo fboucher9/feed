@@ -33,6 +33,9 @@ feed_tty_init(
 
     (void)(p_client);
 
+    p_tty->p_client =
+        p_client;
+
     p_tty->i_output_file =
         STDOUT_FILENO;
 
@@ -49,13 +52,9 @@ feed_tty_init(
 
 void
 feed_tty_cleanup(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty)
 {
-    (void)(
-        p_client);
     (void)(
         p_tty);
 }
@@ -98,8 +97,6 @@ feed_tty_set_raw_options(
 
 char
 feed_tty_enable(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty)
 {
@@ -111,9 +108,6 @@ feed_tty_enable(
 
     int
         i_term_status;
-
-    (void)(
-        p_client);
 
     if (
         isatty(
@@ -176,16 +170,11 @@ feed_tty_enable(
 
 char
 feed_tty_disable(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty)
 {
     char
         b_result;
-
-    (void)(
-        p_client);
 
     if (
         p_tty->b_enabled)
@@ -228,8 +217,6 @@ feed_tty_disable(
 
 char
 feed_tty_read_character(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
     unsigned char * const
@@ -240,9 +227,6 @@ feed_tty_read_character(
 
     int
         i_result;
-
-    (void)(
-        p_client);
 
     i_result =
         (int)(
@@ -270,8 +254,6 @@ feed_tty_read_character(
 
 char
 feed_tty_read_character_array(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
     unsigned char * const
@@ -287,9 +269,6 @@ feed_tty_read_character_array(
 
     unsigned int
         i_index;
-
-    (void)(
-        p_client);
 
     i_index =
         0u;
@@ -331,8 +310,6 @@ feed_tty_read_character_array(
 
 char
 feed_tty_write_character(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
     unsigned char const
@@ -343,9 +320,6 @@ feed_tty_write_character(
 
     int
         i_result;
-
-    (void)(
-        p_client);
 
     i_result =
         (int)(
@@ -373,8 +347,6 @@ feed_tty_write_character(
 
 char
 feed_tty_write_character_array(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
     unsigned char const * const
@@ -390,9 +362,6 @@ feed_tty_write_character_array(
 
     unsigned int
         i_index;
-
-    (void)(
-        p_client);
 
     b_result =
         1;
@@ -434,8 +403,6 @@ feed_tty_write_character_array(
 
 char
 feed_tty_read_unicode_character(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
     unsigned char * const
@@ -474,7 +441,6 @@ feed_tty_read_unicode_character(
     /* Read first character */
     b_result =
         feed_tty_read_character(
-            p_client,
             p_tty,
             a_bytes + i_index);
 
@@ -535,7 +501,6 @@ feed_tty_read_unicode_character(
             {
                 b_result =
                     feed_tty_read_character(
-                        p_client,
                         p_tty,
                         a_bytes + i_index);
 
@@ -597,8 +562,6 @@ feed_tty_read_unicode_character(
 
 char
 feed_tty_read_escape_sequence(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
     unsigned char * const
@@ -629,7 +592,6 @@ feed_tty_read_escape_sequence(
 
     b_result =
         feed_tty_read_unicode_character(
-            p_client,
             p_tty,
             p_buf + i_buf_iterator,
             i_buf_len - i_buf_iterator,
@@ -650,7 +612,6 @@ feed_tty_read_escape_sequence(
             /* read second character */
             b_result =
                 feed_tty_read_unicode_character(
-                    p_client,
                     p_tty,
                     p_buf + i_buf_iterator,
                     i_buf_len - i_buf_iterator,
@@ -681,7 +642,6 @@ feed_tty_read_escape_sequence(
                     {
                         b_result =
                             feed_tty_read_unicode_character(
-                                p_client,
                                 p_tty,
                                 p_buf + i_buf_iterator,
                                 i_buf_len - i_buf_iterator,
@@ -737,7 +697,6 @@ feed_tty_read_escape_sequence(
                     /* read one last character */
                     b_result =
                         feed_tty_read_unicode_character(
-                            p_client,
                             p_tty,
                             p_buf + i_buf_iterator,
                             i_buf_len - i_buf_iterator,
@@ -775,22 +734,20 @@ feed_tty_read_escape_sequence(
 
 char
 feed_tty_get_cursor_position(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
-    int * const
+    unsigned int * const
         p_rows,
-    int * const
+    unsigned int * const
         p_cols)
 {
     char
         b_result;
 
-    int
+    unsigned int
         i_cols;
 
-    int
+    unsigned int
         i_rows;
 
     int
@@ -809,7 +766,6 @@ feed_tty_get_cursor_position(
 
     b_result =
         feed_tty_write_character_array(
-            p_client,
             p_tty,
             g_escape_report_cursor_location,
             sizeof(
@@ -826,7 +782,6 @@ feed_tty_get_cursor_position(
 
         b_result =
             feed_tty_read_escape_sequence(
-                p_client,
                 p_tty,
                 a_buf,
                 sizeof(
@@ -859,7 +814,7 @@ feed_tty_get_cursor_position(
                         sscanf(
                             (char const *)(
                                 a_buf + 2),
-                            "%d;%d",
+                            "%u;%u",
                             &(
                                 i_rows),
                             &(
@@ -913,13 +868,11 @@ feed_tty_get_cursor_position(
 static
 char
 feed_tty_set_cursor_position(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
-    int const
+    unsigned int const
         i_row,
-    int const
+    unsigned int const
         i_col)
 {
     char
@@ -954,7 +907,6 @@ feed_tty_set_cursor_position(
         {
             b_result =
                 feed_tty_write_character_array(
-                    p_client,
                     p_tty,
                     o_buf.p_buf,
                     o_buf.i_len);
@@ -981,11 +933,9 @@ enum feed_tty_move_cursor_direction
 static
 char
 feed_tty_move_cursor(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
-    int const
+    unsigned int const
         i_count,
     enum feed_tty_move_cursor_direction const
         e_direction)
@@ -1052,7 +1002,6 @@ feed_tty_move_cursor(
         {
             b_result =
                 feed_tty_write_character_array(
-                    p_client,
                     p_tty,
                     o_buf.p_buf,
                     o_buf.i_len);
@@ -1070,16 +1019,13 @@ feed_tty_move_cursor(
 
 char
 feed_tty_move_cursor_backward(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
-    int const
+    unsigned int const
         i_count)
 {
     return
         feed_tty_move_cursor(
-            p_client,
             p_tty,
             i_count,
             feed_tty_move_cursor_direction_backward);
@@ -1087,16 +1033,13 @@ feed_tty_move_cursor_backward(
 
 char
 feed_tty_move_cursor_forward(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
-    int const
+    unsigned int const
         i_count)
 {
     return
         feed_tty_move_cursor(
-            p_client,
             p_tty,
             i_count,
             feed_tty_move_cursor_direction_forward);
@@ -1104,16 +1047,13 @@ feed_tty_move_cursor_forward(
 
 char
 feed_tty_move_cursor_up(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
-    int const
+    unsigned int const
         i_count)
 {
     return
         feed_tty_move_cursor(
-            p_client,
             p_tty,
             i_count,
             feed_tty_move_cursor_direction_up);
@@ -1121,16 +1061,13 @@ feed_tty_move_cursor_up(
 
 char
 feed_tty_move_cursor_down(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
-    int const
+    unsigned int const
         i_count)
 {
     return
         feed_tty_move_cursor(
-            p_client,
             p_tty,
             i_count,
             feed_tty_move_cursor_direction_down);
@@ -1138,13 +1075,11 @@ feed_tty_move_cursor_down(
 
 char
 feed_tty_get_window_size(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
-    int * const
+    unsigned int * const
         p_rows,
-    int * const
+    unsigned int * const
         p_columns)
 {
     char
@@ -1155,9 +1090,6 @@ feed_tty_get_window_size(
 
     struct winsize
         o_winsize;
-
-    (void)(
-        p_client);
 
     i_result =
         ioctl(
@@ -1185,15 +1117,14 @@ feed_tty_get_window_size(
         /* Try to determine terminal size using escape sequences */
 
         /* Save the current position */
-        int
+        unsigned int
             i_save_row;
 
-        int
+        unsigned int
             i_save_col;
 
         b_result =
             feed_tty_get_cursor_position(
-                p_client,
                 p_tty,
                 &(
                     i_save_row),
@@ -1206,7 +1137,6 @@ feed_tty_get_window_size(
             /* Move to bottom right corner */
             b_result =
                 feed_tty_move_cursor_forward(
-                    p_client,
                     p_tty,
                     999);
 
@@ -1215,22 +1145,20 @@ feed_tty_get_window_size(
             {
                 b_result =
                     feed_tty_move_cursor_down(
-                        p_client,
                         p_tty,
                         999);
 
                 if (
                     b_result)
                 {
-                    int
+                    unsigned int
                         i_last_row;
 
-                    int
+                    unsigned int
                         i_last_col;
 
                     b_result =
                         feed_tty_get_cursor_position(
-                            p_client,
                             p_tty,
                             &(
                                 i_last_row),
@@ -1254,10 +1182,11 @@ feed_tty_get_window_size(
             /* Restore cursor position */
             b_result =
                 feed_tty_set_cursor_position(
-                    p_client,
                     p_tty,
-                    i_save_row,
-                    i_save_col);
+                    (unsigned int)(
+                        i_save_row),
+                    (unsigned int)(
+                        i_save_col));
         }
     }
 
@@ -1268,11 +1197,9 @@ feed_tty_get_window_size(
 
 char
 feed_tty_clear(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
-    int const
+    unsigned int const
         i_count)
 {
     char
@@ -1284,8 +1211,6 @@ feed_tty_clear(
     struct feed_buf
         o_buf;
 
-    (void)(
-        p_client);
     (void)(
         p_tty);
 
@@ -1311,7 +1236,6 @@ feed_tty_clear(
         {
             b_result =
                 feed_tty_write_character_array(
-                    p_client,
                     p_tty,
                     o_buf.p_buf,
                     o_buf.i_len);
@@ -1325,64 +1249,50 @@ feed_tty_clear(
 
 char
 feed_tty_clear_bottom(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty)
 {
     return
         feed_tty_clear(
-            p_client,
             p_tty,
             FEED_CSI_ED_DOWN);
 }
 
 char
 feed_tty_clear_top(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty)
 {
     return
         feed_tty_clear(
-            p_client,
             p_tty,
             FEED_CSI_ED_UP);
 }
 
 char
 feed_tty_clear_screen(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty)
 {
     return
         feed_tty_clear(
-            p_client,
             p_tty,
             FEED_CSI_ED_SCREEN);
 }
 
 char
 feed_tty_clear_history(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty)
 {
     return
         feed_tty_clear(
-            p_client,
             p_tty,
             FEED_CSI_ED_HISTORY);
 }
 
 char
 feed_tty_line_wrap(
-    struct feed_client * const
-        p_client,
     struct feed_tty * const
         p_tty,
     char const
@@ -1416,7 +1326,6 @@ feed_tty_line_wrap(
 
     b_result =
         feed_tty_write_character_array(
-            p_client,
             p_tty,
             a_buf,
             4u);
@@ -1425,5 +1334,58 @@ feed_tty_line_wrap(
         b_result;
 
 }
+
+char
+feed_tty_write_el(
+    struct feed_tty * const
+        p_tty,
+    unsigned int const
+        i_count)
+{
+    char
+        b_result;
+
+    unsigned char
+        a_buf[16u];
+
+    struct feed_buf
+        o_buf;
+
+    b_result =
+        feed_buf_init(
+            &(
+                o_buf),
+            a_buf,
+            sizeof(
+                a_buf));
+
+    if (
+        b_result)
+    {
+        b_result =
+            feed_esc_write_el(
+                &(
+                    o_buf),
+                i_count);
+
+        if (
+            b_result)
+        {
+            b_result =
+                feed_tty_write_character_array(
+                    p_tty,
+                    o_buf.p_buf,
+                    o_buf.i_len);
+        }
+
+        feed_buf_cleanup(
+            &(
+                o_buf));
+    }
+
+    return
+        b_result;
+
+} /* feed_tty_write_el() */
 
 /* end-of-file: feed_tty.c */

@@ -223,21 +223,55 @@ feed_screen_cursor(
     }
     else
     {
-        printf("\r");
+        static unsigned char const g_cr[] =
+        {
+            '\r'
+        };
+
+        struct feed_client *
+            p_client;
+
+        struct feed_tty *
+            p_tty;
+
+        p_client =
+            p_screen->p_client;
+
+        p_tty =
+            feed_client_get_tty(
+                p_client);
+
+        feed_tty_write_character_array(
+            p_tty,
+            g_cr,
+            sizeof(g_cr));
+
         if (i_cursor_x)
         {
-            printf("\033[%uC", i_cursor_x);
+            feed_tty_move_cursor_forward(
+                p_tty,
+                i_cursor_x);
         }
+
         if (i_cursor_y < p_screen->i_cursor_y)
         {
-            printf("\033[%uA", (unsigned int)(p_screen->i_cursor_y - i_cursor_y));
+            feed_tty_move_cursor_up(
+                p_tty,
+                (unsigned int)(p_screen->i_cursor_y - i_cursor_y));
         }
         else if (i_cursor_y > p_screen->i_cursor_y)
         {
-            printf("\033[%uB", (unsigned int)(i_cursor_y - p_screen->i_cursor_y));
+            feed_tty_move_cursor_down(
+                p_tty,
+                (unsigned int)(i_cursor_y - p_screen->i_cursor_y));
         }
-        p_screen->i_cursor_x = i_cursor_x;
-        p_screen->i_cursor_y = i_cursor_y;
+
+        p_screen->i_cursor_x =
+            i_cursor_x;
+
+        p_screen->i_cursor_y =
+            i_cursor_y;
+
     }
 }
 
@@ -247,9 +281,37 @@ feed_screen_newline(
     struct feed_screen * const
         p_screen)
 {
-    printf("\r\n");
+    struct feed_client *
+        p_client;
+
+    struct feed_tty *
+        p_tty;
+
+    p_client =
+        p_screen->p_client;
+
+    p_tty =
+        feed_client_get_tty(
+            p_client);
+
+    {
+        static unsigned char g_crlf[] =
+        {
+            '\r',
+            '\n'
+        };
+
+        feed_tty_write_character_array(
+            p_tty,
+            g_crlf,
+            sizeof(
+                g_crlf));
+    }
+
     p_screen->i_cursor_x = 0;
+
     p_screen->i_cursor_y ++;
+
     if (p_screen->i_cursor_y >= p_screen->i_region_height)
     {
         p_screen->i_region_height = p_screen->i_cursor_y + 1u;
@@ -268,14 +330,27 @@ feed_screen_write_clip(
     unsigned int const
         i_width)
 {
+    struct feed_client *
+        p_client;
+
+    struct feed_tty *
+        p_tty;
+
+    p_client =
+        p_screen->p_client;
+
+    p_tty =
+        feed_client_get_tty(
+            p_client);
+
     if (i_width < p_screen->i_screen_width)
     {
         if ((p_screen->i_cursor_x + i_width) < p_screen->i_screen_width)
         {
-            printf(
-                "%.*s",
-                (int)(i_count),
-                (char const *)(p_data));
+            feed_tty_write_character_array(
+                p_tty,
+                p_data,
+                i_count);
 
             p_screen->i_cursor_x += i_width;
         }
@@ -303,6 +378,31 @@ feed_screen_write_wrap(
 
         feed_screen_write_clip(p_screen, p_data, i_count, i_width);
     }
+}
+
+static
+void
+feed_screen_clear_line(
+    struct feed_screen * const
+        p_screen)
+{
+    struct feed_client *
+        p_client;
+
+    struct feed_tty *
+        p_tty;
+
+    p_client =
+        p_screen->p_client;
+
+    p_tty =
+        feed_client_get_tty(
+            p_client);
+
+    feed_tty_write_el(
+        p_tty,
+        0u);
+
 }
 
 /*
@@ -446,7 +546,8 @@ feed_main_print_status(
             3u + o_name.i_len);
     }
 
-    printf("\033[0K");
+    feed_screen_clear_line(
+        p_screen);
 
 }
 
@@ -531,10 +632,6 @@ feed_main_refresh_text(
             if (0u == i_height)
             {
                 /* Draw a prompt on first line */
-                /*
-                printf("prompt$ ");
-                */
-
                 p_glyph_iterator =
                     p_text->p_prompt->o_glyphs.p_next;
 
@@ -614,37 +711,38 @@ feed_main_refresh_text(
             }
 
             /* Erase to end-of-line */
-            printf("\033[0K");
+            feed_screen_clear_line(
+                p_screen);
 
             i_height ++;
 
             p_line_iterator =
                 p_line_iterator->p_next;
         }
+    }
 
-        /* Draw status line */
-        {
-            feed_screen_newline(p_screen);
+    /* Draw status line */
+    {
+        feed_screen_newline(p_screen);
 
-            feed_screen_write_clip(
-                p_screen,
-                (unsigned char const *)("status: "),
-                8u,
-                8u);
+        feed_screen_write_clip(
+            p_screen,
+            (unsigned char const *)("status: "),
+            8u,
+            8u);
 
-            feed_main_print_status(
-                p_main_context,
-                &(
-                    p_text->o_last_event));
-        }
+        feed_main_print_status(
+            p_main_context,
+            &(
+                p_text->o_last_event));
+    }
 
-        /* Position the cursor */
-        {
-            feed_screen_cursor(
-                p_screen,
-                i_cursor_visible_x,
-                i_cursor_visible_y);
-        }
+    /* Position the cursor */
+    {
+        feed_screen_cursor(
+            p_screen,
+            i_cursor_visible_x,
+            i_cursor_visible_y);
     }
 
 }
@@ -852,29 +950,28 @@ feed_main(
                 s_prompt));
     }
 
+    p_main_context->p_client->p_tty =
+        &(
+            p_main_context->o_tty);
+
     if (
         feed_tty_init(
             p_main_context->p_client,
-            &(
-                p_main_context->o_tty)))
+            p_main_context->p_client->p_tty))
     {
         if (
             feed_tty_enable(
-                p_main_context->p_client,
-                &(
-                    p_main_context->o_tty)))
+                p_main_context->p_client->p_tty))
         {
-            int
+            unsigned int
                 x;
 
-            int
+            unsigned int
                 y;
 
             if (
                 feed_tty_get_cursor_position(
-                    p_main_context->p_client,
-                    &(
-                        p_main_context->o_tty),
+                    p_main_context->p_client->p_tty,
                     &(
                         y),
                     &(
@@ -889,12 +986,10 @@ feed_main(
                 }
 
                 p_main_context->i_ocx =
-                    (unsigned int)(
-                        x);
+                    x;
 
                 p_main_context->i_ocy =
-                    (unsigned int)(
-                        y);
+                    y;
             }
             else
             {
@@ -904,9 +999,7 @@ feed_main(
 
             if (
                 feed_tty_get_window_size(
-                    p_main_context->p_client,
-                    &(
-                        p_main_context->o_tty),
+                    p_main_context->p_client->p_tty,
                     &(
                         y),
                     &(
@@ -1012,43 +1105,37 @@ feed_main(
 
                 feed_tty_line_wrap(
                     p_main_context->p_client,
-                    &(
-                        p_main_context->o_tty),
+                    p_main_context->p_client->p_tty,
                     1);
 
                 feed_tty_write_character_array(
                     p_main_context->p_client,
-                    &(
-                        p_main_context->o_tty),
+                    p_main_context->p_client->p_tty,
                     g_test_line_wrap_enable,
                     sizeof(
                         g_test_line_wrap_enable));
 
                 feed_tty_move_cursor_backward(
                     p_main_context->p_client,
-                    &(
-                        p_main_context->o_tty),
+                    p_main_context->p_client->p_tty,
                     20);
 
                 /* test line wrap disable */
                 feed_tty_line_wrap(
                     p_main_context->p_client,
-                    &(
-                        p_main_context->o_tty),
+                    p_main_context->p_client->p_tty,
                     0);
 
                 feed_tty_write_character_array(
                     p_main_context->p_client,
-                    &(
-                        p_main_context->o_tty),
+                    p_main_context->p_client->p_tty,
                     g_test_line_wrap_enable,
                     sizeof(
                         g_test_line_wrap_enable));
 
                 feed_tty_move_cursor_backward(
                     p_main_context->p_client,
-                    &(
-                        p_main_context->o_tty),
+                    p_main_context->p_client->p_tty,
                     20);
             }
 #endif
@@ -1057,14 +1144,12 @@ feed_main(
 
             feed_tty_move_cursor_up(
                 p_main_context->p_client,
-                &(
-                    p_main_context->o_tty),
+                p_main_context->p_client->p_tty,
                 3);
 
             feed_tty_move_cursor_forward(
                 p_main_context->p_client,
-                &(
-                    p_main_context->o_tty),
+                p_main_context->p_client->p_tty,
                 40);
 
 #endif
@@ -1085,9 +1170,7 @@ feed_main(
 
                     if (
                         feed_tty_read_escape_sequence(
-                            p_main_context->p_client,
-                            &(
-                                p_main_context->o_tty),
+                            p_main_context->p_client->p_tty,
                             a_escape,
                             sizeof(
                                 a_escape),
@@ -1197,9 +1280,7 @@ feed_main(
                 p_main_context->p_screen);
 
             feed_tty_disable(
-                p_main_context->p_client,
-                &(
-                    p_main_context->o_tty));
+                p_main_context->p_client->p_tty);
         }
         else
         {
@@ -1208,9 +1289,7 @@ feed_main(
         }
 
         feed_tty_cleanup(
-            p_main_context->p_client,
-            &(
-                p_main_context->o_tty));
+            p_main_context->p_client->p_tty);
     }
     else
     {

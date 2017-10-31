@@ -21,28 +21,28 @@ char
 feed_esc_write_cuu(
     struct feed_buf * const
         p_buf,
-    int const
+    unsigned int const
         i_count);
 
 char
 feed_esc_write_cud(
     struct feed_buf * const
         p_buf,
-    int const
+    unsigned int const
         i_count);
 
 char
 feed_esc_write_cuf(
     struct feed_buf * const
         p_buf,
-    int const
+    unsigned int const
         i_count);
 
 char
 feed_esc_write_cub(
     struct feed_buf * const
         p_buf,
-    int const
+    unsigned int const
         i_count);
 
 #define FEED_CSI_ED_DOWN 0
@@ -54,7 +54,7 @@ char
 feed_esc_write_ed(
     struct feed_buf * const
         p_buf,
-    int const
+    unsigned int const
         i_count);
 
 #define FEED_CSI_EL_RIGHT 0
@@ -65,16 +65,16 @@ char
 feed_esc_write_el(
     struct feed_buf * const
         p_buf,
-    int const
+    unsigned int const
         i_count);
 
 char
 feed_esc_write_cup(
     struct feed_buf * const
         p_buf,
-    int const
+    unsigned int const
         i_row,
-    int const
+    unsigned int const
         i_column);
 
 char

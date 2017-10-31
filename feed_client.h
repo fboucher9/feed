@@ -13,10 +13,15 @@ Description:
 
 struct feed_heap;
 
+struct feed_tty;
+
 struct feed_client
 {
     struct feed_heap *
         p_heap;
+
+    struct feed_tty *
+        p_tty;
 
 }; /* struct feed_client */
 
@@ -32,6 +37,11 @@ feed_client_cleanup(
 
 struct feed_heap *
 feed_client_get_heap(
+    struct feed_client * const
+        p_client);
+
+struct feed_tty *
+feed_client_get_tty(
     struct feed_client * const
         p_client);
 
