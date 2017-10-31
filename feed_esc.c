@@ -71,7 +71,8 @@ feed_esc_write_n1(
             b_result =
                 feed_buf_write_number(
                     p_buf,
-                    i_count);
+                    (signed long int)(
+                        i_count));
         }
 
         if (
@@ -167,7 +168,8 @@ feed_esc_write_ed(
             b_result =
                 feed_buf_write_number(
                     p_buf,
-                    i_count);
+                    (signed long int)(
+                        i_count));
         }
 
         if (
@@ -207,7 +209,8 @@ feed_esc_write_el(
             b_result =
                 feed_buf_write_number(
                     p_buf,
-                    i_count);
+                    (signed long int)(
+                        i_count));
         }
 
         if (
@@ -249,7 +252,8 @@ feed_esc_write_cup(
             b_result =
                 feed_buf_write_number(
                     p_buf,
-                    i_row);
+                    (signed long int)(
+                        i_row));
         }
 
         if (
@@ -269,7 +273,8 @@ feed_esc_write_cup(
                     b_result =
                         feed_buf_write_number(
                             p_buf,
-                            i_column);
+                            (signed long int)(
+                                i_column));
                 }
             }
         }
