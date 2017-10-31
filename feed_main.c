@@ -85,20 +85,17 @@ Comments:
 */
 struct feed_screen
 {
+    struct feed_client *
+        p_client;
+
+    void *
+        pv_padding[1u];
+
     unsigned int
         i_screen_width;
 
     unsigned int
         i_screen_height;
-
-    unsigned int
-        i_region_x;
-
-    unsigned int
-        i_region_y;
-
-    unsigned int
-        i_region_width;
 
     unsigned int
         i_region_height;
@@ -109,7 +106,204 @@ struct feed_screen
     unsigned int
         i_cursor_y;
 
+    unsigned int
+        ui_padding[3u];
+
 }; /* struct feed_screen */
+
+static
+struct feed_screen *
+feed_screen_create(
+    struct feed_client * const
+        p_client,
+    unsigned int const
+        i_screen_width,
+    unsigned int const
+        i_screen_height)
+{
+    struct feed_screen *
+        p_screen;
+
+    struct feed_heap *
+        p_heap;
+
+    p_heap =
+        feed_client_get_heap(
+            p_client);
+
+    p_screen =
+        (struct feed_screen *)(
+            feed_heap_alloc(
+                p_heap,
+                sizeof(
+                    struct feed_screen)));
+
+    if (
+        p_screen)
+    {
+        memset(
+            p_screen,
+            0x00u,
+            sizeof(
+                struct feed_screen));
+
+        p_screen->p_client =
+            p_client;
+
+        p_screen->i_screen_width =
+            i_screen_width;
+
+        p_screen->i_screen_height =
+            i_screen_height;
+
+        p_screen->i_region_height =
+            1u;
+
+        p_screen->i_cursor_x =
+            0u;
+
+        p_screen->i_cursor_y =
+            0u;
+    }
+
+    return
+        p_screen;
+
+}
+
+static
+void
+feed_screen_destroy(
+    struct feed_screen * const
+        p_screen)
+{
+    struct feed_client *
+        p_client;
+
+    struct feed_heap *
+        p_heap;
+
+    p_client =
+        p_screen->p_client;
+
+    p_heap =
+        feed_client_get_heap(
+            p_client);
+
+    feed_heap_free(
+        p_heap,
+        (void *)(
+            p_screen));
+
+}
+
+static
+void
+feed_screen_cursor(
+    struct feed_screen * const
+        p_screen,
+    unsigned int const
+        i_cursor_x,
+    unsigned int const
+        i_cursor_y)
+{
+    if (i_cursor_x >= p_screen->i_screen_width)
+    {
+        feed_screen_cursor(
+            p_screen,
+            p_screen->i_screen_width - 1u,
+            i_cursor_y);
+    }
+    else if (i_cursor_y >= p_screen->i_region_height)
+    {
+        feed_screen_cursor(
+            p_screen,
+            i_cursor_x,
+            p_screen->i_region_height - 1u);
+    }
+    else
+    {
+        printf("\r");
+        if (i_cursor_x)
+        {
+            printf("\033[%uC", i_cursor_x);
+        }
+        if (i_cursor_y < p_screen->i_cursor_y)
+        {
+            printf("\033[%uA", (unsigned int)(p_screen->i_cursor_y - i_cursor_y));
+        }
+        else if (i_cursor_y > p_screen->i_cursor_y)
+        {
+            printf("\033[%uB", (unsigned int)(i_cursor_y - p_screen->i_cursor_y));
+        }
+        p_screen->i_cursor_x = i_cursor_x;
+        p_screen->i_cursor_y = i_cursor_y;
+    }
+}
+
+static
+void
+feed_screen_newline(
+    struct feed_screen * const
+        p_screen)
+{
+    printf("\r\n");
+    p_screen->i_cursor_x = 0;
+    p_screen->i_cursor_y ++;
+    if (p_screen->i_cursor_y >= p_screen->i_region_height)
+    {
+        p_screen->i_region_height = p_screen->i_cursor_y + 1u;
+    }
+}
+
+static
+void
+feed_screen_write_clip(
+    struct feed_screen * const
+        p_screen,
+    unsigned char const * const
+        p_data,
+    unsigned int const
+        i_count,
+    unsigned int const
+        i_width)
+{
+    if (i_width < p_screen->i_screen_width)
+    {
+        if ((p_screen->i_cursor_x + i_width) < p_screen->i_screen_width)
+        {
+            printf(
+                "%.*s",
+                (int)(i_count),
+                (char const *)(p_data));
+
+            p_screen->i_cursor_x += i_width;
+        }
+    }
+}
+
+static
+void
+feed_screen_write_wrap(
+    struct feed_screen * const
+        p_screen,
+    unsigned char const * const
+        p_data,
+    unsigned int const
+        i_count,
+    unsigned int const
+        i_width)
+{
+    if (i_width < p_screen->i_screen_width)
+    {
+        if ((p_screen->i_cursor_x + i_width) >= p_screen->i_screen_width)
+        {
+            feed_screen_newline(p_screen);
+        }
+
+        feed_screen_write_clip(p_screen, p_data, i_count, i_width);
+    }
+}
 
 /*
 feed_screen_create
@@ -118,6 +312,7 @@ feed_screen_cursor
 feed_screen_write_glyph
 feed_screen_write_line
 feed_screen_write_text
+feed_screen_clear_line
 */
 
 struct feed_main_context
@@ -130,6 +325,9 @@ struct feed_main_context
 
     struct feed_text *
         p_text;
+
+    struct feed_screen *
+        p_screen;
 
     struct feed_client
         o_client;
@@ -149,12 +347,6 @@ struct feed_main_context
     unsigned int
         i_wy;
 
-    unsigned int
-        i_cy;
-
-    unsigned int
-        a_padding_int[3u];
-
     char
         b_more;
 
@@ -164,49 +356,63 @@ struct feed_main_context
 };
 
 static
-unsigned int
+void
 feed_main_print_status(
+    struct feed_main_context * const
+        p_main_context,
     struct feed_event const * const
-        p_event,
-    unsigned int const
-        i_screen_width)
+        p_event)
 {
-    unsigned int i_width;
-    unsigned char i;
-    unsigned char c;
+    struct feed_screen *
+        p_screen;
 
-    i_width = 0u;
-    if (i_width + 11u < i_screen_width)
-    {
-        printf("%08lx: [", p_event->i_code);
-        i_width += 11u;
-    }
+    unsigned char
+        i;
+
+    unsigned char
+        c;
+
+    unsigned char
+        buf[80u];
+
+    p_screen =
+        p_main_context->p_screen;
+
+    sprintf((char *)(buf), "%08lx: [", p_event->i_code);
+    feed_screen_write_clip(
+        p_screen,
+        buf,
+        11u,
+        11u);
+
     for (i=0u; i<p_event->i_raw_len; i++)
     {
         c = p_event->a_raw[i];
 
         if ((c >= 32) && (c < 127))
         {
-            if (i_width + 4u < i_screen_width)
-            {
-                printf(" '%c'", (char)(c));
-                i_width += 4u;
-            }
+            sprintf((char *)(buf), " '%c'", (char)(c));
+            feed_screen_write_clip(
+                p_screen,
+                buf,
+                4u,
+                4u);
         }
         else
         {
-            if (i_width + 4u < i_screen_width)
-            {
-                printf(" %3u", (unsigned int)(p_event->a_raw[i]));
-                i_width += 4u;
-            }
+            sprintf((char *)(buf), " %3u", (unsigned int)(p_event->a_raw[i]));
+            feed_screen_write_clip(
+                p_screen,
+                buf,
+                4u,
+                4u);
         }
     }
-    if (i_width + 2u < i_screen_width)
-    {
-        printf(" ]");
-        i_width += 2u;
-    }
+    feed_screen_write_clip(
+        p_screen,
+        (unsigned char const *)(" ]"),
+        2u,
+        2u);
 
     {
         unsigned char a_name[64u];
@@ -227,36 +433,34 @@ feed_main_print_status(
             &(
                 o_name));
 
-        if (i_width + 3u + o_name.i_len < i_screen_width)
-        {
-            printf(" <%.*s>", (int)(o_name.i_len), (char const *)(o_name.p_buf));
-            i_width += 3u + o_name.i_len;
-        }
+        sprintf(
+            (char *)(buf),
+            " <%.*s>",
+            (int)(o_name.i_len),
+            (char const *)(o_name.p_buf));
+
+        feed_screen_write_clip(
+            p_screen,
+            buf,
+            3u + o_name.i_len,
+            3u + o_name.i_len);
     }
 
     printf("\033[0K");
 
-    return
-        i_width;
 }
 
 static
 void
-feed_text_refresh(
+feed_main_refresh_text(
     struct feed_main_context * const
         p_main_context)
 {
+    struct feed_screen *
+        p_screen;
+
     struct feed_text *
         p_text;
-
-    unsigned int
-        i_screen_height;
-
-    unsigned int
-        i_screen_width;
-
-    unsigned int
-        i_width;
 
     unsigned int
         i_height;
@@ -270,20 +474,11 @@ feed_text_refresh(
     unsigned int
         i_cursor_glyph_iterator;
 
-    (void)(
-        i_screen_height);
+    p_screen =
+        p_main_context->p_screen;
 
     p_text =
         p_main_context->p_text;
-
-    i_screen_width =
-        p_main_context->i_wx;
-
-    i_screen_height =
-        p_main_context->i_wy;
-
-    i_width =
-        0u;
 
     i_height =
         0u;
@@ -300,11 +495,10 @@ feed_text_refresh(
     /* Grow size of drawing region */
 
     /* Move cursor to beginning of drawing region */
-    printf("\r");
-    if (p_main_context->i_cy)
-    {
-        printf("\033[%dA", p_main_context->i_cy);
-    }
+    feed_screen_cursor(
+        p_main_context->p_screen,
+        0u,
+        0u);
 
     /* Print state of body text */
     {
@@ -333,9 +527,6 @@ feed_text_refresh(
             /* If line is within refresh window */
 
             /* Return to home position */
-            printf("\r");
-
-            i_width = 0;
 
             if (0u == i_height)
             {
@@ -361,40 +552,27 @@ feed_text_refresh(
 
                     /* If char is within refresh window */
 
-                    if ((i_width + p_glyph->i_visible_width) < i_screen_width)
-                    {
-                        printf("%.*s",
-                            (int)(p_glyph->i_visible_width),
-                            p_glyph->a_visible);
-                    }
-                    else
-                    {
-                        i_height ++;
-
-                        i_width = 0;
-
-                        printf("\033[0K\r\n%.*s",
-                            (int)(p_glyph->i_visible_width),
-                            p_glyph->a_visible);
-                    }
-
-                    i_width += p_glyph->i_visible_width;
+                    feed_screen_write_wrap(
+                        p_main_context->p_screen,
+                        p_glyph->a_visible,
+                        p_glyph->i_visible_length,
+                        p_glyph->i_visible_width);
 
                     p_glyph_iterator =
                         p_glyph_iterator->p_next;
                 }
 
                 i_cursor_visible_x =
-                    i_width;
+                    p_screen->i_cursor_x;
 
                 i_cursor_visible_y =
-                    i_height;
+                    p_screen->i_cursor_y;
             }
             else
             {
-                printf("\n");
+                feed_screen_newline(
+                    p_main_context->p_screen);
             }
-
 
             /* For all chars in line */
             p_glyph_iterator =
@@ -414,32 +592,19 @@ feed_text_refresh(
 
                 /* If char is within refresh window */
 
-                if ((i_width + p_glyph->i_visible_width) < i_screen_width)
-                {
-                    printf("%.*s",
-                        (int)(p_glyph->i_visible_width),
-                        p_glyph->a_visible);
-                }
-                else
-                {
-                    i_height ++;
-
-                    i_width = 0;
-
-                    printf("\033[0K\r\n%.*s",
-                        (int)(p_glyph->i_visible_width),
-                        p_glyph->a_visible);
-                }
-
-                i_width += p_glyph->i_visible_width;
+                feed_screen_write_wrap(
+                    p_screen,
+                    p_glyph->a_visible,
+                    p_glyph->i_visible_length,
+                    p_glyph->i_visible_width);
 
                 if (i_cursor_glyph_iterator < p_text->i_cursor_glyph_index)
                 {
                     i_cursor_visible_x =
-                        i_width;
+                        p_screen->i_cursor_x;
 
                     i_cursor_visible_y =
-                        i_height;
+                        p_screen->i_cursor_y;
                 }
 
                 i_cursor_glyph_iterator ++;
@@ -459,41 +624,27 @@ feed_text_refresh(
 
         /* Draw status line */
         {
-            i_width = 0u;
+            feed_screen_newline(p_screen);
 
-            if ((i_width + 8u) < i_screen_width)
-            {
-                printf("\r\nstatus: ");
+            feed_screen_write_clip(
+                p_screen,
+                (unsigned char const *)("status: "),
+                8u,
+                8u);
 
-                i_width += 8u;
-            }
-
-            i_width +=
-                feed_main_print_status(
-                    &(
-                        p_text->o_last_event),
-                    i_screen_width - i_width);
-
-            i_height ++;
+            feed_main_print_status(
+                p_main_context,
+                &(
+                    p_text->o_last_event));
         }
 
         /* Position the cursor */
-        printf("\r");
-        if (i_height > 1u)
         {
-            printf("\033[%dA", i_height - 1u);
+            feed_screen_cursor(
+                p_screen,
+                i_cursor_visible_x,
+                i_cursor_visible_y);
         }
-        if (i_cursor_visible_y)
-        {
-            printf("\033[%dB", i_cursor_visible_y);
-        }
-        if (i_cursor_visible_x)
-        {
-            printf("\033[%dC", i_cursor_visible_x);
-        }
-
-        p_main_context->i_cy =
-            i_cursor_visible_y;
     }
 
 }
@@ -636,7 +787,7 @@ feed_main_event_callback(
                 p_event);
         }
 
-        feed_text_refresh(
+        feed_main_refresh_text(
             p_main_context);
     }
 
@@ -777,14 +928,18 @@ feed_main(
                     (unsigned int)(
                         y);
 
-                p_main_context->i_cy =
-                    0u;
             }
             else
             {
                 feed_dbg_print(
                     "get_window_size error!");
             }
+
+            p_main_context->p_screen =
+                feed_screen_create(
+                    p_main_context->p_client,
+                    p_main_context->i_wx,
+                    p_main_context->i_wy);
 
 #if 0
             /* test line wrap enable */
@@ -985,10 +1140,7 @@ feed_main(
                 p_main_context->b_more =
                     1;
 
-                /* Reserve an extra line on screen */
-                printf("\r\n\033[A");
-
-                feed_text_refresh(
+                feed_main_refresh_text(
                     p_main_context);
 
                 p_input =
@@ -1029,11 +1181,20 @@ feed_main(
                     }
                 }
 
-                printf("\r\n\n");
+                feed_screen_cursor(
+                    p_main_context->p_screen,
+                    0u,
+                    p_main_context->p_screen->i_region_height);
+
+                feed_screen_newline(
+                    p_main_context->p_screen);
 
                 feed_input_destroy(
                     p_input);
             }
+
+            feed_screen_destroy(
+                p_main_context->p_screen);
 
             feed_tty_disable(
                 p_main_context->p_client,
