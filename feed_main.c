@@ -93,8 +93,11 @@ struct feed_main_context
     char
         b_more;
 
+    char
+        b_verbose;
+
     unsigned char
-        a_padding[7u];
+        a_padding[6u];
 
 };
 
@@ -488,88 +491,106 @@ feed_main_event_callback(
         (struct feed_main_context *)(
             p_context);
 
-    /* ((unsigned long int)(unsigned char)('q') == p_event->i_code) */
-    if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'D') == p_event->i_code)
+    p_text =
+        p_main_context->p_text;
+
+    p_text->o_last_event =
+        *(
+            p_event);
+
+    if (p_main_context->b_verbose)
     {
-        p_main_context->b_more =
+        p_main_context->b_verbose =
             0;
+
+        feed_text_write_event(
+            p_text,
+            p_event);
+
+        feed_main_refresh_text(
+            p_main_context);
     }
     else
     {
-        p_text =
-            p_main_context->p_text;
-
-        p_text->o_last_event =
-            *(
-                p_event);
-
-        if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'H') == p_event->i_code)
+        /* ((unsigned long int)(unsigned char)('q') == p_event->i_code) */
+        if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'D') == p_event->i_code)
         {
-            struct feed_line *
-                p_line;
+            p_main_context->b_more =
+                0;
+        }
+        else
+        {
+            p_text->o_last_event =
+                *(
+                    p_event);
 
-            struct feed_glyph *
-                p_glyph;
-
-            /* Find last line */
-            if (p_text->o_lines.p_prev !=
-                &(p_text->o_lines))
+            if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'H') == p_event->i_code)
             {
-                p_line =
-                    (struct feed_line *)(
-                        p_text->o_lines.p_prev);
+                struct feed_line *
+                    p_line;
 
-                /* Find last char */
-                if (p_line->o_glyphs.p_prev !=
-                    &(p_line->o_glyphs))
+                struct feed_glyph *
+                    p_glyph;
+
+                /* Find last line */
+                if (p_text->o_lines.p_prev !=
+                    &(p_text->o_lines))
                 {
-                    /* Delete the selected char */
-                    p_glyph =
-                        (struct feed_glyph *)(
-                            p_line->o_glyphs.p_prev);
+                    p_line =
+                        (struct feed_line *)(
+                            p_text->o_lines.p_prev);
 
-                    feed_glyph_destroy(
-                        p_glyph);
-
-                    if (p_text->i_cursor_glyph_index)
+                    /* Find last char */
+                    if (p_line->o_glyphs.p_prev !=
+                        &(p_line->o_glyphs))
                     {
-                        p_text->i_cursor_glyph_index --;
-                    }
+                        /* Delete the selected char */
+                        p_glyph =
+                            (struct feed_glyph *)(
+                                p_line->o_glyphs.p_prev);
 
-                    if (p_line->i_glyph_count)
-                    {
-                        p_line->i_glyph_count --;
+                        feed_glyph_destroy(
+                            p_glyph);
+
+                        if (p_text->i_cursor_glyph_index)
+                        {
+                            p_text->i_cursor_glyph_index --;
+                        }
+
+                        if (p_line->i_glyph_count)
+                        {
+                            p_line->i_glyph_count --;
+                        }
                     }
                 }
             }
-        }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_HOME) == p_event->i_code)
-        {
-            p_text->i_cursor_glyph_index =
-                0;
-        }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_END) == p_event->i_code)
-        {
-            struct feed_line *
-                p_line;
-
-            /* Find last line */
-            if (p_text->o_lines.p_prev !=
-                &(p_text->o_lines))
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_HOME) == p_event->i_code)
             {
-                p_line =
-                    (struct feed_line *)(
-                        p_text->o_lines.p_prev);
-
-                p_text->i_cursor_glyph_index =
-                    p_line->i_glyph_count;
-
-#if 0
-                struct feed_list *
-                    p_iterator;
-
                 p_text->i_cursor_glyph_index =
                     0;
+            }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_END) == p_event->i_code)
+            {
+                struct feed_line *
+                    p_line;
+
+                /* Find last line */
+                if (p_text->o_lines.p_prev !=
+                    &(p_text->o_lines))
+                {
+                    p_line =
+                        (struct feed_line *)(
+                            p_text->o_lines.p_prev);
+
+                    p_text->i_cursor_glyph_index =
+                        p_line->i_glyph_count;
+
+#if 0
+                    struct feed_list *
+                        p_iterator;
+
+                    p_text->i_cursor_glyph_index =
+                        0;
 
                     p_iterator =
                         p_line->o_glyphs.p_next;
@@ -584,78 +605,83 @@ feed_main_event_callback(
                         p_iterator =
                             p_iterator->p_next;
                     }
-                }
 #endif
 
+                }
             }
-        }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_LEFT) == p_event->i_code)
-        {
-            if (p_text->i_cursor_glyph_index)
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_LEFT) == p_event->i_code)
             {
-                p_text->i_cursor_glyph_index --;
+                if (p_text->i_cursor_glyph_index)
+                {
+                    p_text->i_cursor_glyph_index --;
+                }
+                else
+                {
+                    /* Go to previous line */
+                }
+            }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_RIGHT) == p_event->i_code)
+            {
+                struct feed_line *
+                    p_line;
+
+                /* Find last line */
+                if (p_text->o_lines.p_prev !=
+                    &(p_text->o_lines))
+                {
+                    p_line =
+                        (struct feed_line *)(
+                            p_text->o_lines.p_prev);
+
+                    if (p_text->i_cursor_glyph_index < p_line->i_glyph_count)
+                    {
+                        p_text->i_cursor_glyph_index ++;
+                    }
+                }
+            }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
+            {
+                /* Create a new line */
+                struct feed_line *
+                    p_line;
+
+                p_line =
+                    feed_line_create(
+                        p_main_context->p_client);
+
+                if (
+                    p_line)
+                {
+                    feed_list_join(
+                        &(
+                            p_line->o_list),
+                        &(
+                            p_text->o_lines));
+
+                    p_text->i_line_count ++;
+
+                    p_text->i_cursor_line_index =
+                        p_text->i_line_count - 1u;
+
+                    p_text->i_cursor_glyph_index =
+                        0u;
+                }
+            }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'V') == p_event->i_code)
+            {
+                /* Verbose state */
+                p_main_context->b_verbose = 1;
             }
             else
             {
-                /* Go to previous line */
+                feed_text_write_event(
+                    p_text,
+                    p_event);
             }
+
+            feed_main_refresh_text(
+                p_main_context);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_RIGHT) == p_event->i_code)
-        {
-            struct feed_line *
-                p_line;
-
-            /* Find last line */
-            if (p_text->o_lines.p_prev !=
-                &(p_text->o_lines))
-            {
-                p_line =
-                    (struct feed_line *)(
-                        p_text->o_lines.p_prev);
-
-                if (p_text->i_cursor_glyph_index < p_line->i_glyph_count)
-                {
-                    p_text->i_cursor_glyph_index ++;
-                }
-            }
-        }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
-        {
-            /* Create a new line */
-            struct feed_line *
-                p_line;
-
-            p_line =
-                feed_line_create(
-                    p_main_context->p_client);
-
-            if (
-                p_line)
-            {
-                feed_list_join(
-                    &(
-                        p_line->o_list),
-                    &(
-                        p_text->o_lines));
-
-                p_text->i_line_count ++;
-
-                p_text->i_cursor_line_index =
-                    p_text->i_line_count - 1u;
-
-                p_text->i_cursor_glyph_index =
-                    0u;
-            }
-        }
-        else
-        {
-            feed_text_write_event(
-                p_text,
-                p_event);
-        }
-
-        feed_main_refresh_text(
-            p_main_context);
     }
 
 }
@@ -682,6 +708,13 @@ feed_main(
     p_main_context =
         &(
             o_main_context);
+
+    memset(
+        p_main_context,
+        0x00u,
+        sizeof(
+            *(
+                p_main_context)));
 
     p_main_context->p_client =
         &(
@@ -802,6 +835,9 @@ feed_main(
                     p_main_context->p_client,
                     p_main_context->i_wx,
                     p_main_context->i_wy);
+
+            p_main_context->b_verbose =
+                0;
 
 #if 0
             /* test line wrap enable */
