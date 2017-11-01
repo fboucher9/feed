@@ -121,8 +121,12 @@ feed_main_print_status(
     p_screen =
         p_main_context->p_screen;
 
-    sprintf((char *)(buf), "%08lx: [", p_event->i_code);
-    feed_screen_write_clip(
+    sprintf(
+        (char *)(buf),
+        "%08lx: [",
+        p_event->i_code);
+
+    feed_screen_write_wrap(
         p_screen,
         buf,
         11u,
@@ -135,7 +139,7 @@ feed_main_print_status(
         if ((c >= 32) && (c < 127))
         {
             sprintf((char *)(buf), " '%c'", (char)(c));
-            feed_screen_write_clip(
+            feed_screen_write_wrap(
                 p_screen,
                 buf,
                 4u,
@@ -144,14 +148,14 @@ feed_main_print_status(
         else
         {
             sprintf((char *)(buf), " %3u", (unsigned int)(p_event->a_raw[i]));
-            feed_screen_write_clip(
+            feed_screen_write_wrap(
                 p_screen,
                 buf,
                 4u,
                 4u);
         }
     }
-    feed_screen_write_clip(
+    feed_screen_write_wrap(
         p_screen,
         (unsigned char const *)(" ]"),
         2u,
@@ -182,7 +186,7 @@ feed_main_print_status(
             (int)(o_name.i_len),
             (char const *)(o_name.p_buf));
 
-        feed_screen_write_clip(
+        feed_screen_write_wrap(
             p_screen,
             buf,
             3u + o_name.i_len,
@@ -207,7 +211,7 @@ feed_main_refresh_text(
         p_text;
 
     unsigned int
-        i_height;
+        i_cursor_line_iterator;
 
     unsigned int
         i_cursor_visible_y;
@@ -224,16 +228,13 @@ feed_main_refresh_text(
     p_text =
         p_main_context->p_text;
 
-    i_height =
+    i_cursor_line_iterator =
         0u;
 
     i_cursor_visible_y =
         0u;
 
     i_cursor_visible_x =
-        0u;
-
-    i_cursor_glyph_iterator =
         0u;
 
     /* Grow size of drawing region */
@@ -272,7 +273,7 @@ feed_main_refresh_text(
 
             /* Return to home position */
 
-            if (0u == i_height)
+            if (0u == i_cursor_line_iterator)
             {
                 /* Draw a prompt on first line */
                 p_glyph_iterator =
@@ -301,22 +302,43 @@ feed_main_refresh_text(
                     p_glyph_iterator =
                         p_glyph_iterator->p_next;
                 }
+            }
+            else
+            {
+                feed_screen_newline(
+                    p_main_context->p_screen);
 
+                {
+                    static unsigned char const g_ps2[] =
+                    {
+                        ' ',
+                        '>',
+                        ' '
+                    };
+
+                    feed_screen_write_wrap(
+                        p_main_context->p_screen,
+                        g_ps2,
+                        sizeof(g_ps2),
+                        sizeof(g_ps2));
+                }
+            }
+
+            if (i_cursor_line_iterator == p_text->i_cursor_line_index)
+            {
                 i_cursor_visible_x =
                     p_screen->i_cursor_x;
 
                 i_cursor_visible_y =
                     p_screen->i_cursor_y;
             }
-            else
-            {
-                feed_screen_newline(
-                    p_main_context->p_screen);
-            }
 
             /* For all chars in line */
             p_glyph_iterator =
                 p_line->o_glyphs.p_next;
+
+            i_cursor_glyph_iterator =
+                0u;
 
             while (
                 p_glyph_iterator
@@ -338,7 +360,8 @@ feed_main_refresh_text(
                     p_glyph->i_visible_length,
                     p_glyph->i_visible_width);
 
-                if (i_cursor_glyph_iterator < p_text->i_cursor_glyph_index)
+                if ((i_cursor_line_iterator == p_text->i_cursor_line_index)
+                    && (i_cursor_glyph_iterator < p_text->i_cursor_glyph_index))
                 {
                     i_cursor_visible_x =
                         p_screen->i_cursor_x;
@@ -357,7 +380,7 @@ feed_main_refresh_text(
             feed_screen_clear_line(
                 p_screen);
 
-            i_height ++;
+            i_cursor_line_iterator ++;
 
             p_line_iterator =
                 p_line_iterator->p_next;
@@ -368,7 +391,7 @@ feed_main_refresh_text(
     {
         feed_screen_newline(p_screen);
 
-        feed_screen_write_clip(
+        feed_screen_write_wrap(
             p_screen,
             (unsigned char const *)("status: "),
             8u,
@@ -520,6 +543,34 @@ feed_main_event_callback(
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_RIGHT) == p_event->i_code)
         {
             p_text->i_cursor_glyph_index ++;
+        }
+        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
+        {
+            /* Create a new line */
+            struct feed_line *
+                p_line;
+
+            p_line =
+                feed_line_create(
+                    p_main_context->p_client);
+
+            if (
+                p_line)
+            {
+                feed_list_join(
+                    &(
+                        p_line->o_list),
+                    &(
+                        p_text->o_lines));
+
+                p_text->i_line_count ++;
+
+                p_text->i_cursor_line_index =
+                    p_text->i_line_count - 1u;
+
+                p_text->i_cursor_glyph_index =
+                    0u;
+            }
         }
         else
         {
