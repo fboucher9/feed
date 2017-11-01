@@ -74,10 +74,6 @@ feed_glyph_write_event(
         p_glyph->i_visible_length =
             (unsigned char)(
                 o_buf.i_len + 2u);
-
-        p_glyph->i_visible_width =
-            (unsigned char)(
-                o_buf.i_len + 2u);
     }
     else
     {
@@ -88,9 +84,6 @@ feed_glyph_write_event(
 
         p_glyph->i_visible_length =
             p_event->i_raw_len;
-
-        p_glyph->i_visible_width =
-            1u;
 
     }
 
@@ -118,9 +111,6 @@ feed_glyph_init(
         0u;
 
     p_glyph->i_visible_length =
-        0u;
-
-    p_glyph->i_visible_width =
         0u;
 
     feed_glyph_write_event(

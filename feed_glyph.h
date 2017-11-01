@@ -55,15 +55,11 @@ struct feed_glyph
 
     /* Visible representation of character */
     unsigned char
-        a_visible[30u];
+        a_visible[31u];
 
     /* Length in bytes of visible character */
     unsigned char
         i_visible_length;
-
-    /* Width in columns of visible character */
-    unsigned char
-        i_visible_width;
 
 }; /* struct feed_glyph */
 
