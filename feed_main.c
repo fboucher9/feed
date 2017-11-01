@@ -756,10 +756,12 @@ feed_main(
         &(
             p_main_context->o_tty);
 
+    p_main_context->p_client->p_tty =
+        feed_tty_create(
+            p_main_context->p_client);
+
     if (
-        feed_tty_init(
-            p_main_context->p_client,
-            p_main_context->p_client->p_tty))
+        p_main_context->p_client->p_tty)
     {
         if (
             feed_tty_enable(
@@ -1085,7 +1087,7 @@ feed_main(
                 "enable error!");
         }
 
-        feed_tty_cleanup(
+        feed_tty_destroy(
             p_main_context->p_client->p_tty);
     }
     else

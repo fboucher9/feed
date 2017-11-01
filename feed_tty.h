@@ -17,15 +17,8 @@ struct feed_tty
     struct feed_client *
         p_client;
 
-    union termios_aligned
-    {
-        struct termios
-            o_termios;
-
-        unsigned char
-            a_aligned[(sizeof(struct termios) + 7u) & ~7u];
-
-    } u;
+    void *
+        p_termios;
 
     int
         i_output_file;
@@ -44,15 +37,13 @@ struct feed_tty
 
 };
 
-char
-feed_tty_init(
+struct feed_tty *
+feed_tty_create(
     struct feed_client * const
-        p_client,
-    struct feed_tty * const
-        p_tty);
+        p_client);
 
 void
-feed_tty_cleanup(
+feed_tty_destroy(
     struct feed_tty * const
         p_tty);
 

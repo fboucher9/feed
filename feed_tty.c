@@ -22,6 +22,9 @@ Description:
 
 #include "feed_const.h"
 
+#include "feed_heap.h"
+
+static
 char
 feed_tty_init(
     struct feed_client * const
@@ -31,33 +34,228 @@ feed_tty_init(
 {
     char b_result;
 
-    (void)(p_client);
+    struct feed_heap *
+        p_heap;
 
-    p_tty->p_client =
-        p_client;
+    if (
+        p_client)
+    {
+        if (
+            p_tty)
+        {
+            p_heap =
+                feed_client_get_heap(
+                    p_client);
 
-    p_tty->i_output_file =
-        STDOUT_FILENO;
+            if (
+                p_heap)
+            {
+                p_tty->p_client =
+                    p_client;
 
-    p_tty->i_input_file =
-        STDIN_FILENO;
+                p_tty->p_termios =
+                    feed_heap_alloc(
+                        p_heap,
+                        sizeof(
+                            struct termios));
 
-    p_tty->b_enabled =
-        0;
+                if (
+                    p_tty->p_termios)
+                {
+                    p_tty->i_output_file =
+                        STDOUT_FILENO;
 
-    b_result = 1;
+                    p_tty->i_input_file =
+                        STDIN_FILENO;
+
+                    p_tty->b_enabled =
+                        0;
+
+                    b_result =
+                        1;
+                }
+                else
+                {
+                    b_result =
+                        0;
+                }
+            }
+            else
+            {
+                b_result =
+                    0;
+            }
+        }
+        else
+        {
+            b_result =
+                0;
+        }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
 
     return b_result;
 }
 
+static
 void
 feed_tty_cleanup(
     struct feed_tty * const
         p_tty)
 {
-    (void)(
-        p_tty);
+    if (p_tty)
+    {
+        struct feed_client *
+            p_client;
+
+        p_client =
+            p_tty->p_client;
+
+        if (
+            p_client)
+        {
+            struct feed_heap *
+                p_heap;
+
+            p_heap =
+                feed_client_get_heap(
+                    p_client);
+
+            if (
+                p_heap)
+            {
+                if (p_tty->p_termios)
+                {
+                    feed_heap_free(
+                        p_heap,
+                        p_tty->p_termios);
+
+                    p_tty->p_termios =
+                        (void *)(
+                            0);
+                }
+            }
+
+            p_tty->p_client =
+                (struct feed_client *)(
+                    0);
+        }
+    }
 }
+
+struct feed_tty *
+feed_tty_create(
+    struct feed_client * const
+        p_client)
+{
+    struct feed_tty *
+        p_tty;
+
+    if (
+        p_client)
+    {
+        struct feed_heap *
+            p_heap;
+
+        p_heap =
+            feed_client_get_heap(
+                p_client);
+
+        if (
+            p_heap)
+        {
+            p_tty =
+                (struct feed_tty *)(
+                    feed_heap_alloc(
+                        p_heap,
+                        (unsigned int)(
+                            sizeof(
+                                struct feed_tty))));
+
+            if (
+                p_tty)
+            {
+                if (
+                    feed_tty_init(
+                        p_client,
+                        p_tty))
+                {
+                }
+                else
+                {
+                    feed_heap_free(
+                        p_heap,
+                        (void *)(
+                            p_tty));
+
+                    p_tty =
+                        (struct feed_tty *)(
+                            0);
+                }
+            }
+        }
+        else
+        {
+            p_tty =
+                (struct feed_tty *)(
+                    0);
+        }
+    }
+    else
+    {
+        p_tty =
+            (struct feed_tty *)(
+                0);
+    }
+
+    return
+        p_tty;
+
+} /* feed_tty_create() */
+
+void
+feed_tty_destroy(
+    struct feed_tty * const
+        p_tty)
+{
+    struct feed_client *
+        p_client;
+
+    struct feed_heap *
+        p_heap;
+
+    if (
+        p_tty)
+    {
+        p_client =
+            p_tty->p_client;
+
+        if (
+            p_client)
+        {
+            p_heap =
+                feed_client_get_heap(
+                    p_client);
+
+            if (
+                p_heap)
+            {
+                feed_tty_cleanup(
+                    p_tty);
+
+                feed_heap_free(
+                    p_heap,
+                    (void *)(
+                        p_tty));
+            }
+        }
+    }
+
+} /* feed_tty_destroy() */
 
 static
 void
@@ -116,14 +314,18 @@ feed_tty_enable(
         i_term_status =
             tcgetattr(
                 p_tty->i_input_file,
-                &(
-                    p_tty->u.o_termios));
+                (struct termios *)(
+                    p_tty->p_termios));
 
         if (
             0 <= i_term_status)
         {
-            o_termios =
-                p_tty->u.o_termios;
+            memcpy(
+                &(
+                    o_termios),
+                p_tty->p_termios,
+                sizeof(
+                    struct termios));
 
             feed_tty_set_raw_options(
                 &(
@@ -186,8 +388,8 @@ feed_tty_disable(
             tcsetattr(
                 p_tty->i_input_file,
                 TCSADRAIN,
-                &(
-                    p_tty->u.o_termios));
+                (struct termios *)(
+                    p_tty->p_termios));
 
         if (
             0 <= i_term_status)
