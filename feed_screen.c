@@ -356,27 +356,39 @@ feed_screen_newline(
         feed_client_get_tty(
             p_client);
 
+    if (
+        (p_screen->i_cursor_y + 1u) >= p_screen->i_screen_height)
     {
-        static unsigned char g_crlf[] =
-        {
-            '\r',
-            '\n'
-        };
+        p_screen->i_cursor_y=
+            p_screen->i_screen_height - 1u;
 
-        feed_tty_write_character_array(
-            p_tty,
-            g_crlf,
-            sizeof(
-                g_crlf));
+        p_screen->i_cursor_x =
+            p_screen->i_screen_width - 1u;
     }
-
-    p_screen->i_cursor_x = 0;
-
-    p_screen->i_cursor_y ++;
-
-    if (p_screen->i_cursor_y >= p_screen->i_region_height)
+    else
     {
-        p_screen->i_region_height = p_screen->i_cursor_y + 1u;
+        {
+            static unsigned char g_crlf[] =
+            {
+                '\r',
+                '\n'
+            };
+
+            feed_tty_write_character_array(
+                p_tty,
+                g_crlf,
+                sizeof(
+                    g_crlf));
+        }
+
+        p_screen->i_cursor_x = 0;
+
+        p_screen->i_cursor_y ++;
+
+        if (p_screen->i_cursor_y >= p_screen->i_region_height)
+        {
+            p_screen->i_region_height = p_screen->i_cursor_y + 1u;
+        }
     }
 }
 
