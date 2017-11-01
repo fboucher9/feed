@@ -68,13 +68,31 @@ feed_screen_event_callback(
     struct feed_screen *
         p_screen;
 
+    struct feed_client *
+        p_client;
+
+    struct feed_tty *
+        p_tty;
+
     p_screen =
         (struct feed_screen *)(
             p_context);
 
+    p_client =
+        p_screen->p_client;
+
+    p_tty =
+        feed_client_get_tty(
+            p_client);
+
     if (FEED_EVENT_KEY_FLAG & p_event->i_code)
     {
         /* Special keys should already by converted to visual... */
+        /* This could be an attribute, send direct */
+        feed_tty_write_character_array(
+            p_tty,
+            p_event->a_raw,
+            p_event->i_raw_len);
     }
     else
     {
@@ -89,6 +107,90 @@ feed_screen_event_callback(
         }
     }
 }
+
+static
+void
+feed_screen_init(
+    struct feed_screen * const
+        p_screen,
+    struct feed_client * const
+        p_client,
+    unsigned int const
+        i_screen_width,
+    unsigned int const
+        i_screen_height)
+{
+    memset(
+        p_screen,
+        0x00u,
+        sizeof(
+            struct feed_screen));
+
+    p_screen->p_client =
+        p_client;
+
+    p_screen->p_input =
+        feed_input_create(
+            p_client,
+            &(
+                feed_screen_event_callback),
+            (void *)(
+                p_screen));
+
+    p_screen->i_screen_width =
+        i_screen_width;
+
+    p_screen->i_screen_height =
+        i_screen_height;
+
+    p_screen->i_region_height =
+        1u;
+
+    p_screen->i_cursor_x =
+        0u;
+
+    p_screen->i_cursor_y =
+        0u;
+
+} /* feed_screen_init() */
+
+static
+void
+feed_screen_cleanup(
+    struct feed_screen * const
+        p_screen)
+{
+    if (
+        p_screen->p_input)
+    {
+        feed_input_destroy(
+            p_screen->p_input);
+
+        p_screen->p_input =
+            (struct feed_input *)(
+                0);
+    }
+
+    p_screen->p_client =
+        (struct feed_client *)(
+            0);
+
+    p_screen->i_screen_width =
+        0u;
+
+    p_screen->i_screen_height =
+        0u;
+
+    p_screen->i_region_height =
+        0u;
+
+    p_screen->i_cursor_x =
+        0u;
+
+    p_screen->i_cursor_y =
+        0u;
+
+} /* feed_screen_cleanup() */
 
 struct feed_screen *
 feed_screen_create(
@@ -119,43 +221,17 @@ feed_screen_create(
     if (
         p_screen)
     {
-        memset(
+        feed_screen_init(
             p_screen,
-            0x00u,
-            sizeof(
-                struct feed_screen));
-
-        p_screen->p_client =
-            p_client;
-
-        p_screen->p_input =
-            feed_input_create(
-                p_client,
-                &(
-                    feed_screen_event_callback),
-                (void *)(
-                    p_screen));
-
-        p_screen->i_screen_width =
-            i_screen_width;
-
-        p_screen->i_screen_height =
-            i_screen_height;
-
-        p_screen->i_region_height =
-            1u;
-
-        p_screen->i_cursor_x =
-            0u;
-
-        p_screen->i_cursor_y =
-            0u;
+            p_client,
+            i_screen_width,
+            i_screen_height);
     }
 
     return
         p_screen;
 
-}
+} /* feed_screen_create() */
 
 void
 feed_screen_destroy(
@@ -175,8 +251,8 @@ feed_screen_destroy(
         feed_client_get_heap(
             p_client);
 
-    feed_input_destroy(
-        p_screen->p_input);
+    feed_screen_cleanup(
+        p_screen);
 
     feed_heap_free(
         p_heap,
