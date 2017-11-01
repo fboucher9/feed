@@ -18,6 +18,78 @@ Description:
 
 #include "feed_tty.h"
 
+#include "feed_input.h"
+
+static
+void
+feed_screen_write_clip(
+    struct feed_screen * const
+        p_screen,
+    unsigned char const * const
+        p_data,
+    unsigned int const
+        i_count)
+{
+    struct feed_client *
+        p_client;
+
+    struct feed_tty *
+        p_tty;
+
+    p_client =
+        p_screen->p_client;
+
+    p_tty =
+        feed_client_get_tty(
+            p_client);
+
+    if (1 < p_screen->i_screen_width)
+    {
+        if ((p_screen->i_cursor_x + 1) < p_screen->i_screen_width)
+        {
+            feed_tty_write_character_array(
+                p_tty,
+                p_data,
+                i_count);
+
+            p_screen->i_cursor_x += 1;
+        }
+    }
+}
+
+static
+void
+feed_screen_event_callback(
+    void * const
+        p_context,
+    struct feed_event const * const
+        p_event)
+{
+    struct feed_screen *
+        p_screen;
+
+    p_screen =
+        (struct feed_screen *)(
+            p_context);
+
+    if (FEED_EVENT_KEY_FLAG & p_event->i_code)
+    {
+        /* Special keys should already by converted to visual... */
+    }
+    else
+    {
+        if (1 < p_screen->i_screen_width)
+        {
+            if ((p_screen->i_cursor_x + 1) >= p_screen->i_screen_width)
+            {
+                feed_screen_newline(p_screen);
+            }
+
+            feed_screen_write_clip(p_screen, p_event->a_raw, p_event->i_raw_len);
+        }
+    }
+}
+
 struct feed_screen *
 feed_screen_create(
     struct feed_client * const
@@ -55,6 +127,14 @@ feed_screen_create(
 
         p_screen->p_client =
             p_client;
+
+        p_screen->p_input =
+            feed_input_create(
+                p_client,
+                &(
+                    feed_screen_event_callback),
+                (void *)(
+                    p_screen));
 
         p_screen->i_screen_width =
             i_screen_width;
@@ -94,6 +174,9 @@ feed_screen_destroy(
     p_heap =
         feed_client_get_heap(
             p_client);
+
+    feed_input_destroy(
+        p_screen->p_input);
 
     feed_heap_free(
         p_heap,
@@ -222,62 +305,22 @@ feed_screen_newline(
 }
 
 void
-feed_screen_write_clip(
+feed_screen_write(
     struct feed_screen * const
         p_screen,
     unsigned char const * const
         p_data,
     unsigned int const
-        i_count,
-    unsigned int const
-        i_width)
+        i_count)
 {
-    struct feed_client *
-        p_client;
+    unsigned int
+        i;
 
-    struct feed_tty *
-        p_tty;
-
-    p_client =
-        p_screen->p_client;
-
-    p_tty =
-        feed_client_get_tty(
-            p_client);
-
-    if (i_width < p_screen->i_screen_width)
+    for (i=0u; i<i_count; i++)
     {
-        if ((p_screen->i_cursor_x + i_width) < p_screen->i_screen_width)
-        {
-            feed_tty_write_character_array(
-                p_tty,
-                p_data,
-                i_count);
-
-            p_screen->i_cursor_x += i_width;
-        }
-    }
-}
-
-void
-feed_screen_write_wrap(
-    struct feed_screen * const
-        p_screen,
-    unsigned char const * const
-        p_data,
-    unsigned int const
-        i_count,
-    unsigned int const
-        i_width)
-{
-    if (i_width < p_screen->i_screen_width)
-    {
-        if ((p_screen->i_cursor_x + i_width) >= p_screen->i_screen_width)
-        {
-            feed_screen_newline(p_screen);
-        }
-
-        feed_screen_write_clip(p_screen, p_data, i_count, i_width);
+        feed_input_write(
+            p_screen->p_input,
+            p_data[i]);
     }
 }
 

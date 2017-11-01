@@ -42,13 +42,15 @@ Comments:
 
 struct feed_client;
 
+struct feed_input;
+
 struct feed_screen
 {
     struct feed_client *
         p_client;
 
-    void *
-        pv_padding[1u];
+    struct feed_input *
+        p_input;
 
     unsigned int
         i_screen_width;
@@ -99,26 +101,13 @@ feed_screen_newline(
         p_screen);
 
 void
-feed_screen_write_clip(
+feed_screen_write(
     struct feed_screen * const
         p_screen,
     unsigned char const * const
         p_data,
     unsigned int const
-        i_count,
-    unsigned int const
-        i_width);
-
-void
-feed_screen_write_wrap(
-    struct feed_screen * const
-        p_screen,
-    unsigned char const * const
-        p_data,
-    unsigned int const
-        i_count,
-    unsigned int const
-        i_width);
+        i_count);
 
 void
 feed_screen_clear_line(

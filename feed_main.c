@@ -118,19 +118,27 @@ feed_main_print_status(
     unsigned char
         buf[80u];
 
+    int
+        i_buf_len;
+
     p_screen =
         p_main_context->p_screen;
 
-    sprintf(
-        (char *)(buf),
-        "%08lx: [",
-        p_event->i_code);
+    i_buf_len =
+        sprintf(
+            (char *)(buf),
+            "%08lx: [",
+            p_event->i_code);
 
-    feed_screen_write_wrap(
-        p_screen,
-        buf,
-        11u,
-        11u);
+    if (
+        i_buf_len > 0)
+    {
+        feed_screen_write(
+            p_screen,
+            buf,
+            (unsigned int)(
+                i_buf_len));
+    }
 
     for (i=0u; i<p_event->i_raw_len; i++)
     {
@@ -138,28 +146,57 @@ feed_main_print_status(
 
         if ((c >= 32) && (c < 127))
         {
-            sprintf((char *)(buf), " '%c'", (char)(c));
-            feed_screen_write_wrap(
-                p_screen,
-                buf,
-                4u,
-                4u);
+            i_buf_len =
+                sprintf(
+                    (char *)(buf),
+                    " '%c'",
+                    (char)(c));
+
+            if (
+                i_buf_len > 0)
+            {
+                feed_screen_write(
+                    p_screen,
+                    buf,
+                    (unsigned int)(
+                        i_buf_len));
+            }
         }
         else
         {
-            sprintf((char *)(buf), " %3u", (unsigned int)(p_event->a_raw[i]));
-            feed_screen_write_wrap(
-                p_screen,
-                buf,
-                4u,
-                4u);
+            i_buf_len =
+                sprintf(
+                    (char *)(buf),
+                    " %3u",
+                    (unsigned int)(p_event->a_raw[i]));
+
+            if (
+                i_buf_len > 0)
+            {
+                feed_screen_write(
+                    p_screen,
+                    buf,
+                    (unsigned int)(
+                        i_buf_len));
+            }
         }
     }
-    feed_screen_write_wrap(
-        p_screen,
-        (unsigned char const *)(" ]"),
-        2u,
-        2u);
+
+    {
+        static unsigned char const g_close[] =
+        {
+            ' ',
+            ']',
+            ' ',
+            '<'
+        };
+
+        feed_screen_write(
+            p_screen,
+            g_close,
+            (unsigned int)(
+                sizeof(g_close)));
+    }
 
     {
         unsigned char a_name[64u];
@@ -180,17 +217,24 @@ feed_main_print_status(
             &(
                 o_name));
 
-        sprintf(
-            (char *)(buf),
-            " <%.*s>",
-            (int)(o_name.i_len),
-            (char const *)(o_name.p_buf));
-
-        feed_screen_write_wrap(
+        feed_screen_write(
             p_screen,
-            buf,
-            3u + o_name.i_len,
-            3u + o_name.i_len);
+            o_name.p_buf,
+            o_name.i_len);
+    }
+
+    {
+        static unsigned char const g_name_end[] =
+        {
+            '>'
+        };
+
+        feed_screen_write(
+            p_screen,
+            g_name_end,
+            (unsigned int)(
+                sizeof(
+                    g_name_end)));
     }
 
     feed_screen_clear_line(
@@ -293,11 +337,10 @@ feed_main_refresh_text(
 
                     /* If char is within refresh window */
 
-                    feed_screen_write_wrap(
+                    feed_screen_write(
                         p_main_context->p_screen,
                         p_glyph->a_visible,
-                        p_glyph->i_visible_length,
-                        p_glyph->i_visible_width);
+                        p_glyph->i_visible_length);
 
                     p_glyph_iterator =
                         p_glyph_iterator->p_next;
@@ -316,10 +359,9 @@ feed_main_refresh_text(
                         ' '
                     };
 
-                    feed_screen_write_wrap(
+                    feed_screen_write(
                         p_main_context->p_screen,
                         g_ps2,
-                        sizeof(g_ps2),
                         sizeof(g_ps2));
                 }
             }
@@ -354,11 +396,10 @@ feed_main_refresh_text(
 
                 /* If char is within refresh window */
 
-                feed_screen_write_wrap(
+                feed_screen_write(
                     p_screen,
                     p_glyph->a_visible,
-                    p_glyph->i_visible_length,
-                    p_glyph->i_visible_width);
+                    p_glyph->i_visible_length);
 
                 if ((i_cursor_line_iterator == p_text->i_cursor_line_index)
                     && (i_cursor_glyph_iterator < p_text->i_cursor_glyph_index))
@@ -391,11 +432,26 @@ feed_main_refresh_text(
     {
         feed_screen_newline(p_screen);
 
-        feed_screen_write_wrap(
-            p_screen,
-            (unsigned char const *)("status: "),
-            8u,
-            8u);
+        {
+            static unsigned char const g_status_header[] =
+            {
+                's',
+                't',
+                'a',
+                't',
+                'u',
+                's',
+                ':',
+                ' '
+            };
+
+            feed_screen_write(
+                p_screen,
+                g_status_header,
+                (unsigned int)(
+                    sizeof(
+                        g_status_header)));
+        }
 
         feed_main_print_status(
             p_main_context,
@@ -539,10 +595,29 @@ feed_main_event_callback(
             {
                 p_text->i_cursor_glyph_index --;
             }
+            else
+            {
+                /* Go to previous line */
+            }
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_RIGHT) == p_event->i_code)
         {
-            p_text->i_cursor_glyph_index ++;
+            struct feed_line *
+                p_line;
+
+            /* Find last line */
+            if (p_text->o_lines.p_prev !=
+                &(p_text->o_lines))
+            {
+                p_line =
+                    (struct feed_line *)(
+                        p_text->o_lines.p_prev);
+
+                if (p_text->i_cursor_glyph_index < p_line->i_glyph_count)
+                {
+                    p_text->i_cursor_glyph_index ++;
+                }
+            }
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
         {
@@ -798,37 +873,31 @@ feed_main(
                 };
 
                 feed_tty_line_wrap(
-                    p_main_context->p_client,
                     p_main_context->p_client->p_tty,
                     1);
 
                 feed_tty_write_character_array(
-                    p_main_context->p_client,
                     p_main_context->p_client->p_tty,
                     g_test_line_wrap_enable,
                     sizeof(
                         g_test_line_wrap_enable));
 
                 feed_tty_move_cursor_backward(
-                    p_main_context->p_client,
                     p_main_context->p_client->p_tty,
                     20);
 
                 /* test line wrap disable */
                 feed_tty_line_wrap(
-                    p_main_context->p_client,
                     p_main_context->p_client->p_tty,
                     0);
 
                 feed_tty_write_character_array(
-                    p_main_context->p_client,
                     p_main_context->p_client->p_tty,
                     g_test_line_wrap_enable,
                     sizeof(
                         g_test_line_wrap_enable));
 
                 feed_tty_move_cursor_backward(
-                    p_main_context->p_client,
                     p_main_context->p_client->p_tty,
                     20);
             }
@@ -837,12 +906,10 @@ feed_main(
 #if 0
 
             feed_tty_move_cursor_up(
-                p_main_context->p_client,
                 p_main_context->p_client->p_tty,
                 3);
 
             feed_tty_move_cursor_forward(
-                p_main_context->p_client,
                 p_main_context->p_client->p_tty,
                 40);
 
