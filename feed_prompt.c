@@ -12,37 +12,93 @@ Description:
 
 #include "feed_prompt.h"
 
-#include "feed_client.h"
+#include "feed_object.h"
 
-#include "feed_heap.h"
+#include "feed_list.h"
+
+#include "feed_line.h"
+
+#include "feed_input.h"
 
 static
-void
+char
 feed_prompt_init(
-    struct feed_prompt * const
-        p_prompt,
+    void * const
+        p_buf,
     struct feed_client * const
-        p_client)
+        p_client,
+    void const * const
+        p_descriptor)
 {
-    p_prompt->p_client =
-        p_client;
+    struct feed_prompt *
+        p_prompt;
 
-    p_prompt->a_prompt[0u] =
-        NULL;
+    (void)(
+        p_descriptor);
 
-    p_prompt->a_prompt[1u] =
-        NULL;
+    p_prompt =
+        (struct feed_prompt *)(
+            p_buf);
+
+    if (
+        p_prompt)
+    {
+        p_prompt->p_client =
+            p_client;
+
+        p_prompt->a_prompt[0u] =
+            NULL;
+
+        p_prompt->a_prompt[1u] =
+            NULL;
+
+    }
+
+    return
+        1;
+
 }
 
 static
 void
 feed_prompt_cleanup(
-    struct feed_prompt * const
-        p_prompt)
+    void * const
+        p_buf)
 {
-    p_prompt->p_client =
-        NULL;
+    struct feed_prompt *
+        p_prompt;
 
+    p_prompt =
+        (struct feed_prompt *)(
+            p_buf);
+
+    if (
+        p_prompt)
+    {
+        p_prompt->p_client =
+            NULL;
+
+        if (
+            p_prompt->a_prompt[0u])
+        {
+            feed_line_destroy(
+                p_prompt->a_prompt[0u]);
+
+            p_prompt->a_prompt[0u] =
+                NULL;
+        }
+
+        if (
+            p_prompt->a_prompt[1u])
+        {
+            feed_line_destroy(
+                p_prompt->a_prompt[1u]);
+
+            p_prompt->a_prompt[1u] =
+                NULL;
+        }
+
+    }
 }
 
 struct feed_prompt *
@@ -50,53 +106,16 @@ feed_prompt_create(
     struct feed_client * const
         p_client)
 {
-    struct feed_prompt *
-        p_prompt;
-
-    if (
-        p_client)
-    {
-        struct feed_heap *
-            p_heap;
-
-        p_heap =
-            feed_client_get_heap(
-                p_client);
-
-        if (
-            p_heap)
-        {
-            p_prompt =
-                (struct feed_prompt *)(
-                    feed_heap_alloc(
-                        p_heap,
-                        (unsigned int)(
-                            sizeof(
-                                struct feed_prompt))));
-
-            if (
-                p_prompt)
-            {
-                feed_prompt_init(
-                    p_prompt,
-                    p_client);
-            }
-        }
-        else
-        {
-            p_prompt =
-                NULL;
-        }
-    }
-    else
-    {
-        p_prompt =
-            NULL;
-    }
-
     return
-        p_prompt;
-
+        (struct feed_prompt *)(
+            feed_object_create(
+                p_client,
+                (unsigned int)(
+                    sizeof(
+                        struct feed_prompt)),
+                &(
+                    feed_prompt_init),
+                NULL));
 }
 
 void
@@ -107,35 +126,39 @@ feed_prompt_destroy(
     if (
         p_prompt)
     {
-        struct feed_client *
-            p_client;
-
-        p_client =
-            p_prompt->p_client;
-
-        if (p_client)
-        {
-            struct feed_heap *
-                p_heap;
-
-            p_heap =
-                feed_client_get_heap(
-                    p_client);
-
-            if (
-                p_heap)
-            {
-                feed_prompt_cleanup(
-                    p_prompt);
-
-                feed_heap_free(
-                    p_heap,
-                    (void *)(
-                        p_prompt));
-            }
-        }
+        feed_object_destroy(
+            p_prompt->p_client,
+            p_prompt,
+            &(
+                feed_prompt_cleanup));
     }
 }
+
+/* Create a char and add to prompt line */
+static
+void
+feed_prompt_set_callback(
+    void * const
+        p_context,
+    struct feed_event const * const
+        p_event)
+{
+    if (
+        p_context)
+    {
+        struct feed_line *
+            p_line;
+
+        p_line =
+            (struct feed_line *)(
+                p_context);
+
+        feed_line_write_event(
+            p_line,
+            p_event);
+    }
+
+} /* feed_prompt_set_callback() */
 
 static
 char
@@ -152,20 +175,74 @@ feed_prompt_set(
     char
         b_result;
 
-    if (
-        p_prompt)
+    /* Delete the previous prompt */
+    if (p_prompt && (i_index < 2u))
     {
         if (
-            i_index < 2u)
+            p_prompt->a_prompt[i_index])
         {
-            /* Delete the previous line */
+            feed_line_destroy(
+                p_prompt->a_prompt[i_index]);
+
+            p_prompt->a_prompt[i_index] =
+                (struct feed_line *)(
+                    0);
+        }
+
+        if (
+            i_data_length)
+        {
+            p_prompt->a_prompt[i_index] =
+                feed_line_create(
+                    p_prompt->p_client);
 
             if (
-                i_data_length)
+                p_prompt->a_prompt[i_index])
             {
+                struct feed_input *
+                    p_input;
+
+                p_input =
+                    feed_input_create(
+                        p_prompt->p_client,
+                        &(
+                            feed_prompt_set_callback),
+                        p_prompt->a_prompt[i_index]);
+
                 if (
-                    p_data)
+                    p_input)
                 {
+                    unsigned int
+                        i_data_iterator;
+
+                    i_data_iterator =
+                        0u;
+
+                    b_result =
+                        1;
+
+                    while (
+                        b_result
+                        && (
+                            i_data_iterator
+                            < i_data_length))
+                    {
+                        if (
+                            feed_input_write(
+                                p_input,
+                                p_data[i_data_iterator]))
+                        {
+                            i_data_iterator ++;
+                        }
+                        else
+                        {
+                            b_result =
+                                0;
+                        }
+                    }
+
+                    feed_input_destroy(
+                        p_input);
                 }
                 else
                 {
@@ -176,13 +253,13 @@ feed_prompt_set(
             else
             {
                 b_result =
-                    1;
+                    0;
             }
         }
         else
         {
             b_result =
-                0;
+                1;
         }
     }
     else
@@ -228,6 +305,58 @@ feed_prompt_set2(
             p_data,
             i_data_length,
             1u);
+}
+
+static
+struct feed_line *
+feed_prompt_get(
+    struct feed_prompt * const
+        p_prompt,
+    unsigned int const
+        i_index)
+{
+    struct feed_line *
+        p_line;
+
+    if (p_prompt && (i_index < 2u))
+    {
+        p_line =
+            p_prompt->a_prompt[i_index];
+    }
+    else
+    {
+        p_line =
+            (struct feed_line *)(
+                0);
+    }
+
+    return
+        p_line;
+
+}
+
+struct feed_line *
+feed_prompt_get1(
+    struct feed_prompt * const
+        p_prompt)
+{
+    return
+        feed_prompt_get(
+            p_prompt,
+            0u);
+
+}
+
+struct feed_line *
+feed_prompt_get2(
+    struct feed_prompt * const
+        p_prompt)
+{
+    return
+        feed_prompt_get(
+            p_prompt,
+            1u);
+
 }
 
 /* end-of-file: feed_prompt.c */

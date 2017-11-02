@@ -24,6 +24,8 @@
 
 #include "feed_text.h"
 
+#include "feed_prompt.h"
+
 #include "feed_screen.h"
 
 static
@@ -68,6 +70,9 @@ struct feed_main_context
 
     struct feed_text *
         p_text;
+
+    struct feed_prompt *
+        p_prompt;
 
     struct feed_screen *
         p_screen;
@@ -305,52 +310,54 @@ feed_main_refresh_text(
 
             /* Return to home position */
 
-            if (0u == i_cursor_line_iterator)
             {
-                /* Draw a prompt on first line */
-                p_glyph_iterator =
-                    p_text->p_prompt->o_glyphs.p_next;
+                struct feed_line *
+                    p_prompt_line;
 
-                while (
-                    p_glyph_iterator
-                    != &(
-                        p_text->p_prompt->o_glyphs))
+                if (0u == i_cursor_line_iterator)
                 {
-                    struct feed_glyph const *
-                        p_glyph;
-
-                    p_glyph =
-                        (struct feed_glyph const *)(
-                            p_glyph_iterator);
-
-                    /* If char is within refresh window */
-
-                    feed_screen_write(
-                        p_main_context->p_screen,
-                        p_glyph->a_visible,
-                        p_glyph->i_visible_length);
-
-                    p_glyph_iterator =
-                        p_glyph_iterator->p_next;
+                    /* Draw a prompt on first line */
+                    p_prompt_line =
+                        feed_prompt_get1(
+                            p_main_context->p_prompt);
                 }
-            }
-            else
-            {
-                feed_screen_newline(
-                    p_main_context->p_screen);
-
+                else
                 {
-                    static unsigned char const g_ps2[] =
-                    {
-                        ' ',
-                        '>',
-                        ' '
-                    };
+                    feed_screen_newline(
+                        p_main_context->p_screen);
 
-                    feed_screen_write(
-                        p_main_context->p_screen,
-                        g_ps2,
-                        sizeof(g_ps2));
+                    p_prompt_line =
+                        feed_prompt_get2(
+                            p_main_context->p_prompt);
+                }
+
+                if (p_prompt_line)
+                {
+                    p_glyph_iterator =
+                        p_prompt_line->o_glyphs.p_next;
+
+                    while (
+                        p_glyph_iterator
+                        != &(
+                            p_prompt_line->o_glyphs))
+                    {
+                        struct feed_glyph const *
+                            p_glyph;
+
+                        p_glyph =
+                            (struct feed_glyph const *)(
+                                p_glyph_iterator);
+
+                        /* If char is within refresh window */
+
+                        feed_screen_write(
+                            p_main_context->p_screen,
+                            p_glyph->a_visible,
+                            p_glyph->i_visible_length);
+
+                        p_glyph_iterator =
+                            p_glyph_iterator->p_next;
+                    }
                 }
             }
 
@@ -718,8 +725,12 @@ feed_main(
         feed_text_create(
             p_main_context->p_client);
 
+    p_main_context->p_prompt =
+        feed_prompt_create(
+            p_main_context->p_client);
+
     {
-        static unsigned char const s_prompt[] =
+        static unsigned char const s_prompt1[] =
         {
             'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
             'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
@@ -730,11 +741,24 @@ feed_main(
             'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
         };
 
-        feed_text_prompt(
-            p_main_context->p_text,
-            s_prompt,
+        static unsigned char const s_prompt2[] =
+        {
+            ' ',
+            '>',
+            ' '
+        };
+
+        feed_prompt_set1(
+            p_main_context->p_prompt,
+            s_prompt1,
             sizeof(
-                s_prompt));
+                s_prompt1));
+
+        feed_prompt_set2(
+            p_main_context->p_prompt,
+            s_prompt2,
+            sizeof(
+                s_prompt2));
     }
 
     p_main_context->p_client->p_tty =
@@ -1062,6 +1086,9 @@ feed_main(
         feed_dbg_print(
             "init error!");
     }
+
+    feed_prompt_destroy(
+        p_main_context->p_prompt);
 
     feed_text_destroy(
         p_main_context->p_text);

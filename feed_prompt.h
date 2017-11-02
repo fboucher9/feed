@@ -22,6 +22,8 @@ Description:
 
 struct feed_client;
 
+struct feed_line;
+
 struct feed_prompt
 {
     struct feed_client *
@@ -45,7 +47,7 @@ feed_prompt_destroy(
 char
 feed_prompt_set1(
     struct feed_prompt * const
-        p_text,
+        p_prompt,
     unsigned char const * const
         p_data,
     unsigned int const
@@ -54,10 +56,20 @@ feed_prompt_set1(
 char
 feed_prompt_set2(
     struct feed_prompt * const
-        p_text,
+        p_prompt,
     unsigned char const * const
         p_data,
     unsigned int const
         i_data_length);
+
+struct feed_line *
+feed_prompt_get1(
+    struct feed_prompt * const
+        p_prompt);
+
+struct feed_line *
+feed_prompt_get2(
+    struct feed_prompt * const
+        p_prompt);
 
 /* end-of-file: feed_prompt.h */

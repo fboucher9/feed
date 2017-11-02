@@ -40,9 +40,6 @@ struct feed_text
     struct feed_list
         o_lines;
 
-    struct feed_line *
-        p_prompt;
-
     struct feed_event
         o_last_event;
 
@@ -78,14 +75,5 @@ feed_text_write_event(
         p_text,
     struct feed_event const * const
         p_event);
-
-char
-feed_text_prompt(
-    struct feed_text * const
-        p_text,
-    unsigned char const * const
-        p_data,
-    unsigned int const
-        i_data_length);
 
 /* end-of-file: feed_text.h */

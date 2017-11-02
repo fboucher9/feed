@@ -55,12 +55,6 @@ feed_text_init(
     p_text->i_cursor_glyph_index =
         0;
 
-    p_text->p_prompt =
-        feed_line_create(
-            p_client);
-
-    if (
-        p_text->p_prompt)
     {
         struct feed_line *
             p_line;
@@ -89,11 +83,6 @@ feed_text_init(
             b_result =
                 0;
         }
-    }
-    else
-    {
-        b_result =
-            0;
     }
 
     return
@@ -139,17 +128,6 @@ feed_text_cleanup(
         p_iterator =
             p_next;
 
-    }
-
-    if (
-        p_text->p_prompt)
-    {
-        feed_line_destroy(
-            p_text->p_prompt);
-
-        p_text->p_prompt =
-            (struct feed_line *)(
-                0);
     }
 
 } /* feed_text_cleanup() */
@@ -289,118 +267,6 @@ feed_text_write_event(
 
         p_text->i_cursor_glyph_index ++;
     }
-
-}
-
-
-/* Create a char and add to prompt line */
-static
-void
-feed_text_prompt_callback(
-    void * const
-        p_context,
-    struct feed_event const * const
-        p_event)
-{
-    if (
-        p_context)
-    {
-        struct feed_text *
-            p_text;
-
-        p_text =
-            (struct feed_text *)(
-                p_context);
-
-        if (
-            p_text->p_prompt)
-        {
-            feed_line_write_event(
-                p_text->p_prompt,
-                p_event);
-        }
-    }
-
-} /* feed_text_prompt_callback() */
-
-
-char
-feed_text_prompt(
-    struct feed_text * const
-        p_text,
-    unsigned char const * const
-        p_data,
-    unsigned int const
-        i_data_length)
-{
-    char
-        b_result;
-
-    /* Delete the previous prompt */
-    if (p_text->p_prompt)
-    {
-        struct feed_input *
-            p_input;
-
-        feed_line_reset(
-            p_text->p_prompt);
-
-        p_input =
-            feed_input_create(
-                p_text->p_client,
-                &(
-                    feed_text_prompt_callback),
-                p_text);
-
-        if (
-            p_input)
-        {
-            unsigned int
-                i_data_iterator;
-
-            i_data_iterator =
-                0u;
-
-            b_result =
-                1;
-
-            while (
-                b_result
-                && (
-                    i_data_iterator
-                    < i_data_length))
-            {
-                if (
-                    feed_input_write(
-                        p_input,
-                        p_data[i_data_iterator]))
-                {
-                    i_data_iterator ++;
-                }
-                else
-                {
-                    b_result =
-                        0;
-                }
-            }
-
-            feed_input_destroy(
-                p_input);
-        }
-        else
-        {
-            b_result =
-                0;
-        }
-    }
-    else
-    {
-        b_result =
-            0;
-    }
-
-    return
-        b_result;
 
 }
 
