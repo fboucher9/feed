@@ -75,21 +75,6 @@ struct feed_main_context
     struct feed_client
         o_client;
 
-    struct feed_tty
-        o_tty;
-
-    unsigned int
-        i_ocx;
-
-    unsigned int
-        i_ocy;
-
-    unsigned int
-        i_wx;
-
-    unsigned int
-        i_wy;
-
     char
         b_more;
 
@@ -753,10 +738,6 @@ feed_main(
     }
 
     p_main_context->p_client->p_tty =
-        &(
-            p_main_context->o_tty);
-
-    p_main_context->p_client->p_tty =
         feed_tty_create(
             p_main_context->p_client);
 
@@ -788,12 +769,6 @@ feed_main(
                         x,
                         y);
                 }
-
-                p_main_context->i_ocx =
-                    x;
-
-                p_main_context->i_ocy =
-                    y;
             }
             else
             {
@@ -817,12 +792,10 @@ feed_main(
                         y);
                 }
 
-                p_main_context->i_wx =
-                    (unsigned int)(
-                        x);
-
-                p_main_context->i_wy =
-                    (unsigned int)(
+                p_main_context->p_screen =
+                    feed_screen_create(
+                        p_main_context->p_client,
+                        x,
                         y);
 
             }
@@ -831,12 +804,6 @@ feed_main(
                 feed_dbg_print(
                     "get_window_size error!");
             }
-
-            p_main_context->p_screen =
-                feed_screen_create(
-                    p_main_context->p_client,
-                    p_main_context->i_wx,
-                    p_main_context->i_wy);
 
             p_main_context->b_verbose =
                 0;
