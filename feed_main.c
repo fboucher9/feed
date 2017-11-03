@@ -474,7 +474,6 @@ feed_main_refresh_text(
 
 }
 
-
 static
 void
 feed_main_event_callback(
@@ -665,6 +664,52 @@ feed_main_event_callback(
                         {
                         }
                     }
+                    else
+                    {
+                        /* Bring next line into this line */
+                        /* Delete next line */
+                        if ((p_main_context->i_cursor_line_index + 1u) < p_text->i_line_count)
+                        {
+                            struct feed_line *
+                                p_line_down;
+
+                            p_line_down =
+                                (struct feed_line *)(
+                                    p_line->o_list.p_next);
+
+                            while (
+                                p_line_down->i_glyph_count)
+                            {
+                                struct feed_glyph *
+                                    p_glyph;
+
+                                p_glyph =
+                                    (struct feed_glyph *)(
+                                        p_line_down->o_glyphs.p_next);
+
+                                feed_list_join(
+                                    &(
+                                        p_glyph->o_list),
+                                    &(
+                                        p_glyph->o_list));
+
+                                p_line_down->i_glyph_count --;
+
+                                feed_list_join(
+                                    &(
+                                        p_glyph->o_list),
+                                    &(
+                                        p_line->o_glyphs));
+
+                                p_line->i_glyph_count ++;
+                            }
+
+                            feed_line_destroy(
+                                p_line_down);
+
+                            p_text->i_line_count --;
+                        }
+                    }
                 }
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_HOME) == p_event->i_code)
@@ -739,30 +784,90 @@ feed_main_event_callback(
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
             {
+                /* Notify currently accumulated lines */
+
+                /* Split current line */
+
                 /* Create a new line */
                 struct feed_line *
                     p_line;
 
                 p_line =
-                    feed_line_create(
-                        p_main_context->p_client);
+                    feed_text_get_line(
+                        p_text,
+                        p_main_context->i_cursor_line_index);
 
                 if (
                     p_line)
                 {
-                    feed_list_join(
-                        &(
-                            p_line->o_list),
-                        &(
-                            p_text->o_lines));
+                    struct feed_glyph *
+                        p_glyph;
 
-                    p_text->i_line_count ++;
+                    struct feed_line *
+                        p_line_down;
 
-                    p_main_context->i_cursor_line_index =
-                        p_text->i_line_count - 1u;
+                    p_glyph =
+                        feed_line_get_glyph(
+                            p_line,
+                            p_main_context->i_cursor_glyph_index);
 
-                    p_main_context->i_cursor_glyph_index =
-                        0u;
+                    p_line_down =
+                        feed_line_create(
+                            p_main_context->p_client);
+
+                    if (
+                        p_line_down)
+                    {
+                        feed_list_join(
+                            &(
+                                p_line->o_list),
+                            &(
+                                p_line_down->o_list));
+
+                        p_text->i_line_count ++;
+
+                        if (p_glyph)
+                        {
+                            /* Transfer characters from this line to next */
+                            while (
+                                &(
+                                    p_glyph->o_list)
+                                != &(
+                                    p_line->o_glyphs))
+                            {
+                                struct feed_glyph *
+                                    p_glyph_next;
+
+                                p_glyph_next =
+                                    (struct feed_glyph *)(
+                                        p_glyph->o_list.p_next);
+
+                                feed_list_join(
+                                    &(
+                                        p_glyph->o_list),
+                                    &(
+                                        p_glyph->o_list));
+
+                                p_line->i_glyph_count --;
+
+                                feed_list_join(
+                                    &(
+                                        p_glyph->o_list),
+                                    &(
+                                        p_line_down->o_glyphs));
+
+                                p_line_down->i_glyph_count ++;
+
+                                p_glyph =
+                                    p_glyph_next;
+                            }
+                        }
+
+                        p_main_context->i_cursor_line_index ++;
+
+                        p_main_context->i_cursor_glyph_index =
+                            0u;
+                    }
                 }
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'V') == p_event->i_code)
