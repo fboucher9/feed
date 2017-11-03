@@ -20,6 +20,8 @@ Description:
 
 #include "feed_input.h"
 
+#include "feed_object.h"
+
 static
 void
 feed_screen_write_clip(
@@ -108,18 +110,40 @@ feed_screen_event_callback(
     }
 }
 
+struct feed_screen_descriptor
+{
+    unsigned int
+        i_screen_width;
+
+    unsigned int
+        i_screen_height;
+
+};
+
 static
-void
+char
 feed_screen_init(
-    struct feed_screen * const
-        p_screen,
+    void * const
+        p_buf,
     struct feed_client * const
         p_client,
-    unsigned int const
-        i_screen_width,
-    unsigned int const
-        i_screen_height)
+    void const * const
+        p_descriptor)
 {
+    struct feed_screen *
+        p_screen;
+
+    struct feed_screen_descriptor const *
+        p_screen_descriptor;
+
+    p_screen =
+        (struct feed_screen *)(
+            p_buf);
+
+    p_screen_descriptor =
+        (struct feed_screen_descriptor const *)(
+            p_descriptor);
+
     memset(
         p_screen,
         0x00u,
@@ -138,10 +162,10 @@ feed_screen_init(
                 p_screen));
 
     p_screen->i_screen_width =
-        i_screen_width;
+        p_screen_descriptor->i_screen_width;
 
     p_screen->i_screen_height =
-        i_screen_height;
+        p_screen_descriptor->i_screen_height;
 
     p_screen->i_region_height =
         1u;
@@ -152,14 +176,24 @@ feed_screen_init(
     p_screen->i_cursor_y =
         0u;
 
+    return
+        1;
+
 } /* feed_screen_init() */
 
 static
 void
 feed_screen_cleanup(
-    struct feed_screen * const
-        p_screen)
+    void * const
+        p_buf)
 {
+    struct feed_screen *
+        p_screen;
+
+    p_screen =
+        (struct feed_screen *)(
+            p_buf);
+
     if (
         p_screen->p_input)
     {
@@ -201,35 +235,25 @@ feed_screen_create(
     unsigned int const
         i_screen_height)
 {
-    struct feed_screen *
-        p_screen;
+    struct feed_screen_descriptor
+        o_screen_descriptor;
 
-    struct feed_heap *
-        p_heap;
+    o_screen_descriptor.i_screen_width =
+        i_screen_width;
 
-    p_heap =
-        feed_client_get_heap(
-            p_client);
-
-    p_screen =
-        (struct feed_screen *)(
-            feed_heap_alloc(
-                p_heap,
-                sizeof(
-                    struct feed_screen)));
-
-    if (
-        p_screen)
-    {
-        feed_screen_init(
-            p_screen,
-            p_client,
-            i_screen_width,
-            i_screen_height);
-    }
+    o_screen_descriptor.i_screen_height =
+        i_screen_height;
 
     return
-        p_screen;
+        (struct feed_screen *)(
+            feed_object_create(
+                p_client,
+                sizeof(
+                    struct feed_screen),
+                &(
+                    feed_screen_init),
+                &(
+                    o_screen_descriptor)));
 
 } /* feed_screen_create() */
 
@@ -238,26 +262,22 @@ feed_screen_destroy(
     struct feed_screen * const
         p_screen)
 {
-    struct feed_client *
-        p_client;
+    if (
+        p_screen)
+    {
+        struct feed_client *
+            p_client;
 
-    struct feed_heap *
-        p_heap;
+        p_client =
+            p_screen->p_client;
 
-    p_client =
-        p_screen->p_client;
-
-    p_heap =
-        feed_client_get_heap(
-            p_client);
-
-    feed_screen_cleanup(
-        p_screen);
-
-    feed_heap_free(
-        p_heap,
-        (void *)(
-            p_screen));
+        feed_object_destroy(
+            p_client,
+            (void *)(
+                p_screen),
+            &(
+                feed_screen_cleanup));
+    }
 
 }
 
