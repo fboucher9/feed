@@ -138,6 +138,47 @@ feed_screen_event_callback(
     }
 }
 
+static
+void
+feed_screen_newline_raw(
+    struct feed_screen * const
+        p_screen)
+{
+    if (p_screen)
+    {
+        static unsigned char g_crlf[] =
+        {
+            '\r',
+            '\n'
+        };
+
+        struct feed_client *
+            p_client;
+
+        struct feed_tty *
+            p_tty;
+
+        p_client =
+            p_screen->p_client;
+
+        if (p_client)
+        {
+            p_tty =
+                feed_client_get_tty(
+                    p_client);
+
+            if (p_tty)
+            {
+                feed_tty_write_character_array(
+                    p_tty,
+                    g_crlf,
+                    sizeof(
+                        g_crlf));
+            }
+        }
+    }
+}
+
 struct feed_screen_descriptor
 {
     unsigned int
@@ -227,7 +268,7 @@ feed_screen_cleanup(
         0u,
         p_screen->i_region_height);
 
-    feed_screen_newline(
+    feed_screen_newline_raw(
         p_screen);
 
     if (
@@ -399,19 +440,6 @@ feed_screen_newline(
     struct feed_screen * const
         p_screen)
 {
-    struct feed_client *
-        p_client;
-
-    struct feed_tty *
-        p_tty;
-
-    p_client =
-        p_screen->p_client;
-
-    p_tty =
-        feed_client_get_tty(
-            p_client);
-
     if (
         (p_screen->i_cursor_y + 1u) >= p_screen->i_screen_height)
     {
@@ -423,19 +451,8 @@ feed_screen_newline(
     }
     else
     {
-        {
-            static unsigned char g_crlf[] =
-            {
-                '\r',
-                '\n'
-            };
-
-            feed_tty_write_character_array(
-                p_tty,
-                g_crlf,
-                sizeof(
-                    g_crlf));
-        }
+        feed_screen_newline_raw(
+            p_screen);
 
         p_screen->i_cursor_x = 0;
 
