@@ -195,6 +195,9 @@ feed_tty_cleanup(
             if (
                 p_heap)
             {
+                feed_tty_flush(
+                    p_tty);
+
                 if (p_tty->p_termios)
                 {
                     feed_heap_free(
