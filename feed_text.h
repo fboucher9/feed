@@ -47,15 +47,8 @@ struct feed_text
     unsigned int
         i_line_count;
 
-    /* Cursor */
     unsigned int
-        i_cursor_line_index;
-
-    unsigned int
-        i_cursor_glyph_index;
-
-    unsigned int
-        a_padding[1u];
+        a_padding[3u];
 
 }; /* struct feed_text */
 
@@ -69,11 +62,22 @@ feed_text_destroy(
     struct feed_text * const
         p_text);
 
+struct feed_line *
+feed_text_get_line(
+    struct feed_text * const
+        p_text,
+    unsigned int const
+        i_line_index);
+
 void
 feed_text_write_event(
     struct feed_text * const
         p_text,
     struct feed_event const * const
-        p_event);
+        p_event,
+    unsigned int const
+        i_line_index,
+    unsigned int const
+        i_glyph_index);
 
 /* end-of-file: feed_text.h */

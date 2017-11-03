@@ -49,12 +49,6 @@ feed_text_init(
     p_text->i_line_count =
         0;
 
-    p_text->i_cursor_line_index =
-        0;
-
-    p_text->i_cursor_glyph_index =
-        0;
-
     {
         struct feed_line *
             p_line;
@@ -211,61 +205,85 @@ feed_text_destroy(
 
 }
 
+struct feed_line *
+feed_text_get_line(
+    struct feed_text * const
+        p_text,
+    unsigned int const
+        i_line_index)
+{
+    struct feed_line *
+        p_line;
+
+    struct feed_list *
+        p_iterator;
+
+    unsigned int
+        i_line_iterator;
+
+    i_line_iterator =
+        0u;
+
+    p_iterator =
+        p_text->o_lines.p_next;
+
+    while (
+        (
+            i_line_iterator < i_line_index)
+        && (
+            p_iterator != &(p_text->o_lines)))
+    {
+        i_line_iterator ++;
+
+        p_iterator =
+            p_iterator->p_next;
+    }
+
+    if (
+        p_iterator != &(p_text->o_lines))
+    {
+        p_line =
+            (struct feed_line *)(
+                p_iterator);
+    }
+    else
+    {
+        p_line =
+            (struct feed_line *)(
+                0);
+    }
+
+    return
+        p_line;
+
+}
 
 void
 feed_text_write_event(
     struct feed_text * const
         p_text,
     struct feed_event const * const
-        p_event)
+        p_event,
+    unsigned int const
+        i_line_index,
+    unsigned int const
+        i_glyph_index)
 {
-#if 0
-    /* Store the character into the body */
-    if (p_text->o_lines.p_next
-        == &(p_text->o_lines))
+    struct feed_line *
+        p_line;
+
+    p_line =
+        feed_text_get_line(
+            p_text,
+            i_line_index);
+
+    if (
+        p_line)
     {
-        struct feed_client *
-            p_client;
-
-        struct feed_line *
-            p_line;
-
-        p_client =
-            p_text->p_client;
-
-        /* Create a line */
-        p_line =
-            feed_line_create(
-                p_client);
-
-        /* Store the line into the list */
-        if (p_line)
-        {
-            feed_list_join(
-                &(
-                    p_line->o_list),
-                &(
-                    p_text->o_lines));
-        }
-    }
-#endif
-
-    /* Get last line */
-    if (p_text->o_lines.p_prev
-        != &(p_text->o_lines))
-    {
-        struct feed_line *
-            p_line;
-
-        p_line =
-            (struct feed_line *)(
-                p_text->o_lines.p_prev);
-
         feed_line_write_event(
             p_line,
-            p_event);
-
-        p_text->i_cursor_glyph_index ++;
+            p_event,
+            i_glyph_index);
     }
 
 }

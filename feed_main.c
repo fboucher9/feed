@@ -80,6 +80,16 @@ struct feed_main_context
     struct feed_client
         o_client;
 
+    /* Cursor */
+    unsigned int
+        i_cursor_line_index;
+
+    unsigned int
+        i_cursor_glyph_index;
+
+    unsigned int
+        ui_padding[2u];
+
     char
         b_more;
 
@@ -361,7 +371,7 @@ feed_main_refresh_text(
                 }
             }
 
-            if (i_cursor_line_iterator == p_text->i_cursor_line_index)
+            if (i_cursor_line_iterator == p_main_context->i_cursor_line_index)
             {
                 i_cursor_visible_x =
                     p_screen->i_cursor_x;
@@ -396,8 +406,8 @@ feed_main_refresh_text(
                     p_glyph->a_visible,
                     p_glyph->i_visible_length);
 
-                if ((i_cursor_line_iterator == p_text->i_cursor_line_index)
-                    && (i_cursor_glyph_iterator < p_text->i_cursor_glyph_index))
+                if ((i_cursor_line_iterator == p_main_context->i_cursor_line_index)
+                    && (i_cursor_glyph_iterator < p_main_context->i_cursor_glyph_index))
                 {
                     i_cursor_visible_x =
                         p_screen->i_cursor_x;
@@ -497,7 +507,11 @@ feed_main_event_callback(
 
         feed_text_write_event(
             p_text,
-            p_event);
+            p_event,
+            p_main_context->i_cursor_line_index,
+            p_main_context->i_cursor_glyph_index);
+
+        p_main_context->i_cursor_glyph_index ++;
 
         feed_main_refresh_text(
             p_main_context);
@@ -521,44 +535,90 @@ feed_main_event_callback(
                 struct feed_line *
                     p_line;
 
-                struct feed_glyph *
-                    p_glyph;
+                p_line =
+                    feed_text_get_line(
+                        p_text,
+                        p_main_context->i_cursor_line_index);
 
-                /* Find last line */
-                if (p_text->o_lines.p_prev !=
-                    &(p_text->o_lines))
+                if (
+                    p_line)
                 {
-                    p_line =
-                        (struct feed_line *)(
-                            p_text->o_lines.p_prev);
-
                     /* Find last char */
-                    if (p_line->o_glyphs.p_prev !=
-                        &(p_line->o_glyphs))
+                    if (p_main_context->i_cursor_glyph_index)
                     {
-                        /* Delete the selected char */
+                        struct feed_glyph *
+                            p_glyph;
+
                         p_glyph =
-                            (struct feed_glyph *)(
-                                p_line->o_glyphs.p_prev);
+                            feed_line_get_glyph(
+                                p_line,
+                                p_main_context->i_cursor_glyph_index - 1u);
 
-                        feed_glyph_destroy(
-                            p_glyph);
-
-                        if (p_text->i_cursor_glyph_index)
+                        if (
+                            p_glyph)
                         {
-                            p_text->i_cursor_glyph_index --;
+                            /* Delete the selected char */
+                            feed_glyph_destroy(
+                                p_glyph);
+
+                            p_main_context->i_cursor_glyph_index --;
+
+                            if (p_line->i_glyph_count)
+                            {
+                                p_line->i_glyph_count --;
+                            }
                         }
-
-                        if (p_line->i_glyph_count)
+                        else
                         {
-                            p_line->i_glyph_count --;
+                        }
+                    }
+                }
+            }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_DELETE) == p_event->i_code)
+            {
+                struct feed_line *
+                    p_line;
+
+                p_line =
+                    feed_text_get_line(
+                        p_text,
+                        p_main_context->i_cursor_line_index);
+
+                if (
+                    p_line)
+                {
+                    /* Find last char */
+                    if (p_main_context->i_cursor_glyph_index < p_line->i_glyph_count)
+                    {
+                        struct feed_glyph *
+                            p_glyph;
+
+                        p_glyph =
+                            feed_line_get_glyph(
+                                p_line,
+                                p_main_context->i_cursor_glyph_index);
+
+                        if (
+                            p_glyph)
+                        {
+                            /* Delete the selected char */
+                            feed_glyph_destroy(
+                                p_glyph);
+
+                            if (p_line->i_glyph_count)
+                            {
+                                p_line->i_glyph_count --;
+                            }
+                        }
+                        else
+                        {
                         }
                     }
                 }
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_HOME) == p_event->i_code)
             {
-                p_text->i_cursor_glyph_index =
+                p_main_context->i_cursor_glyph_index =
                     0;
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_END) == p_event->i_code)
@@ -566,46 +626,23 @@ feed_main_event_callback(
                 struct feed_line *
                     p_line;
 
-                /* Find last line */
-                if (p_text->o_lines.p_prev !=
-                    &(p_text->o_lines))
+                p_line =
+                    feed_text_get_line(
+                        p_text,
+                        p_main_context->i_cursor_line_index);
+
+                if (
+                    p_line)
                 {
-                    p_line =
-                        (struct feed_line *)(
-                            p_text->o_lines.p_prev);
-
-                    p_text->i_cursor_glyph_index =
+                    p_main_context->i_cursor_glyph_index =
                         p_line->i_glyph_count;
-
-#if 0
-                    struct feed_list *
-                        p_iterator;
-
-                    p_text->i_cursor_glyph_index =
-                        0;
-
-                    p_iterator =
-                        p_line->o_glyphs.p_next;
-
-                    while (
-                        p_iterator
-                        != &(
-                            p_line->o_glyphs))
-                    {
-                        p_text->i_cursor_glyph_index ++;
-
-                        p_iterator =
-                            p_iterator->p_next;
-                    }
-#endif
-
                 }
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_LEFT) == p_event->i_code)
             {
-                if (p_text->i_cursor_glyph_index)
+                if (p_main_context->i_cursor_glyph_index)
                 {
-                    p_text->i_cursor_glyph_index --;
+                    p_main_context->i_cursor_glyph_index --;
                 }
                 else
                 {
@@ -617,18 +654,36 @@ feed_main_event_callback(
                 struct feed_line *
                     p_line;
 
-                /* Find last line */
-                if (p_text->o_lines.p_prev !=
-                    &(p_text->o_lines))
-                {
-                    p_line =
-                        (struct feed_line *)(
-                            p_text->o_lines.p_prev);
+                p_line =
+                    feed_text_get_line(
+                        p_text,
+                        p_main_context->i_cursor_line_index);
 
-                    if (p_text->i_cursor_glyph_index < p_line->i_glyph_count)
+                if (
+                    p_line)
+                {
+                    if (p_main_context->i_cursor_glyph_index < p_line->i_glyph_count)
                     {
-                        p_text->i_cursor_glyph_index ++;
+                        p_main_context->i_cursor_glyph_index ++;
                     }
+                }
+            }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_UP) == p_event->i_code)
+            {
+                if (p_main_context->i_cursor_line_index)
+                {
+                    p_main_context->i_cursor_line_index --;
+
+                    p_main_context->i_cursor_glyph_index = 0u;
+                }
+            }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_DOWN) == p_event->i_code)
+            {
+                if ((p_main_context->i_cursor_line_index + 1u) < p_text->i_line_count)
+                {
+                    p_main_context->i_cursor_line_index ++;
+
+                    p_main_context->i_cursor_glyph_index = 0u;
                 }
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
@@ -652,10 +707,10 @@ feed_main_event_callback(
 
                     p_text->i_line_count ++;
 
-                    p_text->i_cursor_line_index =
+                    p_main_context->i_cursor_line_index =
                         p_text->i_line_count - 1u;
 
-                    p_text->i_cursor_glyph_index =
+                    p_main_context->i_cursor_glyph_index =
                         0u;
                 }
             }
@@ -668,7 +723,11 @@ feed_main_event_callback(
             {
                 feed_text_write_event(
                     p_text,
-                    p_event);
+                    p_event,
+                    p_main_context->i_cursor_line_index,
+                    p_main_context->i_cursor_glyph_index);
+
+                p_main_context->i_cursor_glyph_index ++;
             }
 
             feed_main_refresh_text(

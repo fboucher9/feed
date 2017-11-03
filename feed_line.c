@@ -130,7 +130,9 @@ feed_line_write_event(
     struct feed_line * const
         p_line,
     struct feed_event const * const
-        p_event)
+        p_event,
+    unsigned int const
+        i_glyph_index)
 {
     struct feed_client *
         p_client;
@@ -151,12 +153,32 @@ feed_line_write_event(
     if (
         p_glyph)
     {
-        /* Store the char into the list */
-        feed_list_join(
-            &(
-                p_glyph->o_list),
-            &(
-                p_line->o_glyphs));
+        struct feed_glyph *
+            p_current_glyph;
+
+        p_current_glyph =
+            feed_line_get_glyph(
+                p_line,
+                i_glyph_index);
+
+        if (
+            p_current_glyph)
+        {
+            feed_list_join(
+                &(
+                    p_glyph->o_list),
+                &(
+                    p_current_glyph->o_list));
+        }
+        else
+        {
+            /* Store the char into the list */
+            feed_list_join(
+                &(
+                    p_glyph->o_list),
+                &(
+                    p_line->o_glyphs));
+        }
 
         p_line->i_glyph_count ++;
     }
@@ -203,5 +225,57 @@ feed_line_reset(
 
 }
 
+struct feed_glyph *
+feed_line_get_glyph(
+    struct feed_line * const
+        p_line,
+    unsigned int const
+        i_glyph_index)
+{
+    struct feed_glyph *
+        p_glyph;
+
+    struct feed_list *
+        p_glyph_iterator;
+
+    unsigned int
+        i_glyph_iterator;
+
+    i_glyph_iterator =
+        0u;
+
+    p_glyph_iterator =
+        p_line->o_glyphs.p_next;
+
+    while (
+        (
+            i_glyph_iterator < i_glyph_index)
+        && (
+            p_glyph_iterator != &(p_line->o_glyphs)))
+    {
+        i_glyph_iterator ++;
+
+        p_glyph_iterator =
+            p_glyph_iterator->p_next;
+    }
+
+    if (
+        p_glyph_iterator != &(p_line->o_glyphs))
+    {
+        p_glyph =
+            (struct feed_glyph *)(
+                p_glyph_iterator);
+    }
+    else
+    {
+        p_glyph =
+            (struct feed_glyph *)(
+                0);
+    }
+
+    return
+        p_glyph;
+
+}
 
 /* end-of-file: feed_line.c */

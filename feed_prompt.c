@@ -155,7 +155,8 @@ feed_prompt_set_callback(
 
         feed_line_write_event(
             p_line,
-            p_event);
+            p_event,
+            p_line->i_glyph_count);
     }
 
 } /* feed_prompt_set_callback() */
