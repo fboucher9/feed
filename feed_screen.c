@@ -22,6 +22,34 @@ Description:
 
 #include "feed_object.h"
 
+struct feed_screen
+{
+    struct feed_client *
+        p_client;
+
+    struct feed_input *
+        p_input;
+
+    unsigned int
+        i_screen_width;
+
+    unsigned int
+        i_screen_height;
+
+    unsigned int
+        i_region_height;
+
+    unsigned int
+        i_cursor_x;
+
+    unsigned int
+        i_cursor_y;
+
+    unsigned int
+        ui_padding[3u];
+
+}; /* struct feed_screen */
+
 static
 void
 feed_screen_write_clip(
@@ -194,6 +222,14 @@ feed_screen_cleanup(
         (struct feed_screen *)(
             p_buf);
 
+    feed_screen_set_cursor_pos(
+        p_screen,
+        0u,
+        p_screen->i_region_height);
+
+    feed_screen_newline(
+        p_screen);
+
     if (
         p_screen->p_input)
     {
@@ -282,7 +318,7 @@ feed_screen_destroy(
 }
 
 void
-feed_screen_cursor(
+feed_screen_set_cursor_pos(
     struct feed_screen * const
         p_screen,
     unsigned int const
@@ -292,14 +328,14 @@ feed_screen_cursor(
 {
     if (i_cursor_x >= p_screen->i_screen_width)
     {
-        feed_screen_cursor(
+        feed_screen_set_cursor_pos(
             p_screen,
             p_screen->i_screen_width - 1u,
             i_cursor_y);
     }
     else if (i_cursor_y >= p_screen->i_region_height)
     {
-        feed_screen_cursor(
+        feed_screen_set_cursor_pos(
             p_screen,
             i_cursor_x,
             p_screen->i_region_height - 1u);
@@ -456,3 +492,19 @@ feed_screen_clear_line(
 
 }
 
+void
+feed_screen_get_cursor_pos(
+    struct feed_screen * const
+        p_screen,
+    unsigned int * const
+        p_cursor_x,
+    unsigned int * const
+        p_cursor_y)
+{
+    *(p_cursor_x) =
+        p_screen->i_cursor_x;
+
+    *(p_cursor_y) =
+        p_screen->i_cursor_y;
+
+}

@@ -24,6 +24,31 @@ Description:
 
 #include "feed_heap.h"
 
+struct feed_tty
+{
+    struct feed_client *
+        p_client;
+
+    void *
+        p_termios;
+
+    int
+        i_output_file;
+
+    int
+        i_input_file;
+
+    int
+        a_padding1[2u];
+
+    char
+        b_enabled;
+
+    char
+        ac_padding[7u];
+
+};
+
 static
 char
 feed_tty_init(

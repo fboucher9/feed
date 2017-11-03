@@ -44,33 +44,7 @@ struct feed_client;
 
 struct feed_input;
 
-struct feed_screen
-{
-    struct feed_client *
-        p_client;
-
-    struct feed_input *
-        p_input;
-
-    unsigned int
-        i_screen_width;
-
-    unsigned int
-        i_screen_height;
-
-    unsigned int
-        i_region_height;
-
-    unsigned int
-        i_cursor_x;
-
-    unsigned int
-        i_cursor_y;
-
-    unsigned int
-        ui_padding[3u];
-
-}; /* struct feed_screen */
+struct feed_screen;
 
 struct feed_screen *
 feed_screen_create(
@@ -87,7 +61,16 @@ feed_screen_destroy(
         p_screen);
 
 void
-feed_screen_cursor(
+feed_screen_get_cursor_pos(
+    struct feed_screen * const
+        p_screen,
+    unsigned int * const
+        p_cursor_x,
+    unsigned int * const
+        p_cursor_y);
+
+void
+feed_screen_set_cursor_pos(
     struct feed_screen * const
         p_screen,
     unsigned int const

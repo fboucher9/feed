@@ -287,7 +287,7 @@ feed_main_refresh_text(
     /* Grow size of drawing region */
 
     /* Move cursor to beginning of drawing region */
-    feed_screen_cursor(
+    feed_screen_set_cursor_pos(
         p_main_context->p_screen,
         0u,
         0u);
@@ -373,11 +373,13 @@ feed_main_refresh_text(
 
             if (i_cursor_line_iterator == p_main_context->i_cursor_line_index)
             {
-                i_cursor_visible_x =
-                    p_screen->i_cursor_x;
+                feed_screen_get_cursor_pos(
+                    p_screen,
+                    &(
+                        i_cursor_visible_x),
+                    &(
+                        i_cursor_visible_y));
 
-                i_cursor_visible_y =
-                    p_screen->i_cursor_y;
             }
 
             /* For all chars in line */
@@ -409,11 +411,12 @@ feed_main_refresh_text(
                 if ((i_cursor_line_iterator == p_main_context->i_cursor_line_index)
                     && (i_cursor_glyph_iterator < p_main_context->i_cursor_glyph_index))
                 {
-                    i_cursor_visible_x =
-                        p_screen->i_cursor_x;
-
-                    i_cursor_visible_y =
-                        p_screen->i_cursor_y;
+                    feed_screen_get_cursor_pos(
+                        p_screen,
+                        &(
+                            i_cursor_visible_x),
+                        &(
+                            i_cursor_visible_y));
                 }
 
                 i_cursor_glyph_iterator ++;
@@ -466,7 +469,7 @@ feed_main_refresh_text(
 
     /* Position the cursor */
     {
-        feed_screen_cursor(
+        feed_screen_set_cursor_pos(
             p_screen,
             i_cursor_visible_x,
             i_cursor_visible_y);
@@ -1268,14 +1271,6 @@ feed_main(
                             0;
                     }
                 }
-
-                feed_screen_cursor(
-                    p_main_context->p_screen,
-                    0u,
-                    p_main_context->p_screen->i_region_height);
-
-                feed_screen_newline(
-                    p_main_context->p_screen);
 
                 feed_input_destroy(
                     p_input);
