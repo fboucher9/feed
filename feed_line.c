@@ -16,20 +16,21 @@ Description:
 
 #include "feed_glyph.h"
 
-#include "feed_client.h"
-
-#include "feed_heap.h"
+#include "feed_object.h"
 
 #include "feed_buf.h"
 
 static
-void
+char
 feed_line_init(
     struct feed_line * const
         p_line,
     struct feed_client * const
         p_client)
 {
+    char
+        b_result;
+
     feed_list_init(
         &(
             p_line->o_list));
@@ -40,6 +41,85 @@ feed_line_init(
     feed_list_init(
         &(
             p_line->o_glyphs));
+
+    p_line->i_glyph_count =
+        0u;
+
+    b_result =
+        1;
+
+    return
+        b_result;
+
+}
+
+static
+char
+feed_line_init_cb(
+    void * const
+        p_object,
+    struct feed_client * const
+        p_client,
+    void const * const
+        p_descriptor)
+{
+    char
+        b_result;
+
+    struct feed_line * const
+        p_line =
+        (struct feed_line *)(
+            p_object);
+
+    (void)(
+        p_descriptor);
+
+    b_result =
+        feed_line_init(
+            p_line,
+            p_client);
+
+    return
+        b_result;
+
+}
+
+static
+void
+feed_line_reset(
+    struct feed_line * const
+        p_line)
+{
+    struct feed_list *
+        p_iterator;
+
+    struct feed_list *
+        p_next;
+
+    struct feed_glyph *
+        p_glyph;
+
+    /* Free all characters... */
+    p_iterator =
+        p_line->o_glyphs.p_next;
+
+    while (
+        p_iterator != &(p_line->o_glyphs))
+    {
+        p_next =
+            p_iterator->p_next;
+
+        p_glyph =
+            (struct feed_glyph *)(
+                p_iterator);
+
+        feed_glyph_destroy(
+            p_glyph);
+
+        p_iterator =
+            p_next;
+
+    }
 
     p_line->i_glyph_count =
         0u;
@@ -64,6 +144,22 @@ feed_line_cleanup(
 
 }
 
+static
+void
+feed_line_cleanup_cb(
+    void * const
+        p_object)
+{
+    struct feed_line * const
+        p_line =
+        (struct feed_line *)(
+            p_object);
+
+    feed_line_cleanup(
+        p_line);
+
+}
+
 struct feed_line *
 feed_line_create(
     struct feed_client * const
@@ -72,27 +168,16 @@ feed_line_create(
     struct feed_line *
         p_line;
 
-    struct feed_heap *
-        p_heap;
-
-    p_heap =
-        feed_client_get_heap(
-            p_client);
-
     p_line =
         (struct feed_line *)(
-            feed_heap_alloc(
-                p_heap,
+            feed_object_create(
+                p_client,
                 sizeof(
-                    struct feed_line)));
-
-    if (
-        p_line)
-    {
-        feed_line_init(
-            p_line,
-            p_client);
-    }
+                    struct feed_line),
+                &(
+                    feed_line_init_cb),
+                (void const *)(
+                    0)));
 
     return
         p_line;
@@ -104,27 +189,24 @@ feed_line_destroy(
     struct feed_line * const
         p_line)
 {
-    struct feed_client *
-        p_client;
+    if (
+        p_line)
+    {
+        struct feed_client * const
+            p_client =
+            p_line->p_client;
 
-    struct feed_heap *
-        p_heap;
-
-    p_client =
-        p_line->p_client;
-
-    p_heap =
-        feed_client_get_heap(
-            p_client);
-
-    feed_line_cleanup(
-        p_line);
-
-    feed_heap_free(
-        p_heap,
-        (void *)(
-            p_line));
-
+        if (
+            p_client)
+        {
+            feed_object_destroy(
+                p_client,
+                (void *)(
+                    p_line),
+                &(
+                    feed_line_cleanup_cb));
+        }
+    }
 }
 
 void
@@ -184,47 +266,6 @@ feed_line_write_event(
 
         p_line->i_glyph_count ++;
     }
-}
-
-void
-feed_line_reset(
-    struct feed_line * const
-        p_line)
-{
-    struct feed_list *
-        p_iterator;
-
-    struct feed_list *
-        p_next;
-
-    struct feed_glyph *
-        p_glyph;
-
-    /* Free all characters... */
-    p_iterator =
-        p_line->o_glyphs.p_next;
-
-    while (
-        p_iterator != &(p_line->o_glyphs))
-    {
-        p_next =
-            p_iterator->p_next;
-
-        p_glyph =
-            (struct feed_glyph *)(
-                p_iterator);
-
-        feed_glyph_destroy(
-            p_glyph);
-
-        p_iterator =
-            p_next;
-
-    }
-
-    p_line->i_glyph_count =
-        0u;
-
 }
 
 struct feed_glyph *

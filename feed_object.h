@@ -14,7 +14,7 @@ feed_object_create(
         i_buf_len,
     char (*p_init_cb)(
         void * const
-            p_buf,
+            p_object,
         struct feed_client * const
             p_client,
         void const * const
@@ -27,8 +27,8 @@ feed_object_destroy(
     struct feed_client * const
         p_client,
     void * const
-        p_buf,
+        p_object,
     void (*p_cleanup_cb)(
         void * const
-            p_buf));
+            p_object));
 

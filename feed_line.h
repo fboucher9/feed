@@ -64,11 +64,6 @@ feed_line_destroy(
         p_line);
 
 void
-feed_line_reset(
-    struct feed_line * const
-        p_line);
-
-void
 feed_line_write_event(
     struct feed_line * const
         p_line,

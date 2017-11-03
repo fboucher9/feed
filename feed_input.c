@@ -16,17 +16,14 @@ Description:
 /* Module */
 #include "feed_input.h"
 
-/* Client context */
-#include "feed_client.h"
-
-/* Heap */
-#include "feed_heap.h"
-
 /* Table of key codes */
 #include "feed_keys.h"
 
 /* Buffer */
 #include "feed_buf.h"
+
+/* Object */
+#include "feed_object.h"
 
 /*
 
@@ -85,6 +82,80 @@ struct feed_input
 
 }; /* struct feed_input */
 
+struct feed_input_descriptor
+{
+    void (* p_callback)(
+        void * const
+            p_context,
+        struct feed_event const * const
+            p_event);
+
+    void *
+        p_context;
+
+};
+
+static
+char
+feed_input_init(
+    void * const
+        p_object,
+    struct feed_client * const
+        p_client,
+    void const * const
+        p_descriptor)
+{
+    char
+        b_result;
+
+    struct feed_input * const
+        p_input =
+        (struct feed_input *)(
+            p_object);
+
+    if (
+        p_input)
+    {
+        struct feed_input_descriptor const * const
+            p_input_descriptor =
+            (struct feed_input_descriptor const *)(
+                p_descriptor);
+
+        if (
+            p_input_descriptor)
+        {
+            p_input->p_callback =
+                p_input_descriptor->p_callback;
+
+            p_input->p_context =
+                p_input_descriptor->p_context;
+
+            p_input->p_client =
+                p_client;
+
+            p_input->e_state =
+                feed_input_state_idle;
+
+            b_result =
+                1;
+        }
+        else
+        {
+            b_result =
+                0;
+        }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+}
+
 struct feed_input *
 feed_input_create(
     struct feed_client * const
@@ -100,68 +171,76 @@ feed_input_create(
     struct feed_input *
         p_input;
 
-    struct feed_heap *
-        p_heap;
+    struct feed_input_descriptor
+        o_input_descriptor;
 
-    p_heap =
-        feed_client_get_heap(
-            p_client);
+    {
+        o_input_descriptor.p_callback =
+            p_callback;
+
+        o_input_descriptor.p_context =
+            p_context;
+    }
 
     p_input =
         (struct feed_input *)(
-            feed_heap_alloc(
-                p_heap,
-                sizeof(
-                    struct feed_input)));
-
-    if (
-        p_input)
-    {
-        p_input->p_callback =
-            p_callback;
-
-        p_input->p_context =
-            p_context;
-
-        p_input->p_client =
-            p_client;
-
-        p_input->e_state =
-            feed_input_state_idle;
-
-    }
+            feed_object_create(
+                p_client,
+                (unsigned int)(
+                    sizeof(
+                        struct feed_input)),
+                &(
+                    feed_input_init),
+                &(
+                    o_input_descriptor)));
 
     return
         p_input;
 
 } /* feed_input_create() */
 
+static
 void
-feed_input_destroy(
-    struct feed_input * const
-        p_input)
+feed_input_cleanup(
+    void * const
+        p_object)
 {
-    struct feed_client *
-        p_client;
-
-    struct feed_heap *
-        p_heap;
-
-    p_client =
-        p_input->p_client;
-
-    p_heap =
-        feed_client_get_heap(
-            p_client);
+    struct feed_input * const
+        p_input =
+        (struct feed_input *)(
+            p_object);
 
     p_input->p_client =
         (struct feed_client *)(
             0);
 
-    feed_heap_free(
-        p_heap,
-        p_input);
+}
 
+void
+feed_input_destroy(
+    struct feed_input * const
+        p_input)
+{
+    if (
+        p_input)
+    {
+        struct feed_client *
+            p_client;
+
+        p_client =
+            p_input->p_client;
+
+        if (
+            p_client)
+        {
+            feed_object_destroy(
+                p_client,
+                (void *)(
+                    p_input),
+                &(
+                    feed_input_cleanup));
+        }
+    }
 }
 
 static

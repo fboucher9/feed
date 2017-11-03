@@ -24,6 +24,8 @@ Description:
 
 #include "feed_heap.h"
 
+#include "feed_object.h"
+
 struct feed_tty
 {
     struct feed_client *
@@ -127,6 +129,37 @@ feed_tty_init(
 }
 
 static
+char
+feed_tty_init_cb(
+    void * const
+        p_object,
+    struct feed_client * const
+        p_client,
+    void const * const
+        p_descriptor)
+{
+    char
+        b_result;
+
+    struct feed_tty * const
+        p_tty =
+        (struct feed_tty *)(
+            p_object);
+
+    (void)(
+        p_descriptor);
+
+    b_result =
+        feed_tty_init(
+            p_client,
+            p_tty);
+
+    return
+        b_result;
+
+}
+
+static
 void
 feed_tty_cleanup(
     struct feed_tty * const
@@ -172,6 +205,22 @@ feed_tty_cleanup(
     }
 }
 
+static
+void
+feed_tty_cleanup_cb(
+    void * const
+        p_object)
+{
+    struct feed_tty * const
+        p_tty =
+        (struct feed_tty *)(
+            p_object);
+
+    feed_tty_cleanup(
+        p_tty);
+
+}
+
 struct feed_tty *
 feed_tty_create(
     struct feed_client * const
@@ -180,62 +229,17 @@ feed_tty_create(
     struct feed_tty *
         p_tty;
 
-    if (
-        p_client)
-    {
-        struct feed_heap *
-            p_heap;
-
-        p_heap =
-            feed_client_get_heap(
-                p_client);
-
-        if (
-            p_heap)
-        {
-            p_tty =
-                (struct feed_tty *)(
-                    feed_heap_alloc(
-                        p_heap,
-                        (unsigned int)(
-                            sizeof(
-                                struct feed_tty))));
-
-            if (
-                p_tty)
-            {
-                if (
-                    feed_tty_init(
-                        p_client,
-                        p_tty))
-                {
-                }
-                else
-                {
-                    feed_heap_free(
-                        p_heap,
-                        (void *)(
-                            p_tty));
-
-                    p_tty =
-                        (struct feed_tty *)(
-                            0);
-                }
-            }
-        }
-        else
-        {
-            p_tty =
-                (struct feed_tty *)(
-                    0);
-        }
-    }
-    else
-    {
-        p_tty =
-            (struct feed_tty *)(
-                0);
-    }
+    p_tty =
+        (struct feed_tty *)(
+            feed_object_create(
+                p_client,
+                (unsigned int)(
+                    sizeof(
+                        struct feed_tty)),
+                &(
+                    feed_tty_init_cb),
+                (void const *)(
+                    0)));
 
     return
         p_tty;
@@ -247,36 +251,22 @@ feed_tty_destroy(
     struct feed_tty * const
         p_tty)
 {
-    struct feed_client *
-        p_client;
-
-    struct feed_heap *
-        p_heap;
-
     if (
         p_tty)
     {
-        p_client =
+        struct feed_client * const
+            p_client =
             p_tty->p_client;
 
         if (
             p_client)
         {
-            p_heap =
-                feed_client_get_heap(
-                    p_client);
-
-            if (
-                p_heap)
-            {
-                feed_tty_cleanup(
-                    p_tty);
-
-                feed_heap_free(
-                    p_heap,
-                    (void *)(
-                        p_tty));
-            }
+            feed_object_destroy(
+                p_client,
+                (void *)(
+                    p_tty),
+                &(
+                    feed_tty_cleanup_cb));
         }
     }
 

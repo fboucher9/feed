@@ -18,9 +18,7 @@ Description:
 
 #include "feed_line.h"
 
-#include "feed_client.h"
-
-#include "feed_heap.h"
+#include "feed_object.h"
 
 #include "feed_buf.h"
 
@@ -86,6 +84,37 @@ feed_text_init(
 
 }
 
+static
+char
+feed_text_init_cb(
+    void * const
+        p_object,
+    struct feed_client * const
+        p_client,
+    void const * const
+        p_descriptor)
+{
+    char
+        b_result;
+
+    struct feed_text * const
+        p_text =
+        (struct feed_text *)(
+            p_object);
+
+    (void)(
+        p_descriptor);
+
+    b_result =
+        feed_text_init(
+            p_text,
+            p_client);
+
+    return
+        b_result;
+
+}
+
 
 static
 void
@@ -128,6 +157,21 @@ feed_text_cleanup(
 
 } /* feed_text_cleanup() */
 
+static
+void
+feed_text_cleanup_cb(
+    void * const
+        p_object)
+{
+    struct feed_text * const
+        p_text =
+        (struct feed_text *)(
+            p_object);
+
+    feed_text_cleanup(
+        p_text);
+
+}
 
 struct feed_text *
 feed_text_create(
@@ -137,74 +181,45 @@ feed_text_create(
     struct feed_text *
         p_text;
 
-    struct feed_heap *
-        p_heap;
-
-    p_heap =
-        feed_client_get_heap(
-            p_client);
-
     p_text =
         (struct feed_text *)(
-            feed_heap_alloc(
-                p_heap,
+            feed_object_create(
+                p_client,
                 sizeof(
-                    struct feed_text)));
-
-    if (
-        p_text)
-    {
-        if (
-            feed_text_init(
-                p_text,
-                p_client))
-        {
-        }
-        else
-        {
-            feed_heap_free(
-                p_heap,
-                (void *)(
-                    p_text));
-
-            p_text =
-                (struct feed_text *)(
-                    0);
-        }
-    }
+                    struct feed_text),
+                &(
+                    feed_text_init_cb),
+                (void const *)(
+                    0)));
 
     return
         p_text;
 
 }
 
-
 void
 feed_text_destroy(
     struct feed_text * const
         p_text)
 {
-    struct feed_client *
-        p_client;
+    if (
+        p_text)
+    {
+        struct feed_client * const
+            p_client =
+            p_text->p_client;
 
-    struct feed_heap *
-        p_heap;
-
-    p_client =
-        p_text->p_client;
-
-    p_heap =
-        feed_client_get_heap(
-            p_client);
-
-    feed_text_cleanup(
-        p_text);
-
-    feed_heap_free(
-        p_heap,
-        (void *)(
-            p_text));
-
+        if (
+            p_client)
+        {
+            feed_object_destroy(
+                p_client,
+                (void *)(
+                    p_text),
+                &(
+                    feed_text_cleanup_cb));
+        }
+    }
 }
 
 struct feed_line *

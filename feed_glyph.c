@@ -21,9 +21,7 @@ Description:
 
 #include "feed_buf.h"
 
-#include "feed_client.h"
-
-#include "feed_heap.h"
+#include "feed_object.h"
 
 static
 void
@@ -91,7 +89,7 @@ feed_glyph_write_event(
 
 
 static
-void
+char
 feed_glyph_init(
     struct feed_glyph * const
         p_glyph,
@@ -100,6 +98,9 @@ feed_glyph_init(
     struct feed_event const * const
         p_event)
 {
+    char
+        b_result;
+
     feed_list_init(
         &(
             p_glyph->o_list));
@@ -117,7 +118,48 @@ feed_glyph_init(
         p_glyph,
         p_event);
 
+    b_result =
+        1;
+
+    return
+        b_result;
+
 } /* feed_glyph_init() */
+
+
+static
+char
+feed_glyph_init_cb(
+    void * const
+        p_object,
+    struct feed_client * const
+        p_client,
+    void const * const
+        p_descriptor)
+{
+    char
+        b_result;
+
+    struct feed_glyph * const
+        p_glyph =
+        (struct feed_glyph *)(
+            p_object);
+
+    struct feed_event const * const
+        p_event =
+        (struct feed_event const *)(
+            p_descriptor);
+
+    b_result =
+        feed_glyph_init(
+            p_glyph,
+            p_client,
+            p_event);
+
+    return
+        b_result;
+
+} /* feed_glyph_init_cb() */
 
 
 static
@@ -135,6 +177,23 @@ feed_glyph_cleanup(
 } /* feed_glyph_cleanup() */
 
 
+static
+void
+feed_glyph_cleanup_cb(
+    void * const
+        p_object)
+{
+    struct feed_glyph * const
+        p_glyph =
+        (struct feed_glyph *)(
+            p_object);
+
+    feed_glyph_cleanup(
+        p_glyph);
+
+}
+
+
 struct feed_glyph *
 feed_glyph_create(
     struct feed_client * const
@@ -145,28 +204,17 @@ feed_glyph_create(
     struct feed_glyph *
         p_glyph;
 
-    struct feed_heap *
-        p_heap;
-
-    p_heap =
-        feed_client_get_heap(
-            p_client);
-
     p_glyph =
         (struct feed_glyph *)(
-            feed_heap_alloc(
-                p_heap,
-                sizeof(
-                    struct feed_glyph)));
-
-    if (
-        p_glyph)
-    {
-        feed_glyph_init(
-            p_glyph,
-            p_client,
-            p_event);
-    }
+            feed_object_create(
+                p_client,
+                (unsigned int)(
+                    sizeof(
+                        struct feed_glyph)),
+                &(
+                    feed_glyph_init_cb),
+                (void const *)(
+                    p_event)));
 
     return
         p_glyph;
@@ -181,29 +229,23 @@ feed_glyph_destroy(
 {
     if (p_glyph)
     {
-        struct feed_heap *
-            p_heap;
+        struct feed_client *
+            p_client;
 
+        p_client =
+            p_glyph->p_client;
+
+        if (
+            p_client)
         {
-            struct feed_client *
-                p_client;
+            feed_object_destroy(
+                p_client,
+                (void *)(
+                    p_glyph),
+                &(
+                    feed_glyph_cleanup_cb));
 
-            p_client =
-                p_glyph->p_client;
-
-            p_heap =
-                feed_client_get_heap(
-                    p_client);
         }
-
-        feed_glyph_cleanup(
-            p_glyph);
-
-        feed_heap_free(
-            p_heap,
-            (void *)(
-                p_glyph));
-
     }
 
 } /* feed_glyph_destroy() */
