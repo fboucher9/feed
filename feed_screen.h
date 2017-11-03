@@ -97,4 +97,9 @@ feed_screen_clear_line(
     struct feed_screen * const
         p_screen);
 
+void
+feed_screen_clear_region(
+    struct feed_screen * const
+        p_screen);
+
 /* end-of-file: feed_screen.h */

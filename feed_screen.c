@@ -525,3 +525,34 @@ feed_screen_get_cursor_pos(
         p_screen->i_cursor_y;
 
 }
+
+void
+feed_screen_clear_region(
+    struct feed_screen * const
+        p_screen)
+{
+    if (
+        p_screen)
+    {
+        struct feed_client * const
+            p_client =
+            p_screen->p_client;
+
+        if (
+            p_client)
+        {
+            struct feed_tty * const
+                p_tty =
+                feed_client_get_tty(
+                    p_client);
+
+            if (
+                p_tty)
+            {
+                feed_tty_clear_bottom(
+                    p_tty);
+            }
+        }
+    }
+}
+
