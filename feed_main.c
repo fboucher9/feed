@@ -572,6 +572,57 @@ feed_main_event_callback(
                         {
                         }
                     }
+                    else
+                    {
+                        /* Take all glyphs of current line and append at
+                        end of previous line */
+                        if (p_main_context->i_cursor_line_index)
+                        {
+                            struct feed_line *
+                                p_line_up;
+
+                            p_main_context->i_cursor_line_index --;
+
+                            p_line_up =
+                                (struct feed_line *)(
+                                    p_line->o_list.p_prev);
+
+                            p_main_context->i_cursor_glyph_index =
+                                p_line_up->i_glyph_count;
+
+                            while (
+                                p_line->i_glyph_count)
+                            {
+                                struct feed_glyph *
+                                    p_glyph;
+
+                                p_glyph =
+                                    (struct feed_glyph *)(
+                                        p_line->o_glyphs.p_next);
+
+                                feed_list_join(
+                                    &(
+                                        p_glyph->o_list),
+                                    &(
+                                        p_glyph->o_list));
+
+                                p_line->i_glyph_count --;
+
+                                feed_list_join(
+                                    &(
+                                        p_glyph->o_list),
+                                    &(
+                                        p_line_up->o_glyphs));
+
+                                p_line_up->i_glyph_count ++;
+                            }
+
+                            feed_line_destroy(
+                                p_line);
+
+                            p_text->i_line_count --;
+                        }
+                    }
                 }
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_DELETE) == p_event->i_code)
