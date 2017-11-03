@@ -467,6 +467,10 @@ feed_main_refresh_text(
                 p_text->o_last_event));
     }
 
+    /* Erase old lines */
+    feed_screen_clear_region(
+        p_screen);
+
     /* Position the cursor */
     {
         feed_screen_set_cursor_pos(
