@@ -32,6 +32,8 @@ Description:
 
 struct feed_client;
 
+struct feed_buf;
+
 struct feed_text
 {
     struct feed_client *
@@ -79,5 +81,17 @@ feed_text_write_event(
         i_line_index,
     unsigned int const
         i_glyph_index);
+
+unsigned int
+feed_text_get_raw_length(
+    struct feed_text * const
+        p_text);
+
+void
+feed_text_get_raw_buffer(
+    struct feed_text * const
+        p_text,
+    struct feed_buf * const
+        p_buf);
 
 /* end-of-file: feed_text.h */
