@@ -22,6 +22,8 @@ Description:
 
 #include "feed_heap.h"
 
+#include "feed_buf.h"
+
 static
 char
 feed_text_init(
@@ -284,6 +286,81 @@ feed_text_write_event(
             p_line,
             p_event,
             i_glyph_index);
+    }
+
+}
+
+unsigned int
+feed_text_get_raw_length(
+    struct feed_text * const
+        p_text)
+{
+    unsigned int
+        i_buf_len;
+
+    struct feed_list *
+        p_iterator;
+
+    i_buf_len =
+        0u;
+
+    p_iterator =
+        p_text->o_lines.p_next;
+
+    while (
+        p_iterator
+        != &(p_text->o_lines))
+    {
+        struct feed_line *
+            p_line;
+
+        p_line =
+            (struct feed_line *)(
+                p_iterator);
+
+        i_buf_len +=
+            feed_line_get_raw_length(
+                p_line);
+
+        p_iterator =
+            p_iterator->p_next;
+    }
+
+    return
+        i_buf_len;
+
+}
+
+void
+feed_text_get_raw_buffer(
+    struct feed_text * const
+        p_text,
+    struct feed_buf * const
+        p_buf)
+{
+    struct feed_list *
+        p_iterator;
+
+    p_iterator =
+        p_text->o_lines.p_next;
+
+    while (
+        p_iterator
+        != &(p_text->o_lines))
+    {
+        struct feed_line *
+            p_line;
+
+        p_line =
+            (struct feed_line *)(
+                p_iterator);
+
+        feed_line_get_raw_buffer(
+            p_line,
+            p_buf);
+
+        p_iterator =
+            p_iterator->p_next;
     }
 
 }

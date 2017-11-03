@@ -31,6 +31,8 @@ struct feed_client;
 
 struct feed_event;
 
+struct feed_buf;
+
 struct feed_line
 {
     struct feed_list
@@ -81,5 +83,17 @@ feed_line_get_glyph(
         p_line,
     unsigned int const
         i_glyph_index);
+
+unsigned int
+feed_line_get_raw_length(
+    struct feed_line * const
+        p_line);
+
+void
+feed_line_get_raw_buffer(
+    struct feed_line * const
+        p_line,
+    struct feed_buf * const
+        p_buf);
 
 /* end-of-file: feed_line.h */

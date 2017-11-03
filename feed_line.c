@@ -20,6 +20,8 @@ Description:
 
 #include "feed_heap.h"
 
+#include "feed_buf.h"
+
 static
 void
 feed_line_init(
@@ -277,5 +279,87 @@ feed_line_get_glyph(
         p_glyph;
 
 }
+
+unsigned int
+feed_line_get_raw_length(
+    struct feed_line * const
+        p_line)
+{
+    unsigned int
+        i_buf_len;
+
+    struct feed_list *
+        p_iterator;
+
+    i_buf_len =
+        0u;
+
+    p_iterator =
+        p_line->o_glyphs.p_next;
+
+    while (
+        p_iterator
+        != &(p_line->o_glyphs))
+    {
+        struct feed_glyph *
+            p_glyph;
+
+        p_glyph =
+            (struct feed_glyph *)(
+                p_iterator);
+
+        i_buf_len +=
+            p_glyph->i_raw_length;
+
+        p_iterator =
+            p_iterator->p_next;
+    }
+
+    /* Add one for newline */
+    i_buf_len ++;
+
+    return
+        i_buf_len;
+
+} /* feed_line_get_raw_length() */
+
+void
+feed_line_get_raw_buffer(
+    struct feed_line * const
+        p_line,
+    struct feed_buf * const
+        p_buf)
+{
+    struct feed_list *
+        p_iterator;
+
+    p_iterator =
+        p_line->o_glyphs.p_next;
+
+    while (
+        p_iterator
+        != &(p_line->o_glyphs))
+    {
+        struct feed_glyph *
+            p_glyph;
+
+        p_glyph =
+            (struct feed_glyph *)(
+                p_iterator);
+
+        feed_buf_write_character_array(
+            p_buf,
+            p_glyph->a_raw,
+            p_glyph->i_raw_length);
+
+        p_iterator =
+            p_iterator->p_next;
+    }
+
+    feed_buf_write_character(
+        p_buf,
+        '\n');
+
+} /* feed_line_get_raw_buffer() */
 
 /* end-of-file: feed_line.c */
