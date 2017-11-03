@@ -40,14 +40,20 @@ struct feed_tty
     int
         i_input_file;
 
+    unsigned int
+        i_cache_len;
+
     int
-        a_padding1[2u];
+        a_padding1[1u];
 
     char
         b_enabled;
 
     char
         ac_padding[7u];
+
+    unsigned char
+        a_cache[65536u];
 
 };
 
@@ -94,6 +100,9 @@ feed_tty_init(
 
                     p_tty->i_input_file =
                         STDIN_FILENO;
+
+                    p_tty->i_cache_len =
+                        0u;
 
                     p_tty->b_enabled =
                         0;
@@ -445,6 +454,9 @@ feed_tty_read_character(
     int
         i_result;
 
+    feed_tty_flush(
+        p_tty);
+
     i_result =
         (int)(
             read(
@@ -526,6 +538,78 @@ feed_tty_read_character_array(
 }
 
 char
+feed_tty_flush(
+    struct feed_tty * const
+        p_tty)
+{
+    char
+        b_result;
+
+    if (
+        p_tty->i_cache_len)
+    {
+        unsigned int
+            i_index;
+
+        b_result =
+            1;
+
+        i_index =
+            0u;
+
+        while (
+            b_result
+            && (
+                i_index
+                < p_tty->i_cache_len))
+        {
+            int
+                i_result;
+
+            i_result =
+                (int)(
+                    write(
+                        p_tty->i_output_file,
+                        p_tty->a_cache + i_index,
+                        p_tty->i_cache_len - i_index));
+
+            if (
+                i_result > 0)
+            {
+                i_index +=
+                    (unsigned int)(
+                        i_result);
+
+                b_result =
+                    1;
+            }
+            else
+            {
+                b_result =
+                    0;
+            }
+        }
+
+        if (
+            b_result)
+        {
+            p_tty->i_cache_len =
+                0;
+
+        }
+    }
+    else
+    {
+        b_result =
+            1;
+    }
+
+    return
+        b_result;
+
+}
+
+char
 feed_tty_write_character(
     struct feed_tty * const
         p_tty,
@@ -535,26 +619,26 @@ feed_tty_write_character(
     char
         b_result;
 
-    int
-        i_result;
-
-    i_result =
-        (int)(
-            write(
-                p_tty->i_output_file,
-                &(i_value),
-                1));
-
     if (
-        i_result > 0)
+        p_tty->i_cache_len + 1u >= sizeof(p_tty->a_cache))
     {
         b_result =
-            1;
+            feed_tty_flush(
+                p_tty);
     }
     else
     {
         b_result =
-            0;
+            1;
+    }
+
+    if (
+        b_result)
+    {
+        p_tty->a_cache[p_tty->i_cache_len] =
+            i_value;
+
+        p_tty->i_cache_len ++;
     }
 
     return
@@ -574,9 +658,6 @@ feed_tty_write_character_array(
     char
         b_result;
 
-    int
-        i_result;
-
     unsigned int
         i_index;
 
@@ -592,24 +673,15 @@ feed_tty_write_character_array(
             i_index
             < i_buf_len))
     {
-        i_result =
-            (int)(
-                write(
-                    p_tty->i_output_file,
-                    p_buf + i_index,
-                    i_buf_len - i_index));
+        b_result =
+            feed_tty_write_character(
+                p_tty,
+                p_buf[i_index]);
 
         if (
-            i_result > 0)
+            b_result)
         {
-            i_index +=
-                (unsigned int)(
-                    i_result);
-        }
-        else
-        {
-            b_result =
-                0;
+            i_index ++;
         }
     }
 

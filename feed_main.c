@@ -479,6 +479,9 @@ feed_main_refresh_text(
             i_cursor_visible_y);
     }
 
+    feed_tty_flush(
+        p_main_context->p_client->p_tty);
+
 }
 
 static

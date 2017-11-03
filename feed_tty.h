@@ -35,6 +35,11 @@ feed_tty_disable(
         p_tty);
 
 char
+feed_tty_flush(
+    struct feed_tty * const
+        p_tty);
+
+char
 feed_tty_read_character(
     struct feed_tty * const
         p_tty,
