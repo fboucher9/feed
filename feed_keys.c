@@ -1055,7 +1055,7 @@ feed_keys_lookup(
             'P', 'Q', 'R', 'S',
             'T', 'U', 'V', 'W',
             'X', 'Y', 'Z', '[',
-            '4', ']', '^', '7'
+            '\\', ']', '^', '_'
         };
 
         /* TODO: Detect simple ctrl and alt sequences */
