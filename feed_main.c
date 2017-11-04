@@ -792,6 +792,34 @@ feed_main_event_callback(
                     p_main_context->i_cursor_glyph_index = 0u;
                 }
             }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_ALT | FEED_KEY_UP) == p_event->i_code)
+            {
+                feed_screen_modify_visible_pos(
+                    p_main_context->p_screen,
+                    0,
+                    -1);
+            }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_ALT | FEED_KEY_DOWN) == p_event->i_code)
+            {
+                feed_screen_modify_visible_pos(
+                    p_main_context->p_screen,
+                    0,
+                    1);
+            }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_ALT | FEED_KEY_RIGHT) == p_event->i_code)
+            {
+                feed_screen_modify_visible_pos(
+                    p_main_context->p_screen,
+                    1,
+                    0);
+            }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_ALT | FEED_KEY_LEFT) == p_event->i_code)
+            {
+                feed_screen_modify_visible_pos(
+                    p_main_context->p_screen,
+                    -1,
+                    0);
+            }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
             {
                 /* Notify currently accumulated lines */

@@ -79,6 +79,33 @@ feed_screen_set_cursor_pos(
         i_cursor_y);
 
 void
+feed_screen_get_visible_pos(
+    struct feed_screen * const
+        p_screen,
+    unsigned int * const
+        p_visible_x,
+    unsigned int * const
+        p_visible_y);
+
+void
+feed_screen_set_visible_pos(
+    struct feed_screen * const
+        p_screen,
+    unsigned int const
+        i_visible_x,
+    unsigned int const
+        i_visible_y);
+
+void
+feed_screen_modify_visible_pos(
+    struct feed_screen * const
+        p_screen,
+    int const
+        i_modify_x,
+    int const
+        i_modify_y);
+
+void
 feed_screen_newline(
     struct feed_screen * const
         p_screen);
