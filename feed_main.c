@@ -240,9 +240,6 @@ feed_main_print_status(
                     g_name_end)));
     }
 
-    feed_screen_clear_line(
-        p_screen);
-
 }
 
 static
@@ -269,6 +266,18 @@ feed_main_refresh_text(
     unsigned int
         i_cursor_glyph_iterator;
 
+    unsigned int
+        i_visible_width;
+
+    unsigned int
+        i_visible_height;
+
+    unsigned int
+        i_visible_left;
+
+    unsigned int
+        i_visible_top;
+
     p_screen =
         p_main_context->p_screen;
 
@@ -286,11 +295,25 @@ feed_main_refresh_text(
 
     /* Grow size of drawing region */
 
+    feed_screen_get_visible_pos(
+        p_main_context->p_screen,
+        &(
+            i_visible_left),
+        &(
+            i_visible_top));
+
+    feed_screen_get_visible_size(
+        p_main_context->p_screen,
+        &(
+            i_visible_width),
+        &(
+            i_visible_height));
+
     /* Move cursor to beginning of drawing region */
     feed_screen_set_cursor_pos(
         p_main_context->p_screen,
         0u,
-        0u);
+        i_visible_top);
 
     /* Print state of body text */
     {
@@ -305,9 +328,15 @@ feed_main_refresh_text(
             p_text->o_lines.p_next;
 
         while (
-            p_line_iterator
-            != &(
-                p_text->o_lines))
+            (
+                p_line_iterator
+                != &(
+                    p_text->o_lines))
+            && (
+                i_cursor_line_iterator
+                < (
+                    i_visible_top
+                    + i_visible_height)))
         {
             struct feed_line *
                 p_line;
@@ -317,99 +346,65 @@ feed_main_refresh_text(
                     p_line_iterator);
 
             /* If line is within refresh window */
-
-            /* Return to home position */
-
+            if (i_cursor_line_iterator >= i_visible_top)
             {
-                struct feed_line *
-                    p_prompt_line;
+                /* Return to home position */
 
-                if (0u == i_cursor_line_iterator)
                 {
-                    /* Draw a prompt on first line */
-                    p_prompt_line =
-                        feed_prompt_get1(
-                            p_main_context->p_prompt);
-                }
-                else
-                {
-                    feed_screen_newline(
-                        p_main_context->p_screen);
+                    struct feed_line *
+                        p_prompt_line;
 
-                    p_prompt_line =
-                        feed_prompt_get2(
-                            p_main_context->p_prompt);
-                }
-
-                if (p_prompt_line)
-                {
-                    p_glyph_iterator =
-                        p_prompt_line->o_glyphs.p_next;
-
-                    while (
-                        p_glyph_iterator
-                        != &(
-                            p_prompt_line->o_glyphs))
+                    if (0u == i_cursor_line_iterator)
                     {
-                        struct feed_glyph const *
-                            p_glyph;
+                        /* Draw a prompt on first line */
+                        p_prompt_line =
+                            feed_prompt_get1(
+                                p_main_context->p_prompt);
+                    }
+                    else
+                    {
+                        p_prompt_line =
+                            feed_prompt_get2(
+                                p_main_context->p_prompt);
+                    }
 
-                        p_glyph =
-                            (struct feed_glyph const *)(
-                                p_glyph_iterator);
+                    if (i_cursor_line_iterator > i_visible_top)
+                    {
+                        feed_screen_newline(
+                            p_main_context->p_screen);
+                    }
 
-                        /* If char is within refresh window */
-
-                        feed_screen_write(
-                            p_main_context->p_screen,
-                            p_glyph->a_visible,
-                            p_glyph->i_visible_length);
-
+                    if (p_prompt_line)
+                    {
                         p_glyph_iterator =
-                            p_glyph_iterator->p_next;
+                            p_prompt_line->o_glyphs.p_next;
+
+                        while (
+                            p_glyph_iterator
+                            != &(
+                                p_prompt_line->o_glyphs))
+                        {
+                            struct feed_glyph const *
+                                p_glyph;
+
+                            p_glyph =
+                                (struct feed_glyph const *)(
+                                    p_glyph_iterator);
+
+                            /* If char is within refresh window */
+
+                            feed_screen_write(
+                                p_main_context->p_screen,
+                                p_glyph->a_visible,
+                                p_glyph->i_visible_length);
+
+                            p_glyph_iterator =
+                                p_glyph_iterator->p_next;
+                        }
                     }
                 }
-            }
 
-            if (i_cursor_line_iterator == p_main_context->i_cursor_line_index)
-            {
-                feed_screen_get_cursor_pos(
-                    p_screen,
-                    &(
-                        i_cursor_visible_x),
-                    &(
-                        i_cursor_visible_y));
-
-            }
-
-            /* For all chars in line */
-            p_glyph_iterator =
-                p_line->o_glyphs.p_next;
-
-            i_cursor_glyph_iterator =
-                0u;
-
-            while (
-                p_glyph_iterator
-                != &(
-                    p_line->o_glyphs))
-            {
-                struct feed_glyph const *
-                    p_glyph;
-
-                p_glyph =
-                    (struct feed_glyph const *)(
-                        p_glyph_iterator);
-
-                /* If char is within refresh window */
-
-                feed_screen_write(
-                    p_screen,
-                    p_glyph->a_visible,
-                    p_glyph->i_visible_length);
-
-                if ((i_cursor_line_iterator == p_main_context->i_cursor_line_index)
-                    && (i_cursor_glyph_iterator < p_main_context->i_cursor_glyph_index))
+                if (i_cursor_line_iterator == p_main_context->i_cursor_line_index)
                 {
                     feed_screen_get_cursor_pos(
                         p_screen,
@@ -417,17 +412,52 @@ feed_main_refresh_text(
                             i_cursor_visible_x),
                         &(
                             i_cursor_visible_y));
+
                 }
 
-                i_cursor_glyph_iterator ++;
-
+                /* For all chars in line */
                 p_glyph_iterator =
-                    p_glyph_iterator->p_next;
-            }
+                    p_line->o_glyphs.p_next;
 
-            /* Erase to end-of-line */
-            feed_screen_clear_line(
-                p_screen);
+                i_cursor_glyph_iterator =
+                    0u;
+
+                while (
+                    p_glyph_iterator
+                    != &(
+                        p_line->o_glyphs))
+                {
+                    struct feed_glyph const *
+                        p_glyph;
+
+                    p_glyph =
+                        (struct feed_glyph const *)(
+                            p_glyph_iterator);
+
+                    /* If char is within refresh window */
+
+                    feed_screen_write(
+                        p_screen,
+                        p_glyph->a_visible,
+                        p_glyph->i_visible_length);
+
+                    if ((i_cursor_line_iterator == p_main_context->i_cursor_line_index)
+                        && (i_cursor_glyph_iterator < p_main_context->i_cursor_glyph_index))
+                    {
+                        feed_screen_get_cursor_pos(
+                            p_screen,
+                            &(
+                                i_cursor_visible_x),
+                            &(
+                                i_cursor_visible_y));
+                    }
+
+                    i_cursor_glyph_iterator ++;
+
+                    p_glyph_iterator =
+                        p_glyph_iterator->p_next;
+                }
+            }
 
             i_cursor_line_iterator ++;
 
@@ -438,7 +468,11 @@ feed_main_refresh_text(
 
     /* Draw status line */
     {
-        feed_screen_newline(p_screen);
+        if (
+            i_cursor_line_iterator > i_visible_top)
+        {
+            feed_screen_newline(p_screen);
+        }
 
         {
             static unsigned char const g_status_header[] =
@@ -791,6 +825,20 @@ feed_main_event_callback(
 
                     p_main_context->i_cursor_glyph_index = 0u;
                 }
+            }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_PAGEUP) == p_event->i_code)
+            {
+                feed_screen_modify_visible_pos(
+                    p_main_context->p_screen,
+                    0,
+                    -25);
+            }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_PAGEDOWN) == p_event->i_code)
+            {
+                feed_screen_modify_visible_pos(
+                    p_main_context->p_screen,
+                    0,
+                    25);
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_ALT | FEED_KEY_UP) == p_event->i_code)
             {

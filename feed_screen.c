@@ -809,3 +809,25 @@ feed_screen_modify_visible_pos(
     }
 }
 
+void
+feed_screen_get_visible_size(
+    struct feed_screen * const
+        p_screen,
+    unsigned int * const
+        p_visible_width,
+    unsigned int * const
+        p_visible_height)
+{
+    if (
+        p_screen)
+    {
+        *(
+            p_visible_width) =
+            p_screen->i_screen_width;
+
+        *(
+            p_visible_height) =
+            p_screen->i_screen_height;
+    }
+}
+

@@ -88,6 +88,15 @@ feed_screen_get_visible_pos(
         p_visible_y);
 
 void
+feed_screen_get_visible_size(
+    struct feed_screen * const
+        p_screen,
+    unsigned int * const
+        p_visible_width,
+    unsigned int * const
+        p_visible_height);
+
+void
 feed_screen_set_visible_pos(
     struct feed_screen * const
         p_screen,
