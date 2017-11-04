@@ -276,6 +276,31 @@ feed_text_get_line(
 }
 
 void
+feed_text_append_event(
+    struct feed_text * const
+        p_text,
+    struct feed_event const * const
+        p_event)
+{
+    struct feed_line *
+        p_line;
+
+    p_line =
+        feed_text_get_line(
+            p_text,
+            p_text->i_line_count - 1u);
+
+    if (
+        p_line)
+    {
+        feed_line_append_event(
+            p_line,
+            p_event);
+    }
+
+}
+
+void
 feed_text_write_event(
     struct feed_text * const
         p_text,
@@ -377,6 +402,149 @@ feed_text_get_raw_buffer(
         p_iterator =
             p_iterator->p_next;
     }
+
+}
+
+static
+void
+feed_text_set_callback(
+    void * const
+        p_context,
+    struct feed_event const * const
+        p_event)
+{
+    if (
+        p_context)
+    {
+        struct feed_text *
+            p_text;
+
+        p_text =
+            (struct feed_text *)(
+                p_context);
+
+        feed_text_append_event(
+            p_text,
+            p_event);
+    }
+
+} /* feed_prompt_set_callback() */
+
+char
+feed_text_set(
+    struct feed_text * const
+        p_text,
+    unsigned char const * const
+        p_data,
+    unsigned int const
+        i_data_length)
+{
+    char
+        b_result;
+
+    if (p_text)
+    {
+        /* Go to end of buffer */
+
+        if (
+            i_data_length)
+        {
+            struct feed_input *
+                p_input;
+
+            p_input =
+                feed_input_create(
+                    p_text->p_client,
+                    &(
+                        feed_text_set_callback),
+                    p_text);
+
+            if (
+                p_input)
+            {
+                unsigned int
+                    i_data_iterator;
+
+                i_data_iterator =
+                    0u;
+
+                b_result =
+                    1;
+
+                while (
+                    b_result
+                    && (
+                        i_data_iterator
+                        < i_data_length))
+                {
+                    if ('\n' == p_data[i_data_iterator])
+                    {
+                        struct feed_line *
+                            p_line;
+
+                        p_line =
+                            feed_line_create(
+                                p_text->p_client);
+
+                        if (
+                            p_line)
+                        {
+                            feed_list_join(
+                                &(
+                                    p_line->o_list),
+                                &(
+                                    p_text->o_lines));
+
+                            p_text->i_line_count ++;
+
+                            i_data_iterator ++;
+                        }
+                        else
+                        {
+                            b_result =
+                                0;
+                        }
+                    }
+                    else
+                    {
+                        if (
+                            feed_input_write(
+                                p_input,
+                                p_data[i_data_iterator]))
+                        {
+                            i_data_iterator ++;
+                        }
+                        else
+                        {
+                            b_result =
+                                0;
+                        }
+                    }
+                }
+
+                feed_input_destroy(
+                    p_input);
+            }
+            else
+            {
+                b_result =
+                    0;
+            }
+        }
+        else
+        {
+            b_result =
+                1;
+        }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
 
 }
 

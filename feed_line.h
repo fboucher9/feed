@@ -72,6 +72,13 @@ feed_line_write_event(
     unsigned int const
         i_glyph_index);
 
+void
+feed_line_append_event(
+    struct feed_line * const
+        p_line,
+    struct feed_event const * const
+        p_event);
+
 struct feed_glyph *
 feed_line_get_glyph(
     struct feed_line * const

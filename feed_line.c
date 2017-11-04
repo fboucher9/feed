@@ -210,6 +210,20 @@ feed_line_destroy(
 }
 
 void
+feed_line_append_event(
+    struct feed_line * const
+        p_line,
+    struct feed_event const * const
+        p_event)
+{
+    feed_line_write_event(
+        p_line,
+        p_event,
+        p_line->i_glyph_count);
+
+}
+
+void
 feed_line_write_event(
     struct feed_line * const
         p_line,

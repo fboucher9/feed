@@ -82,6 +82,13 @@ feed_text_write_event(
     unsigned int const
         i_glyph_index);
 
+void
+feed_text_append_event(
+    struct feed_text * const
+        p_text,
+    struct feed_event const * const
+        p_event);
+
 unsigned int
 feed_text_get_raw_length(
     struct feed_text * const
@@ -93,5 +100,14 @@ feed_text_get_raw_buffer(
         p_text,
     struct feed_buf * const
         p_buf);
+
+char
+feed_text_set(
+    struct feed_text * const
+        p_text,
+    unsigned char const * const
+        p_data,
+    unsigned int const
+        i_count);
 
 /* end-of-file: feed_text.h */
