@@ -548,4 +548,33 @@ feed_text_set(
 
 }
 
+struct feed_line *
+feed_text_append_line(
+    struct feed_text * const
+        p_text)
+{
+    struct feed_line *
+        p_line;
+
+    p_line =
+        feed_line_create(
+            p_text->p_client);
+
+    if (
+        p_line)
+    {
+        feed_list_join(
+            &(
+                p_line->o_list),
+            &(
+                p_text->o_lines));
+
+        p_text->i_line_count ++;
+    }
+
+    return
+        p_line;
+
+}
+
 /* end-of-file: feed_text.c */

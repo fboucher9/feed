@@ -110,4 +110,9 @@ feed_text_set(
     unsigned int const
         i_count);
 
+struct feed_line *
+feed_text_append_line(
+    struct feed_text * const
+        p_text);
+
 /* end-of-file: feed_text.h */

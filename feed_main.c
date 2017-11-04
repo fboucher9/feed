@@ -903,6 +903,139 @@ feed_main_event_callback(
 
 }
 
+static
+void
+feed_main_set_callback(
+    void * const
+        p_context,
+    struct feed_event const * const
+        p_event)
+{
+    struct feed_main_context * const
+        p_main_context =
+        (struct feed_main_context *)(
+            p_context);
+
+    struct feed_text * const
+        p_text =
+        p_main_context->p_text;
+
+    if (((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
+        || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'J') == p_event->i_code))
+    {
+        /* Notify currently accumulated lines */
+
+        /* Split current line */
+
+        /* Create a new line */
+        if (
+            feed_text_append_line(
+                p_text))
+        {
+            p_main_context->i_cursor_line_index ++;
+
+            p_main_context->i_cursor_glyph_index =
+                0u;
+        }
+    }
+    else
+    {
+        feed_text_append_event(
+            p_text,
+            p_event);
+
+        p_main_context->i_cursor_glyph_index ++;
+    }
+
+}
+
+static
+char
+feed_main_set(
+    struct feed_main_context * const
+        p_main_context,
+    unsigned char const * const
+        p_data,
+    unsigned int const
+        i_data_length)
+{
+    char
+        b_result;
+
+    if (p_main_context)
+    {
+        /* Go to end of buffer */
+
+        if (
+            i_data_length)
+        {
+            struct feed_input *
+                p_input;
+
+            p_input =
+                feed_input_create(
+                    p_main_context->p_client,
+                    &(
+                        feed_main_set_callback),
+                    p_main_context);
+
+            if (
+                p_input)
+            {
+                unsigned int
+                    i_data_iterator;
+
+                i_data_iterator =
+                    0u;
+
+                b_result =
+                    1;
+
+                while (
+                    b_result
+                    && (
+                        i_data_iterator
+                        < i_data_length))
+                {
+                    if (
+                        feed_input_write(
+                            p_input,
+                            p_data[i_data_iterator]))
+                    {
+                        i_data_iterator ++;
+                    }
+                    else
+                    {
+                        b_result =
+                            0;
+                    }
+                }
+
+                feed_input_destroy(
+                    p_input);
+            }
+            else
+            {
+                b_result =
+                    0;
+            }
+        }
+        else
+        {
+            b_result =
+                1;
+        }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+}
 
 int
 feed_main(
@@ -1230,6 +1363,38 @@ feed_main(
                 }
             }
 
+            {
+                static unsigned char const s_load[] =
+                {
+                    'a', 'b', 'c', '\n',
+                    '1', '2', '3', '\n',
+                    '\n',
+                    '\n',
+                    '!'
+                };
+
+                if (0)
+                {
+                    feed_text_set(
+                        p_main_context->p_text,
+                        s_load,
+                        sizeof(
+                            s_load));
+
+                    /* Move cursor to end... */
+                }
+
+                if (0)
+                {
+                    /* Load using direct */
+                    feed_main_set(
+                        p_main_context,
+                        s_load,
+                        sizeof(
+                            s_load));
+                }
+            }
+
             if (1)
             {
                 struct feed_input *
@@ -1306,6 +1471,67 @@ feed_main(
 
     feed_prompt_destroy(
         p_main_context->p_prompt);
+
+    {
+        unsigned int
+            i_text_length;
+
+        /* Transfer text to a linear buffer */
+        i_text_length =
+            feed_text_get_raw_length(
+                p_main_context->p_text);
+
+        if (
+            i_text_length)
+        {
+            unsigned char *
+                p_raw_buffer;
+
+            p_raw_buffer =
+                (unsigned char *)(
+                    feed_heap_alloc(
+                        p_main_context->p_client->p_heap,
+                        i_text_length));
+
+            if (
+                p_raw_buffer)
+            {
+                struct feed_buf
+                    o_raw_content;
+
+                if (
+                    feed_buf_init(
+                        &(
+                            o_raw_content),
+                        p_raw_buffer,
+                        i_text_length))
+                {
+                    feed_text_get_raw_buffer(
+                        p_main_context->p_text,
+                        &(
+                            o_raw_content));
+
+                    if (0)
+                    {
+                        printf("content: [\n%.*s]\n",
+                            (int)(
+                                o_raw_content.i_len),
+                            (char const *)(
+                                o_raw_content.p_buf));
+                    }
+
+                    feed_buf_cleanup(
+                        &(
+                            o_raw_content));
+                }
+
+                feed_heap_free(
+                    p_main_context->p_client->p_heap,
+                    (void *)(
+                        p_raw_buffer));
+            }
+        }
+    }
 
     feed_text_destroy(
         p_main_context->p_text);
