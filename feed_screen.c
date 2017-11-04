@@ -286,7 +286,7 @@ feed_screen_init(
         1u;
 
     p_screen->i_region_sx =
-        20u;
+        0u;
 
     p_screen->i_region_sy =
         0u;

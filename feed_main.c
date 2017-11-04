@@ -1065,6 +1065,100 @@ feed_main_set(
 
 }
 
+static
+char
+feed_main_load_file(
+    struct feed_main_context * const
+        p_main_context,
+    char const * const
+        p_file_name)
+{
+    char
+        b_result;
+
+    if (
+        p_main_context)
+    {
+        if (
+            p_file_name)
+        {
+            FILE * const
+                p_file_handle =
+                fopen(
+                    p_file_name,
+                    "rt");
+
+            if (
+                p_file_handle)
+            {
+                char
+                    b_eof;
+
+                b_eof =
+                    0;
+
+                b_result =
+                    1;
+
+                while (
+                    b_result
+                    && (!b_eof))
+                {
+                    unsigned char a_block[1024u];
+
+                    int iResult;
+
+                    iResult =
+                        (int)(
+                            fread(
+                                a_block,
+                                sizeof(a_block[0u]),
+                                sizeof(a_block),
+                                p_file_handle));
+
+                    if (
+                        iResult > 0)
+                    {
+                        b_result =
+                            feed_main_set(
+                                p_main_context,
+                                a_block,
+                                (unsigned int)(
+                                    iResult));
+                    }
+                    else
+                    {
+                        b_eof =
+                            1;
+                    }
+                }
+
+                fclose(
+                    p_file_handle);
+            }
+            else
+            {
+                b_result =
+                    0;
+            }
+        }
+        else
+        {
+            b_result =
+                0;
+        }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+}
+
 int
 feed_main(
     unsigned int const
@@ -1420,6 +1514,16 @@ feed_main(
                         s_load,
                         sizeof(
                             s_load));
+                }
+            }
+
+            if (1)
+            {
+                if (argc > 1u)
+                {
+                    feed_main_load_file(
+                        p_main_context,
+                        argv[1u]);
                 }
             }
 
