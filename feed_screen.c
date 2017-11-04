@@ -539,23 +539,17 @@ feed_screen_set_cursor_pos(
                         i_screen_cx = p_screen->i_screen_width - 1u;
                     }
 
+                    if (i_screen_cx < p_screen->i_screen_cx)
                     {
-                        static unsigned char const g_cr[] =
-                        {
-                            '\r'
-                        };
-
-                        feed_tty_write_character_array(
+                        feed_tty_move_cursor_backward(
                             p_tty,
-                            g_cr,
-                            sizeof(g_cr));
+                            (unsigned int)(p_screen->i_screen_cx - i_screen_cx));
                     }
-
-                    if (i_screen_cx)
+                    else if (i_screen_cx > p_screen->i_screen_cx)
                     {
                         feed_tty_move_cursor_forward(
                             p_tty,
-                            i_screen_cx);
+                            (unsigned int)(i_screen_cx - p_screen->i_screen_cx));
                     }
 
                     if (i_screen_cy < p_screen->i_screen_cy)
