@@ -1209,38 +1209,6 @@ feed_main(
         feed_prompt_create(
             p_main_context->p_client);
 
-    {
-        static unsigned char const s_prompt1[] =
-        {
-            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
-            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
-            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
-            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
-            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
-            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
-            'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
-        };
-
-        static unsigned char const s_prompt2[] =
-        {
-            ' ',
-            '>',
-            ' '
-        };
-
-        feed_prompt_set1(
-            p_main_context->p_prompt,
-            s_prompt1,
-            sizeof(
-                s_prompt1));
-
-        feed_prompt_set2(
-            p_main_context->p_prompt,
-            s_prompt2,
-            sizeof(
-                s_prompt2));
-    }
-
     p_main_context->p_client->p_tty =
         feed_tty_create(
             p_main_context->p_client);
@@ -1485,6 +1453,46 @@ feed_main(
                 }
             }
 
+            if (argc > 1u)
+            {
+                feed_main_load_file(
+                    p_main_context,
+                    argv[1u]);
+            }
+            else
+            {
+                static unsigned char const s_prompt1[] =
+                {
+                    'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                    'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                    'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                    'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                    'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                    'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                    'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                };
+
+                static unsigned char const s_prompt2[] =
+                {
+                    ' ',
+                    '>',
+                    ' '
+                };
+
+                feed_prompt_set1(
+                    p_main_context->p_prompt,
+                    s_prompt1,
+                    sizeof(
+                        s_prompt1));
+
+                feed_prompt_set2(
+                    p_main_context->p_prompt,
+                    s_prompt2,
+                    sizeof(
+                        s_prompt2));
+            }
+
+            if (0)
             {
                 static unsigned char const s_load[] =
                 {
@@ -1495,36 +1503,12 @@ feed_main(
                     '!'
                 };
 
-                if (0)
-                {
-                    feed_text_set(
-                        p_main_context->p_text,
-                        s_load,
-                        sizeof(
-                            s_load));
-
-                    /* Move cursor to end... */
-                }
-
-                if (0)
-                {
-                    /* Load using direct */
-                    feed_main_set(
-                        p_main_context,
-                        s_load,
-                        sizeof(
-                            s_load));
-                }
-            }
-
-            if (1)
-            {
-                if (argc > 1u)
-                {
-                    feed_main_load_file(
-                        p_main_context,
-                        argv[1u]);
-                }
+                /* Load using direct */
+                feed_main_set(
+                    p_main_context,
+                    s_load,
+                    sizeof(
+                        s_load));
             }
 
             if (1)

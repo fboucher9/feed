@@ -162,7 +162,7 @@ feed_screen_event_callback(
                 }
                 else
                 {
-                    if (p_screen->i_region_cx >= (p_screen->i_region_sx + p_screen->i_screen_width - 1u))
+                    if (p_screen->i_region_cx >= (p_screen->i_region_width - 1u))
                     {
                         feed_screen_newline(p_screen);
                     }
@@ -557,6 +557,9 @@ feed_screen_newline(
             && (
                 p_screen->i_region_cy < (p_screen->i_region_sy + p_screen->i_screen_height - 1u)))
         {
+            feed_screen_clear_line(
+                p_screen);
+
             feed_screen_newline_raw(
                 p_screen);
 
