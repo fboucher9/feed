@@ -29,7 +29,7 @@ Description:
 
 struct feed_client;
 
-struct feed_event;
+struct feed_utf8_code;
 
 struct feed_buf;
 
@@ -64,20 +64,20 @@ feed_line_destroy(
         p_line);
 
 void
-feed_line_write_event(
+feed_line_write_utf8_code(
     struct feed_line * const
         p_line,
-    struct feed_event const * const
-        p_event,
+    struct feed_utf8_code const * const
+        p_utf8_code,
     unsigned int const
         i_glyph_index);
 
 void
-feed_line_append_event(
+feed_line_append_utf8_code(
     struct feed_line * const
         p_line,
-    struct feed_event const * const
-        p_event);
+    struct feed_utf8_code const * const
+        p_utf8_code);
 
 struct feed_glyph *
 feed_line_get_glyph(

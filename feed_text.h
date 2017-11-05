@@ -34,6 +34,8 @@ struct feed_client;
 
 struct feed_buf;
 
+struct feed_utf8_code;
+
 struct feed_text
 {
     struct feed_client *
@@ -72,22 +74,22 @@ feed_text_get_line(
         i_line_index);
 
 void
-feed_text_write_event(
+feed_text_write_utf8_code(
     struct feed_text * const
         p_text,
-    struct feed_event const * const
-        p_event,
+    struct feed_utf8_code const * const
+        p_utf8_code,
     unsigned int const
         i_line_index,
     unsigned int const
         i_glyph_index);
 
 void
-feed_text_append_event(
+feed_text_append_utf8_code(
     struct feed_text * const
         p_text,
-    struct feed_event const * const
-        p_event);
+    struct feed_utf8_code const * const
+        p_utf8_code);
 
 unsigned int
 feed_text_get_raw_length(

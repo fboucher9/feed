@@ -20,6 +20,8 @@ Description:
 
 #include "feed_buf.h"
 
+#include "feed_input.h"
+
 static
 char
 feed_line_init(
@@ -210,25 +212,25 @@ feed_line_destroy(
 }
 
 void
-feed_line_append_event(
+feed_line_append_utf8_code(
     struct feed_line * const
         p_line,
-    struct feed_event const * const
-        p_event)
+    struct feed_utf8_code const * const
+        p_utf8_code)
 {
-    feed_line_write_event(
+    feed_line_write_utf8_code(
         p_line,
-        p_event,
+        p_utf8_code,
         p_line->i_glyph_count);
 
 }
 
 void
-feed_line_write_event(
+feed_line_write_utf8_code(
     struct feed_line * const
         p_line,
-    struct feed_event const * const
-        p_event,
+    struct feed_utf8_code const * const
+        p_utf8_code,
     unsigned int const
         i_glyph_index)
 {
@@ -246,7 +248,7 @@ feed_line_write_event(
     p_glyph =
         feed_glyph_create(
             p_client,
-            p_event);
+            p_utf8_code);
 
     if (
         p_glyph)

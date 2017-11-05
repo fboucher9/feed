@@ -22,6 +22,8 @@ Description:
 
 #include "feed_buf.h"
 
+#include "feed_utf8.h"
+
 static
 char
 feed_text_init(
@@ -276,11 +278,11 @@ feed_text_get_line(
 }
 
 void
-feed_text_append_event(
+feed_text_append_utf8_code(
     struct feed_text * const
         p_text,
-    struct feed_event const * const
-        p_event)
+    struct feed_utf8_code const * const
+        p_utf8_code)
 {
     struct feed_line *
         p_line;
@@ -293,19 +295,19 @@ feed_text_append_event(
     if (
         p_line)
     {
-        feed_line_append_event(
+        feed_line_append_utf8_code(
             p_line,
-            p_event);
+            p_utf8_code);
     }
 
 }
 
 void
-feed_text_write_event(
+feed_text_write_utf8_code(
     struct feed_text * const
         p_text,
-    struct feed_event const * const
-        p_event,
+    struct feed_utf8_code const * const
+        p_utf8_code,
     unsigned int const
         i_line_index,
     unsigned int const
@@ -322,9 +324,9 @@ feed_text_write_event(
     if (
         p_line)
     {
-        feed_line_write_event(
+        feed_line_write_utf8_code(
             p_line,
-            p_event,
+            p_utf8_code,
             i_glyph_index);
     }
 
@@ -410,8 +412,8 @@ void
 feed_text_set_callback(
     void * const
         p_context,
-    struct feed_event const * const
-        p_event)
+    struct feed_utf8_code const * const
+        p_utf8_code)
 {
     if (
         p_context)
@@ -423,9 +425,9 @@ feed_text_set_callback(
             (struct feed_text *)(
                 p_context);
 
-        feed_text_append_event(
+        feed_text_append_utf8_code(
             p_text,
-            p_event);
+            p_utf8_code);
     }
 
 } /* feed_prompt_set_callback() */
@@ -449,73 +451,72 @@ feed_text_set(
         if (
             i_data_length)
         {
-            struct feed_input *
-                p_input;
+            unsigned int
+                i_data_iterator;
 
-            p_input =
-                feed_input_create(
-                    p_text->p_client);
+            i_data_iterator =
+                0u;
 
-            if (
-                p_input)
+            b_result =
+                1;
+
+            while (
+                b_result
+                && (
+                    i_data_iterator
+                    < i_data_length))
             {
-                unsigned int
-                    i_data_iterator;
-
-                i_data_iterator =
-                    0u;
-
-                b_result =
-                    1;
-
-                while (
-                    b_result
-                    && (
-                        i_data_iterator
-                        < i_data_length))
+                if ('\n' == p_data[i_data_iterator])
                 {
-                    if ('\n' == p_data[i_data_iterator])
+                    struct feed_line *
+                        p_line;
+
+                    p_line =
+                        feed_line_create(
+                            p_text->p_client);
+
+                    if (
+                        p_line)
                     {
-                        struct feed_line *
-                            p_line;
+                        feed_list_join(
+                            &(
+                                p_line->o_list),
+                            &(
+                                p_text->o_lines));
 
-                        p_line =
-                            feed_line_create(
-                                p_text->p_client);
+                        p_text->i_line_count ++;
 
-                        if (
-                            p_line)
-                        {
-                            feed_list_join(
-                                &(
-                                    p_line->o_list),
-                                &(
-                                    p_text->o_lines));
-
-                            p_text->i_line_count ++;
-
-                            i_data_iterator ++;
-                        }
-                        else
-                        {
-                            b_result =
-                                0;
-                        }
+                        i_data_iterator ++;
                     }
                     else
                     {
-                        int
-                            i_result;
+                        b_result =
+                            0;
+                    }
+                }
+                else
+                {
+                    int
+                        i_result;
 
-                        struct feed_event
-                            o_event;
+                    struct feed_utf8_parser
+                        o_utf8_parser;
+
+                    if (
+                        feed_utf8_parser_init(
+                            &(
+                                o_utf8_parser)))
+                    {
+                        struct feed_utf8_code
+                            o_utf8_code;
 
                         i_result =
-                            feed_input_write(
-                                p_input,
+                            feed_utf8_parser_write(
+                                &(
+                                    o_utf8_parser),
                                 p_data[i_data_iterator],
                                 &(
-                                    o_event));
+                                    o_utf8_code));
 
                         if (
                             0
@@ -528,7 +529,7 @@ feed_text_set(
                                 feed_text_set_callback(
                                     p_text,
                                     &(
-                                        o_event));
+                                        o_utf8_code));
                             }
 
                             i_data_iterator ++;
@@ -538,16 +539,17 @@ feed_text_set(
                             b_result =
                                 0;
                         }
+
+                        feed_utf8_parser_cleanup(
+                            &(
+                                o_utf8_parser));
+                    }
+                    else
+                    {
+                        b_result =
+                            0;
                     }
                 }
-
-                feed_input_destroy(
-                    p_input);
-            }
-            else
-            {
-                b_result =
-                    0;
             }
         }
         else

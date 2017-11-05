@@ -17,7 +17,7 @@ Description:
 
 #include "feed_glyph.h"
 
-#include "feed_input.h"
+#include "feed_utf8.h"
 
 #include "feed_buf.h"
 
@@ -25,72 +25,64 @@ Description:
 
 static
 void
-feed_glyph_write_event(
+feed_glyph_write_code(
     struct feed_glyph * const
         p_glyph,
-    struct feed_event const * const
-        p_event)
+    struct feed_utf8_code const * const
+        p_utf8_code)
 {
     memcpy(
         p_glyph->a_raw,
-        p_event->a_raw,
-        p_event->i_raw_len);
+        p_utf8_code->a_raw,
+        p_utf8_code->i_raw_len);
 
     p_glyph->i_raw_length =
-        p_event->i_raw_len;
+        p_utf8_code->i_raw_len;
 
-    if (
-        FEED_EVENT_KEY_FLAG & p_event->i_code)
+    if (p_utf8_code->i_code < 32ul)
     {
-        struct feed_buf
-            o_buf;
-
-        memset(
-            p_glyph->a_visible,
-            0u,
-            sizeof(
-                p_glyph->a_visible));
-
         p_glyph->a_visible[0u] =
-            '<';
+            '^';
 
-        feed_buf_init(
-            &(
-                o_buf),
-            p_glyph->a_visible + 1u,
-            sizeof(
-                p_glyph->a_visible) - 1u);
-
-        feed_input_print(
-            p_event,
-            &(
-                o_buf));
-
-        p_glyph->a_visible[1u + o_buf.i_len] =
-            '>';
+        p_glyph->a_visible[1u] =
+            (unsigned char)(
+                '@' + p_utf8_code->i_code);
 
         p_glyph->i_visible_length =
-            (unsigned char)(
-                o_buf.i_len + 2u);
+            2u;
 
         p_glyph->i_visible_width =
-            p_glyph->i_visible_length;
+            2u;
+    }
+    else if (p_utf8_code->i_code == 127ul)
+    {
+        p_glyph->a_visible[0u] =
+            '^';
+
+        p_glyph->a_visible[1u] =
+            '?';
+
+        p_glyph->i_visible_length =
+            2u;
+
+        p_glyph->i_visible_width =
+            2u;
     }
     else
     {
         memcpy(
             p_glyph->a_visible,
-            p_event->a_raw,
-            p_event->i_raw_len);
+            p_utf8_code->a_raw,
+            p_utf8_code->i_raw_len);
 
         p_glyph->i_visible_length =
-            p_event->i_raw_len;
+            p_utf8_code->i_raw_len;
 
         p_glyph->i_visible_width =
             1u;
     }
 
-} /* feed_glyph_write_event() */
+} /* feed_glyph_write_code() */
 
 
 static
@@ -100,8 +92,8 @@ feed_glyph_init(
         p_glyph,
     struct feed_client * const
         p_client,
-    struct feed_event const * const
-        p_event)
+    struct feed_utf8_code const * const
+        p_utf8_code)
 {
     char
         b_result;
@@ -119,9 +111,9 @@ feed_glyph_init(
     p_glyph->i_visible_length =
         0u;
 
-    feed_glyph_write_event(
+    feed_glyph_write_code(
         p_glyph,
-        p_event);
+        p_utf8_code);
 
     b_result =
         1;
@@ -150,16 +142,16 @@ feed_glyph_init_cb(
         (struct feed_glyph *)(
             p_object);
 
-    struct feed_event const * const
-        p_event =
-        (struct feed_event const *)(
+    struct feed_utf8_code const * const
+        p_utf8_code =
+        (struct feed_utf8_code const *)(
             p_descriptor);
 
     b_result =
         feed_glyph_init(
             p_glyph,
             p_client,
-            p_event);
+            p_utf8_code);
 
     return
         b_result;
@@ -203,8 +195,8 @@ struct feed_glyph *
 feed_glyph_create(
     struct feed_client * const
         p_client,
-    struct feed_event const * const
-        p_event)
+    struct feed_utf8_code const * const
+        p_utf8_code)
 {
     struct feed_glyph *
         p_glyph;
@@ -219,7 +211,7 @@ feed_glyph_create(
                 &(
                     feed_glyph_init_cb),
                 (void const *)(
-                    p_event)));
+                    p_utf8_code)));
 
     return
         p_glyph;

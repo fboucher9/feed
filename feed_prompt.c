@@ -18,7 +18,7 @@ Description:
 
 #include "feed_line.h"
 
-#include "feed_input.h"
+#include "feed_utf8.h"
 
 static
 char
@@ -140,8 +140,8 @@ void
 feed_prompt_set_callback(
     void * const
         p_context,
-    struct feed_event const * const
-        p_event)
+    struct feed_utf8_code const * const
+        p_utf8_code)
 {
     if (
         p_context)
@@ -153,9 +153,9 @@ feed_prompt_set_callback(
             (struct feed_line *)(
                 p_context);
 
-        feed_line_write_event(
+        feed_line_write_utf8_code(
             p_line,
-            p_event,
+            p_utf8_code,
             p_line->i_glyph_count);
     }
 
@@ -200,20 +200,13 @@ feed_prompt_set(
             if (
                 p_prompt->a_prompt[i_index])
             {
-                struct feed_input *
-                    p_input;
-
-                p_input =
-                    feed_input_create(
-                        p_prompt->p_client);
-
-                /*
-                        &(
-                            feed_prompt_set_callback),
-                        p_prompt->a_prompt[i_index]); */
+                struct feed_utf8_parser
+                    o_utf8_parser;
 
                 if (
-                    p_input)
+                    feed_utf8_parser_init(
+                        &(
+                            o_utf8_parser)))
                 {
                     unsigned int
                         i_data_iterator;
@@ -233,15 +226,16 @@ feed_prompt_set(
                         int
                             i_result;
 
-                        struct feed_event
-                            o_event;
+                        struct feed_utf8_code
+                            o_utf8_code;
 
                         i_result =
-                            feed_input_write(
-                                p_input,
+                            feed_utf8_parser_write(
+                                &(
+                                    o_utf8_parser),
                                 p_data[i_data_iterator],
                                 &(
-                                    o_event));
+                                    o_utf8_code));
 
                         if (
                             0
@@ -254,7 +248,7 @@ feed_prompt_set(
                                 feed_prompt_set_callback(
                                     p_prompt->a_prompt[i_index],
                                     &(
-                                        o_event));
+                                        o_utf8_code));
                             }
 
                             i_data_iterator ++;
@@ -266,8 +260,9 @@ feed_prompt_set(
                         }
                     }
 
-                    feed_input_destroy(
-                        p_input);
+                    feed_utf8_parser_cleanup(
+                        &(
+                            o_utf8_parser));
                 }
                 else
                 {

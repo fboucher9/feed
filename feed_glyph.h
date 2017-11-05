@@ -30,7 +30,7 @@ Description:
 
 struct feed_client;
 
-struct feed_event;
+struct feed_utf8_code;
 
 /*
 
@@ -55,7 +55,7 @@ struct feed_glyph
 
     /* Visible representation of character */
     unsigned char
-        a_visible[30u];
+        a_visible[14u];
 
     /* Length in bytes of visible character */
     unsigned char
@@ -74,8 +74,8 @@ struct feed_glyph *
 feed_glyph_create(
     struct feed_client * const
         p_client,
-    struct feed_event const * const
-        p_event);
+    struct feed_utf8_code const * const
+        p_utf8_code);
 
 void
 feed_glyph_destroy(

@@ -28,6 +28,8 @@
 
 #include "feed_screen.h"
 
+#include "feed_utf8.h"
+
 static
 void
 #if defined(__GNUC__)
@@ -781,6 +783,58 @@ feed_main_refresh_cursor(
 
 }
 
+static
+void
+feed_main_insert_event(
+    struct feed_main_context * const
+        p_main_context,
+    struct feed_event const * const
+        p_event)
+{
+    struct feed_utf8_parser
+        o_utf8_parser;
+
+    if (
+        feed_utf8_parser_init(
+            &(
+                o_utf8_parser)))
+    {
+        unsigned char
+            i_raw_iterator;
+
+        for (
+            i_raw_iterator = 0u;
+            i_raw_iterator < p_event->i_raw_len;
+            i_raw_iterator ++)
+        {
+            struct feed_utf8_code
+                o_utf8_code;
+
+            if (
+                0 < feed_utf8_parser_write(
+                    &(
+                        o_utf8_parser),
+                    p_event->a_raw[i_raw_iterator],
+                    &(
+                        o_utf8_code)))
+            {
+                feed_text_write_utf8_code(
+                    p_main_context->p_text,
+                    &(
+                        o_utf8_code),
+                    p_main_context->i_cursor_line_index,
+                    p_main_context->i_cursor_glyph_index);
+
+                p_main_context->i_cursor_glyph_index ++;
+            }
+        }
+
+        feed_utf8_parser_cleanup(
+            &(
+                o_utf8_parser));
+    }
+}
+
 
 static
 void
@@ -813,14 +867,9 @@ feed_main_event_callback(
             0;
 
         /* Split event into unicode characters */
-
-        feed_text_write_event(
-            p_text,
-            p_event,
-            p_main_context->i_cursor_line_index,
-            p_main_context->i_cursor_glyph_index);
-
-        p_main_context->i_cursor_glyph_index ++;
+        feed_main_insert_event(
+            p_main_context,
+            p_event);
 
         feed_main_refresh_text(
             p_main_context);
@@ -1306,13 +1355,9 @@ feed_main_event_callback(
             }
             else
             {
-                feed_text_write_event(
-                    p_text,
-                    p_event,
-                    p_main_context->i_cursor_line_index,
-                    p_main_context->i_cursor_glyph_index);
-
-                p_main_context->i_cursor_glyph_index ++;
+                feed_main_insert_event(
+                    p_main_context,
+                    p_event);
             }
 
             if (b_refresh_text)
@@ -1367,11 +1412,9 @@ feed_main_set_callback(
     }
     else
     {
-        feed_text_append_event(
-            p_text,
+        feed_main_insert_event(
+            p_main_context,
             p_event);
-
-        p_main_context->i_cursor_glyph_index ++;
     }
 
 }
