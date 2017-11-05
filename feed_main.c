@@ -1404,8 +1404,8 @@ void
 feed_main_set_callback(
     void * const
         p_context,
-    struct feed_event const * const
-        p_event)
+    struct feed_utf8_code const * const
+        p_utf8_code)
 {
     struct feed_main_context * const
         p_main_context =
@@ -1416,8 +1416,7 @@ feed_main_set_callback(
         p_text =
         p_main_context->p_text;
 
-    if (((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
-        || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'J') == p_event->i_code))
+    if ('\n' == p_utf8_code->a_raw[0u])
     {
         /* Notify currently accumulated lines */
 
@@ -1436,9 +1435,11 @@ feed_main_set_callback(
     }
     else
     {
-        feed_main_insert_event(
-            p_main_context,
-            p_event);
+        feed_text_append_utf8_code(
+            p_main_context->p_text,
+            p_utf8_code);
+
+        p_main_context->i_cursor_glyph_index ++;
     }
 
 }
@@ -1463,15 +1464,13 @@ feed_main_set(
         if (
             i_data_length)
         {
-            struct feed_input *
-                p_input;
-
-            p_input =
-                feed_input_create(
-                    p_main_context->p_client);
+            struct feed_utf8_parser
+                o_utf8_parser;
 
             if (
-                p_input)
+                feed_utf8_parser_init(
+                    &(
+                        o_utf8_parser)))
             {
                 unsigned int
                     i_data_iterator;
@@ -1488,18 +1487,19 @@ feed_main_set(
                         i_data_iterator
                         < i_data_length))
                 {
-                    struct feed_event
-                        o_event;
-
                     int
                         i_result;
 
+                    struct feed_utf8_code
+                        o_utf8_code;
+
                     i_result =
-                        feed_input_write(
-                            p_input,
+                        feed_utf8_parser_write(
+                            &(
+                                o_utf8_parser),
                             p_data[i_data_iterator],
                             &(
-                                o_event));
+                                o_utf8_code));
 
                     if (
                         0
@@ -1512,7 +1512,7 @@ feed_main_set(
                             feed_main_set_callback(
                                 p_main_context,
                                 &(
-                                    o_event));
+                                    o_utf8_code));
                         }
 
                         i_data_iterator ++;
@@ -1524,8 +1524,9 @@ feed_main_set(
                     }
                 }
 
-                feed_input_destroy(
-                    p_input);
+                feed_utf8_parser_cleanup(
+                    &(
+                        o_utf8_parser));
             }
             else
             {
@@ -1641,6 +1642,29 @@ feed_main_load_file(
 
     return
         b_result;
+
+}
+
+static unsigned long int g_load_time = 0ul;
+
+static
+unsigned long int
+feed_time_read(void)
+{
+    struct timespec
+        o_time;
+
+    clock_gettime(
+        CLOCK_MONOTONIC,
+        &(
+            o_time));
+
+    return
+        (
+            (
+                (unsigned long int)(o_time.tv_sec) * 1000ul)
+            + (
+                (unsigned long int)(o_time.tv_nsec) / (1000ul * 1000ul)));
 
 }
 
@@ -1940,9 +1964,15 @@ feed_main(
 
             if (argc > 1u)
             {
+                g_load_time =
+                    feed_time_read();
+
                 feed_main_load_file(
                     p_main_context,
                     argv[1u]);
+
+                g_load_time =
+                    feed_time_read() - g_load_time;
 
                 /* move cursor to home */
                 p_main_context->i_cursor_glyph_index =
@@ -2164,6 +2194,9 @@ feed_main(
 
     feed_heap_destroy(
         p_main_context->p_heap);
+
+    printf("*** load time %lu msec ***\n",
+        g_load_time);
 
     feed_client_cleanup(
         p_main_context->p_client);

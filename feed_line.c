@@ -221,11 +221,38 @@ feed_line_append_utf8_code(
     struct feed_utf8_code const * const
         p_utf8_code)
 {
-    feed_line_write_utf8_code(
-        p_line,
-        p_utf8_code,
-        p_line->i_glyph_count);
+    if (
+        p_line)
+    {
+        struct feed_client * const
+            p_client =
+                p_line->p_client;
 
+        if (
+            p_client)
+        {
+            /* Create a character */
+            /* Set char information */
+            struct feed_glyph * const
+                p_glyph =
+                feed_glyph_create(
+                    p_client,
+                    p_utf8_code);
+
+            if (
+                p_glyph)
+            {
+                /* Store the char into the list */
+                feed_list_join(
+                    &(
+                        p_glyph->o_list),
+                    &(
+                        p_line->o_glyphs));
+
+                p_line->i_glyph_count ++;
+            }
+        }
+    }
 }
 
 void

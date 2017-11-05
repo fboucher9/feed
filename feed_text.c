@@ -284,22 +284,23 @@ feed_text_append_utf8_code(
     struct feed_utf8_code const * const
         p_utf8_code)
 {
-    struct feed_line *
-        p_line;
-
-    p_line =
-        feed_text_get_line(
-            p_text,
-            p_text->i_line_count - 1u);
-
-    if (
-        p_line)
+    if (p_text)
     {
-        feed_line_append_utf8_code(
-            p_line,
-            p_utf8_code);
-    }
+        if (
+            p_text->i_line_count)
+        {
+            struct feed_line *
+                p_line;
 
+            p_line =
+                (struct feed_line *)(
+                    p_text->o_lines.p_prev);
+
+            feed_line_append_utf8_code(
+                p_line,
+                p_utf8_code);
+        }
+    }
 }
 
 void

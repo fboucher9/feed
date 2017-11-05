@@ -92,6 +92,8 @@ FEED_LDFLAGS_fre = -s
 
 FEED_LDFLAGS = $(LDFLAGS) $(FEED_LDFLAGS_$(FEED_CFG_DBG))
 
+FEED_LIBS = -lrt
+
 FEED_SRCS = \
     $(FEED_DST_PATH)/_obj_feed_os.o \
     $(FEED_DST_PATH)/_obj_feed_client.o \
@@ -123,7 +125,7 @@ testfeed: $(FEED_DST_PATH)/testfeed.exe
 # Link the target
 $(FEED_DST_PATH)/testfeed.exe : $(FEED_SRCS)
 	@echo linking $@
-	@echo -o $@ $(FEED_CFLAGS) $(FEED_SRCS) $(FEED_LDFLAGS) > $(FEED_DST_PATH)/_obj_testfeed.cmd
+	@echo -o $@ $(FEED_CFLAGS) $(FEED_SRCS) $(FEED_LDFLAGS) $(FEED_LIBS) > $(FEED_DST_PATH)/_obj_testfeed.cmd
 	@$(FEED_CC) @$(FEED_DST_PATH)/_obj_testfeed.cmd
 
 # Build each object file

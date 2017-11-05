@@ -38,6 +38,8 @@ Description:
 
 #include <sys/ioctl.h>
 
+#include <time.h>
+
 /* Avoid unused macro warning while using precompiled header file */
 #if defined(__GNUC__)
 #if defined(__SSP_STRONG__)
