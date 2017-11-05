@@ -418,11 +418,23 @@ feed_main_refresh_text(
                                     p_glyph_iterator);
 
                             /* If char is within refresh window */
+                            {
+                                unsigned char
+                                    a_visible[15u];
 
-                            feed_screen_write(
-                                p_main_context->p_screen,
-                                p_glyph->a_visible,
-                                p_glyph->i_visible_length);
+                                unsigned char
+                                    i_visible_length;
+
+                                i_visible_length =
+                                    feed_glyph_render_visible(
+                                        p_glyph,
+                                        a_visible);
+
+                                feed_screen_write(
+                                    p_main_context->p_screen,
+                                    a_visible,
+                                    i_visible_length);
+                            }
 
                             p_glyph_iterator =
                                 p_glyph_iterator->p_next;
@@ -458,16 +470,26 @@ feed_main_refresh_text(
                     struct feed_glyph const *
                         p_glyph;
 
+                    unsigned char
+                        a_visible[15u];
+
+                    unsigned char
+                        i_visible_length;
+
                     p_glyph =
                         (struct feed_glyph const *)(
                             p_glyph_iterator);
 
                     /* If char is within refresh window */
+                    i_visible_length =
+                        feed_glyph_render_visible(
+                            p_glyph,
+                            a_visible);
 
                     feed_screen_write(
                         p_screen,
-                        p_glyph->a_visible,
-                        p_glyph->i_visible_length);
+                        a_visible,
+                        i_visible_length);
 
                     if ((i_cursor_line_iterator == p_main_context->i_cursor_line_index)
                         && (i_cursor_glyph_iterator < p_main_context->i_cursor_glyph_index))
@@ -691,7 +713,7 @@ feed_main_refresh_cursor(
                                     p_glyph_iterator);
 
                             /* If char is within refresh window */
-                            i_emulated_x += p_glyph->i_visible_width;
+                            i_emulated_x += feed_glyph_get_visible_width(p_glyph);
                             if (i_emulated_x >= i_visible_width)
                             {
                                 i_emulated_y ++;
@@ -737,7 +759,7 @@ feed_main_refresh_cursor(
 
                     /* If char is within refresh window */
 
-                    i_emulated_x += p_glyph->i_visible_width;
+                    i_emulated_x += feed_glyph_get_visible_width(p_glyph);
                     if (i_emulated_x >= i_visible_width)
                     {
                         i_emulated_x -= i_visible_width;
@@ -929,6 +951,7 @@ feed_main_event_callback(
                         {
                             /* Delete the selected char */
                             feed_glyph_destroy(
+                                p_main_context->p_client,
                                 p_glyph);
 
                             p_main_context->i_cursor_glyph_index --;
@@ -1033,6 +1056,7 @@ feed_main_event_callback(
                         {
                             /* Delete the selected char */
                             feed_glyph_destroy(
+                                p_main_context->p_client,
                                 p_glyph);
 
                             if (p_line->i_glyph_count)

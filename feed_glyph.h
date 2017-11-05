@@ -41,10 +41,6 @@ struct feed_glyph
     struct feed_list
         o_list;
 
-    /* Pointer to parent execution context */
-    struct feed_client *
-        p_client;
-
     /* Raw representation of character */
     unsigned char
         a_raw[7u];
@@ -52,18 +48,6 @@ struct feed_glyph
     /* Length in bytes of raw character */
     unsigned char
         i_raw_length;
-
-    /* Visible representation of character */
-    unsigned char
-        a_visible[14u];
-
-    /* Length in bytes of visible character */
-    unsigned char
-        i_visible_length;
-
-    /* Width of visible representation */
-    unsigned char
-        i_visible_width;
 
 }; /* struct feed_glyph */
 
@@ -79,7 +63,21 @@ feed_glyph_create(
 
 void
 feed_glyph_destroy(
+    struct feed_client * const
+        p_client,
     struct feed_glyph * const
+        p_glyph);
+
+unsigned char
+feed_glyph_render_visible(
+    struct feed_glyph const * const
+        p_glyph,
+    unsigned char * const
+        a_visible);
+
+unsigned char
+feed_glyph_get_visible_width(
+    struct feed_glyph const * const
         p_glyph);
 
 /* end-of-file: feed_glyph.h */

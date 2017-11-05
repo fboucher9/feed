@@ -116,6 +116,7 @@ feed_line_reset(
                 p_iterator);
 
         feed_glyph_destroy(
+            p_line->p_client,
             p_glyph);
 
         p_iterator =
