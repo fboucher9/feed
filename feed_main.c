@@ -18,6 +18,8 @@
 
 #include "feed_list.h"
 
+#include "feed_utf8.h"
+
 #include "feed_glyph.h"
 
 #include "feed_line.h"
@@ -27,8 +29,6 @@
 #include "feed_prompt.h"
 
 #include "feed_screen.h"
-
-#include "feed_utf8.h"
 
 static
 void
@@ -520,7 +520,7 @@ feed_main_refresh_text(
     }
 
     /* Draw status line */
-    if (0)
+    if (1)
     {
         if (
             i_cursor_line_iterator > i_visible_top)

@@ -15,32 +15,13 @@ Description:
 
 #include "feed_list.h"
 
-#include "feed_glyph.h"
-
 #include "feed_utf8.h"
+
+#include "feed_glyph.h"
 
 #include "feed_buf.h"
 
 #include "feed_object.h"
-
-static
-void
-feed_glyph_write_code(
-    struct feed_glyph * const
-        p_glyph,
-    struct feed_utf8_code const * const
-        p_utf8_code)
-{
-    memcpy(
-        p_glyph->a_raw,
-        p_utf8_code->a_raw,
-        p_utf8_code->i_raw_len);
-
-    p_glyph->i_raw_length =
-        p_utf8_code->i_raw_len;
-
-} /* feed_glyph_write_code() */
-
 
 static
 char
@@ -57,12 +38,9 @@ feed_glyph_init(
         &(
             p_glyph->o_list));
 
-    p_glyph->i_raw_length =
-        0u;
-
-    feed_glyph_write_code(
-        p_glyph,
-        p_utf8_code);
+    p_glyph->o_utf8_code =
+        *(
+            p_utf8_code);
 
     b_result =
         1;
@@ -205,19 +183,19 @@ feed_glyph_render_visible(
     unsigned char
         i_visible_length;
 
-    if (p_glyph->a_raw[0u] < 32ul)
+    if (p_glyph->o_utf8_code.a_raw[0u] < 32ul)
     {
         a_visible[0u] =
             '^';
 
         a_visible[1u] =
             (unsigned char)(
-                '@' + p_glyph->a_raw[0u]);
+                '@' + p_glyph->o_utf8_code.a_raw[0u]);
 
         i_visible_length =
             2u;
     }
-    else if (p_glyph->a_raw[0u] == 127ul)
+    else if (p_glyph->o_utf8_code.a_raw[0u] == 127ul)
     {
         a_visible[0u] =
             '^';
@@ -232,11 +210,11 @@ feed_glyph_render_visible(
     {
         memcpy(
             a_visible,
-            p_glyph->a_raw,
-            p_glyph->i_raw_length);
+            p_glyph->o_utf8_code.a_raw,
+            p_glyph->o_utf8_code.i_raw_len);
 
         i_visible_length =
-            p_glyph->i_raw_length;
+            p_glyph->o_utf8_code.i_raw_len;
     }
 
     return
@@ -252,9 +230,9 @@ feed_glyph_get_visible_width(
     return
         (
             (
-                p_glyph->a_raw[0u] < 32ul)
+                p_glyph->o_utf8_code.a_raw[0u] < 32ul)
             || (
-                p_glyph->a_raw[0u] == 127ul)
+                p_glyph->o_utf8_code.a_raw[0u] == 127ul)
             ? 2u
             : 1u);
 }

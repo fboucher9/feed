@@ -313,7 +313,7 @@ feed_input_process_idle_state(
     int
         i_result;
 
-    if (27ul == p_utf8_code->i_code)
+    if (27ul == p_utf8_code->a_raw[0u])
     {
         p_input->e_state =
             feed_input_state_escape;
@@ -324,7 +324,8 @@ feed_input_process_idle_state(
     else
     {
         p_input->o_event.i_code =
-            p_utf8_code->i_code;
+            feed_utf8_decode(
+                p_utf8_code);
 
         i_result =
             feed_input_notify(
@@ -348,7 +349,7 @@ feed_input_process_escape_state(
         i_result;
 
     if (
-        '[' == p_utf8_code->i_code)
+        '[' == p_utf8_code->a_raw[0u])
     {
         p_input->e_state =
             feed_input_state_escape_csi;
@@ -358,9 +359,9 @@ feed_input_process_escape_state(
     }
     else if (
         (
-            'O' == p_utf8_code->i_code)
+            'O' == p_utf8_code->a_raw[0u])
         || (
-            'N' == p_utf8_code->i_code))
+            'N' == p_utf8_code->a_raw[0u]))
     {
         p_input->e_state =
             feed_input_state_escape_ssx;
@@ -396,7 +397,7 @@ feed_input_process_csi_state(
     int
         i_result;
 
-    if (0x40u <= p_utf8_code->i_code)
+    if (0x40u <= p_utf8_code->a_raw[0u])
     {
         p_input->o_event.i_code =
             FEED_EVENT_KEY_FLAG;

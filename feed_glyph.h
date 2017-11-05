@@ -21,6 +21,11 @@ Description:
 #error include feed_list.h first
 #endif /* #if !defined(INC_FEED_LIST_H) */
 
+/* Header file dependencies */
+#if !defined(INC_FEED_UTF8_H)
+#error include feed_utf8.h first
+#endif /* #if !defined(INC_FEED_UTF8_H) */
+
 /* Reverse include guard */
 #if defined(INC_FEED_GLYPH_H)
 #error include feed_glyph.h once
@@ -29,8 +34,6 @@ Description:
 #define INC_FEED_GLYPH_H
 
 struct feed_client;
-
-struct feed_utf8_code;
 
 /*
 
@@ -42,12 +45,8 @@ struct feed_glyph
         o_list;
 
     /* Raw representation of character */
-    unsigned char
-        a_raw[7u];
-
-    /* Length in bytes of raw character */
-    unsigned char
-        i_raw_length;
+    struct feed_utf8_code
+        o_utf8_code;
 
 }; /* struct feed_glyph */
 

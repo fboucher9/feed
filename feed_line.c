@@ -14,6 +14,8 @@ Description:
 
 #include "feed_line.h"
 
+#include "feed_utf8.h"
+
 #include "feed_glyph.h"
 
 #include "feed_object.h"
@@ -367,7 +369,7 @@ feed_line_get_raw_length(
                 p_iterator);
 
         i_buf_len +=
-            p_glyph->i_raw_length;
+            p_glyph->o_utf8_code.i_raw_len;
 
         p_iterator =
             p_iterator->p_next;
@@ -407,8 +409,8 @@ feed_line_get_raw_buffer(
 
         feed_buf_write_character_array(
             p_buf,
-            p_glyph->a_raw,
-            p_glyph->i_raw_length);
+            p_glyph->o_utf8_code.a_raw,
+            p_glyph->o_utf8_code.i_raw_len);
 
         p_iterator =
             p_iterator->p_next;
