@@ -812,6 +812,8 @@ feed_main_event_callback(
         p_main_context->b_verbose =
             0;
 
+        /* Split event into unicode characters */
+
         feed_text_write_event(
             p_text,
             p_event,
@@ -1399,10 +1401,7 @@ feed_main_set(
 
             p_input =
                 feed_input_create(
-                    p_main_context->p_client,
-                    &(
-                        feed_main_set_callback),
-                    p_main_context);
+                    p_main_context->p_client);
 
             if (
                 p_input)
@@ -1422,11 +1421,33 @@ feed_main_set(
                         i_data_iterator
                         < i_data_length))
                 {
-                    if (
+                    struct feed_event
+                        o_event;
+
+                    int
+                        i_result;
+
+                    i_result =
                         feed_input_write(
                             p_input,
-                            p_data[i_data_iterator]))
+                            p_data[i_data_iterator],
+                            &(
+                                o_event));
+
+                    if (
+                        0
+                        <= i_result)
                     {
+                        if (
+                            0
+                            < i_result)
+                        {
+                            feed_main_set_callback(
+                                p_main_context,
+                                &(
+                                    o_event));
+                        }
+
                         i_data_iterator ++;
                     }
                     else
@@ -1928,10 +1949,7 @@ feed_main(
 
                 p_input =
                     feed_input_create(
-                        p_main_context->p_client,
-                        &(
-                            feed_main_event_callback),
-                        p_main_context);
+                        p_main_context->p_client);
 
                 while (
                     p_main_context->b_more)
@@ -1944,12 +1962,33 @@ feed_main(
                     if (
                         EOF != c)
                     {
-                        if (
+                        int
+                            i_result;
+
+                        struct feed_event
+                            o_event;
+
+                        i_result =
                             feed_input_write(
                                 p_input,
                                 (unsigned char)(
-                                    c)))
+                                    c),
+                                &(
+                                    o_event));
+
+                        if (
+                            0
+                            <= i_result)
                         {
+                            if (
+                                0
+                                < i_result)
+                            {
+                                feed_main_event_callback(
+                                    p_main_context,
+                                    &(
+                                        o_event));
+                            }
                         }
                         else
                         {

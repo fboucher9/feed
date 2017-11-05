@@ -205,10 +205,12 @@ feed_prompt_set(
 
                 p_input =
                     feed_input_create(
-                        p_prompt->p_client,
+                        p_prompt->p_client);
+
+                /*
                         &(
                             feed_prompt_set_callback),
-                        p_prompt->a_prompt[i_index]);
+                        p_prompt->a_prompt[i_index]); */
 
                 if (
                     p_input)
@@ -228,11 +230,33 @@ feed_prompt_set(
                             i_data_iterator
                             < i_data_length))
                     {
-                        if (
+                        int
+                            i_result;
+
+                        struct feed_event
+                            o_event;
+
+                        i_result =
                             feed_input_write(
                                 p_input,
-                                p_data[i_data_iterator]))
+                                p_data[i_data_iterator],
+                                &(
+                                    o_event));
+
+                        if (
+                            0
+                            <= i_result)
                         {
+                            if (
+                                0
+                                < i_result)
+                            {
+                                feed_prompt_set_callback(
+                                    p_prompt->a_prompt[i_index],
+                                    &(
+                                        o_event));
+                            }
+
                             i_data_iterator ++;
                         }
                         else

@@ -306,11 +306,7 @@ feed_screen_init(
 
     p_screen->p_input =
         feed_input_create(
-            p_client,
-            &(
-                feed_screen_event_callback),
-            (void *)(
-                p_screen));
+            p_client);
 
     p_screen->i_screen_width =
         p_screen_descriptor->i_screen_width;
@@ -649,9 +645,28 @@ feed_screen_write(
 
     for (i=0u; i<i_count; i++)
     {
-        feed_input_write(
-            p_screen->p_input,
-            p_data[i]);
+        int
+            i_result;
+
+        struct feed_event
+            o_event;
+
+        i_result =
+            feed_input_write(
+                p_screen->p_input,
+                p_data[i],
+                &(
+                    o_event));
+
+        if (
+            0
+            < i_result)
+        {
+            feed_screen_event_callback(
+                p_screen,
+                &(
+                    o_event));
+        }
     }
 }
 

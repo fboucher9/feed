@@ -454,10 +454,7 @@ feed_text_set(
 
             p_input =
                 feed_input_create(
-                    p_text->p_client,
-                    &(
-                        feed_text_set_callback),
-                    p_text);
+                    p_text->p_client);
 
             if (
                 p_input)
@@ -507,11 +504,33 @@ feed_text_set(
                     }
                     else
                     {
-                        if (
+                        int
+                            i_result;
+
+                        struct feed_event
+                            o_event;
+
+                        i_result =
                             feed_input_write(
                                 p_input,
-                                p_data[i_data_iterator]))
+                                p_data[i_data_iterator],
+                                &(
+                                    o_event));
+
+                        if (
+                            0
+                            <= i_result)
                         {
+                            if (
+                                0
+                                < i_result)
+                            {
+                                feed_text_set_callback(
+                                    p_text,
+                                    &(
+                                        o_event));
+                            }
+
                             i_data_iterator ++;
                         }
                         else

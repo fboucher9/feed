@@ -25,6 +25,9 @@ Description:
 /* Object */
 #include "feed_object.h"
 
+/* Utf8 */
+#include "feed_utf8.h"
+
 /*
 
 Enumeration: feed_input_state
@@ -38,8 +41,6 @@ enum feed_input_state
 {
     feed_input_state_idle = 1,
 
-    feed_input_state_unicode,
-
     feed_input_state_escape,
 
     feed_input_state_escape_csi,
@@ -50,14 +51,8 @@ enum feed_input_state
 
 struct feed_input
 {
-    void (* p_callback)(
-        void * const
-            p_context,
-        struct feed_event const * const
-            p_event);
-
-    void *
-        p_context;
+    struct feed_utf8_parser
+        o_utf8_parser;
 
     struct feed_client *
         p_client;
@@ -74,26 +69,7 @@ struct feed_input
     unsigned int
         ai_padding[3u];
 
-    unsigned char
-        i_count;
-
-    unsigned char
-        ac_padding[7u];
-
 }; /* struct feed_input */
-
-struct feed_input_descriptor
-{
-    void (* p_callback)(
-        void * const
-            p_context,
-        struct feed_event const * const
-            p_event);
-
-    void *
-        p_context;
-
-};
 
 static
 char
@@ -116,20 +92,14 @@ feed_input_init(
     if (
         p_input)
     {
-        struct feed_input_descriptor const * const
-            p_input_descriptor =
-            (struct feed_input_descriptor const *)(
-                p_descriptor);
+        (void)(
+            p_descriptor);
 
         if (
-            p_input_descriptor)
+            feed_utf8_parser_init(
+                &(
+                    p_input->o_utf8_parser)))
         {
-            p_input->p_callback =
-                p_input_descriptor->p_callback;
-
-            p_input->p_context =
-                p_input_descriptor->p_context;
-
             p_input->p_client =
                 p_client;
 
@@ -159,28 +129,10 @@ feed_input_init(
 struct feed_input *
 feed_input_create(
     struct feed_client * const
-        p_client,
-    void (* const p_callback)(
-        void * const
-            p_context,
-        struct feed_event const * const
-            p_event),
-    void * const
-        p_context)
+        p_client)
 {
     struct feed_input *
         p_input;
-
-    struct feed_input_descriptor
-        o_input_descriptor;
-
-    {
-        o_input_descriptor.p_callback =
-            p_callback;
-
-        o_input_descriptor.p_context =
-            p_context;
-    }
 
     p_input =
         (struct feed_input *)(
@@ -191,8 +143,7 @@ feed_input_create(
                         struct feed_input)),
                 &(
                     feed_input_init),
-                &(
-                    o_input_descriptor)));
+                NULL));
 
     return
         p_input;
@@ -209,6 +160,10 @@ feed_input_cleanup(
         p_input =
         (struct feed_input *)(
             p_object);
+
+    feed_utf8_parser_cleanup(
+        &(
+            p_input->o_utf8_parser));
 
     p_input->p_client =
         (struct feed_client *)(
@@ -266,7 +221,7 @@ feed_input_lookup(
 }
 
 static
-void
+int
 feed_input_notify(
     struct feed_input * const
         p_input)
@@ -274,13 +229,18 @@ feed_input_notify(
     feed_input_lookup(
         p_input);
 
+#if 0
     (*(p_input->p_callback))(
         p_input->p_context,
         &(
             p_input->o_event));
+#endif
 
     p_input->e_state =
         feed_input_state_idle;
+
+    return
+        1;
 
 }
 
@@ -289,8 +249,8 @@ char
 feed_input_store_data(
     struct feed_input * const
         p_input,
-    unsigned char const
-        c_data)
+    struct feed_utf8_code const * const
+        p_utf8_code)
 {
     char
         b_result;
@@ -299,11 +259,13 @@ feed_input_store_data(
         feed_input_state_idle
         == p_input->e_state)
     {
-        p_input->o_event.a_raw[0u] =
-            c_data;
+        memcpy(
+            p_input->o_event.a_raw,
+            p_utf8_code->a_raw,
+            p_utf8_code->i_raw_len);
 
         p_input->o_event.i_raw_len =
-            1u;
+            p_utf8_code->i_raw_len;
 
         p_input->o_event.i_code =
             0ul;
@@ -313,12 +275,17 @@ feed_input_store_data(
     }
     else
     {
-        if (p_input->o_event.i_raw_len < 30u)
+        if (p_input->o_event.i_raw_len + p_utf8_code->i_raw_len < 30u)
         {
-            p_input->o_event.a_raw[p_input->o_event.i_raw_len] =
-                c_data;
+            memcpy(
+                p_input->o_event.a_raw + p_input->o_event.i_raw_len,
+                p_utf8_code->a_raw,
+                p_utf8_code->i_raw_len);
 
-            p_input->o_event.i_raw_len ++;
+            p_input->o_event.i_raw_len =
+                (unsigned char)(
+                    p_input->o_event.i_raw_len
+                    + p_utf8_code->i_raw_len);
 
             b_result =
                 1;
@@ -336,174 +303,70 @@ feed_input_store_data(
 }
 
 static
-char
+int
 feed_input_process_idle_state(
     struct feed_input * const
         p_input,
-    unsigned char const
-        c_data)
+    struct feed_utf8_code const * const
+        p_utf8_code)
 {
-    char
-        b_result;
+    int
+        i_result;
 
-    if (0xC0u <= c_data)
-    {
-        if (0xC0u == (c_data & 0xE0u))
-        {
-            p_input->e_state =
-                feed_input_state_unicode;
-
-            p_input->o_event.i_code =
-                (unsigned long int)(
-                    c_data & 0x1Fu);
-
-            p_input->i_count =
-                2u;
-
-            b_result =
-                1;
-        }
-        else if (0xE0u == (c_data & 0xF0u))
-        {
-            p_input->e_state =
-                feed_input_state_unicode;
-
-            p_input->o_event.i_code =
-                (unsigned long int)(
-                    c_data & 0x0Fu);
-
-            p_input->i_count =
-                3u;
-
-            b_result =
-                1;
-        }
-        else if (0xF0u == (c_data & 0xF8u))
-        {
-            p_input->e_state =
-                feed_input_state_unicode;
-
-            p_input->o_event.i_code =
-                (unsigned long int)(
-                    c_data & 0x07u);
-
-            p_input->i_count =
-                4u;
-
-            b_result =
-                1;
-        }
-        else
-        {
-            p_input->e_state =
-                feed_input_state_idle;
-
-            b_result =
-                0;
-        }
-    }
-    else if (27u == c_data)
+    if (27ul == p_utf8_code->i_code)
     {
         p_input->e_state =
             feed_input_state_escape;
 
-        b_result =
-            1;
-    }
-    else
-    {
-        p_input->o_event.i_code =
-            (unsigned long int)(
-                c_data);
-
-        feed_input_notify(
-            p_input);
-
-        b_result =
-            1;
-    }
-
-    return
-        b_result;
-
-}
-
-static
-char
-feed_input_process_unicode_state(
-    struct feed_input * const
-        p_input,
-    unsigned char const
-        c_data)
-{
-    char
-        b_result;
-
-    if (0x80u == (c_data & 0xC0u))
-    {
-        p_input->o_event.i_code =
-            (unsigned long int)(
-                (
-                    p_input->o_event.i_code << 6u)
-                | (unsigned long int)(
-                    c_data & 0x3Fu));
-
-        if (
-            p_input->o_event.i_raw_len
-            == p_input->i_count)
-        {
-            /* Notify */
-            feed_input_notify(
-                p_input);
-        }
-
-        b_result = 1;
-    }
-    else
-    {
-        p_input->e_state =
-            feed_input_state_idle;
-
-        b_result =
+        i_result =
             0;
     }
+    else
+    {
+        p_input->o_event.i_code =
+            p_utf8_code->i_code;
+
+        i_result =
+            feed_input_notify(
+                p_input);
+    }
 
     return
-        b_result;
+        i_result;
 
 }
 
 static
-char
+int
 feed_input_process_escape_state(
     struct feed_input * const
         p_input,
-    unsigned char const
-        c_data)
+    struct feed_utf8_code const * const
+        p_utf8_code)
 {
-    char
-        b_result;
+    int
+        i_result;
 
     if (
-        '[' == c_data)
+        '[' == p_utf8_code->i_code)
     {
         p_input->e_state =
             feed_input_state_escape_csi;
 
-        b_result =
-            1;
+        i_result =
+            0;
     }
     else if (
         (
-            'O' == c_data)
+            'O' == p_utf8_code->i_code)
         || (
-            'N' == c_data))
+            'N' == p_utf8_code->i_code))
     {
         p_input->e_state =
             feed_input_state_escape_ssx;
 
-        b_result =
-            1;
+        i_result =
+            0;
     }
     else
     {
@@ -512,179 +375,201 @@ feed_input_process_escape_state(
             FEED_EVENT_KEY_FLAG;
 
         /* Notify */
-        feed_input_notify(
-            p_input);
-
-        b_result =
-            1;
+        i_result =
+            feed_input_notify(
+                p_input);
     }
 
     return
-        b_result;
+        i_result;
 
 }
 
 static
-char
+int
 feed_input_process_csi_state(
     struct feed_input * const
         p_input,
-    unsigned char const
-        c_data)
+    struct feed_utf8_code const * const
+        p_utf8_code)
 {
-    char
-        b_result;
+    int
+        i_result;
 
-    if (0x40u <= c_data)
+    if (0x40u <= p_utf8_code->i_code)
     {
         p_input->o_event.i_code =
             FEED_EVENT_KEY_FLAG;
 
         /* Notify */
-        feed_input_notify(
-            p_input);
-
-        b_result =
-            1;
+        i_result =
+            feed_input_notify(
+                p_input);
     }
     else
     {
-        b_result =
-            1;
+        i_result =
+            0;
     }
 
     return
-        b_result;
+        i_result;
 
 }
 
-
 static
-char
+int
 feed_input_process_ssx_state(
     struct feed_input * const
         p_input,
-    unsigned char const
-        c_data)
+    struct feed_utf8_code const * const
+        p_utf8_code)
 {
-    char
-        b_result;
+    int
+        i_result;
 
     (void)(
-        c_data);
+        p_utf8_code);
 
     p_input->o_event.i_code =
         FEED_EVENT_KEY_FLAG;
 
     /* Notify */
-    feed_input_notify(
-        p_input);
-
-    b_result =
-        1;
+    i_result =
+        feed_input_notify(
+            p_input);
 
     return
-        b_result;
+        i_result;
 
 }
 
 static
-char
+int
 feed_input_process_data(
     struct feed_input * const
         p_input,
-    unsigned char const
-        c_data)
+    struct feed_utf8_code const * const
+        p_utf8_code)
 {
-    char
-        b_result;
+    int
+        i_result;
 
     if (
         feed_input_state_idle
         == p_input->e_state)
     {
-        b_result =
+        i_result =
             feed_input_process_idle_state(
                 p_input,
-                c_data);
-    }
-    else if (
-        feed_input_state_unicode
-        == p_input->e_state)
-    {
-        b_result =
-            feed_input_process_unicode_state(
-                p_input,
-                c_data);
+                p_utf8_code);
     }
     else if (
         feed_input_state_escape
         == p_input->e_state)
     {
-        b_result =
+        i_result =
             feed_input_process_escape_state(
                 p_input,
-                c_data);
+                p_utf8_code);
     }
     else if (
         feed_input_state_escape_csi
         == p_input->e_state)
     {
-        b_result =
+        i_result =
             feed_input_process_csi_state(
                 p_input,
-                c_data);
+                p_utf8_code);
     }
     else if (
         feed_input_state_escape_ssx
         == p_input->e_state)
     {
-        b_result =
+        i_result =
             feed_input_process_ssx_state(
                 p_input,
-                c_data);
+                p_utf8_code);
     }
     else
     {
         p_input->e_state =
             feed_input_state_idle;
 
-        b_result =
-            0;
+        i_result =
+            -1;
     }
 
     return
-        b_result;
+        i_result;
 
 }
 
-char
+int
 feed_input_write(
     struct feed_input * const
         p_input,
     unsigned char const
-        c_data)
+        c_data,
+    struct feed_event * const
+        p_event)
 {
-    char
-        b_result;
+    int
+        i_result;
 
-    /* Store into raw */
-    b_result =
-        feed_input_store_data(
-            p_input,
-            c_data);
+    struct feed_utf8_code
+        o_data;
+
+    /* Write char into utf8 parser */
+    i_result =
+        feed_utf8_parser_write(
+            &(
+                p_input->o_utf8_parser),
+            c_data,
+            &(
+                o_data));
 
     if (
-        b_result)
+        0
+        <= i_result)
     {
-        b_result =
-            feed_input_process_data(
-                p_input,
-                c_data);
+        if (
+            0
+            < i_result)
+        {
+            /* Process of resulting code */
+
+            /* Store into raw */
+            if (
+                feed_input_store_data(
+                    p_input,
+                    &(
+                        o_data)))
+            {
+                i_result =
+                    feed_input_process_data(
+                        p_input,
+                        &(
+                            o_data));
+
+                if (
+                    0
+                    < i_result)
+                {
+                    *(p_event) =
+                        p_input->o_event;
+                }
+            }
+            else
+            {
+                i_result =
+                    -1;
+            }
+        }
     }
 
     return
-        b_result;
+        i_result;
 
 }
 
