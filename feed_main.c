@@ -340,7 +340,7 @@ feed_main_refresh_text(
 
     /* Grow size of drawing region */
 
-    feed_screen_get_visible_size(
+    feed_screen_get_physical_size(
         p_main_context->p_screen,
         &(
             i_visible_width),
@@ -620,7 +620,7 @@ feed_main_refresh_cursor(
 
     /* Grow size of drawing region */
 
-    feed_screen_get_visible_size(
+    feed_screen_get_physical_size(
         p_main_context->p_screen,
         &(
             i_visible_width),
@@ -1245,6 +1245,7 @@ feed_main_event_callback(
                 p_main_context->i_page_line_index =
                     p_main_context->i_cursor_line_index;
             }
+#if 0
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_ALT | FEED_KEY_UP) == p_event->i_code)
             {
                 feed_screen_modify_visible_pos(
@@ -1273,6 +1274,7 @@ feed_main_event_callback(
                     -1,
                     0);
             }
+#endif
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
             {
                 /* Notify currently accumulated lines */

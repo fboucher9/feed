@@ -46,12 +46,6 @@ struct feed_screen
         i_region_height;
 
     unsigned int
-        i_region_sx;
-
-    unsigned int
-        i_region_sy;
-
-    unsigned int
         i_region_cx;
 
     unsigned int
@@ -132,18 +126,10 @@ feed_screen_write_clip(
                 if (1 < p_screen->i_screen_width)
                 {
                     if (
-                        p_screen->i_region_cy < p_screen->i_region_sy)
-                    {
-                    }
-                    else if (
-                        p_screen->i_region_cy < (p_screen->i_region_sy + p_screen->i_screen_height - 1u))
+                        p_screen->i_region_cy < (p_screen->i_screen_height - 1u))
                     {
                         if (
-                            p_screen->i_region_cx < p_screen->i_region_sx)
-                        {
-                        }
-                        else if (
-                            p_screen->i_region_cx < (p_screen->i_region_sx + p_screen->i_screen_width - 1u))
+                            p_screen->i_region_cx < (p_screen->i_screen_width - 1u))
                         {
                             feed_tty_write_character_array(
                                 p_tty,
@@ -153,7 +139,7 @@ feed_screen_write_clip(
                             p_screen->i_screen_cx += 1;
                         }
                         else if (
-                            p_screen->i_region_cx == (p_screen->i_region_sx + p_screen->i_screen_width - 1u))
+                            p_screen->i_region_cx == (p_screen->i_screen_width - 1u))
                         {
                             feed_tty_write_character_array(
                                 p_tty,
@@ -174,14 +160,10 @@ feed_screen_write_clip(
                         }
                     }
                     else if (
-                        p_screen->i_region_cy == (p_screen->i_region_sy + p_screen->i_screen_height - 1u))
+                        p_screen->i_region_cy == (p_screen->i_screen_height - 1u))
                     {
                         if (
-                            p_screen->i_region_cx < p_screen->i_region_sx)
-                        {
-                        }
-                        else if (
-                            p_screen->i_region_cx < (p_screen->i_region_sx + p_screen->i_screen_width - 1u))
+                            p_screen->i_region_cx < (p_screen->i_screen_width - 1u))
                         {
                             feed_tty_write_character_array(
                                 p_tty,
@@ -191,7 +173,7 @@ feed_screen_write_clip(
                             p_screen->i_screen_cx += 1;
                         }
                         else if (
-                            p_screen->i_region_cx == (p_screen->i_region_sx + p_screen->i_screen_width - 1u))
+                            p_screen->i_region_cx == (p_screen->i_screen_width - 1u))
                         {
                         }
                         else
@@ -306,12 +288,6 @@ feed_screen_init(
     p_screen->i_region_height =
         1u;
 
-    p_screen->i_region_sx =
-        0u;
-
-    p_screen->i_region_sy =
-        0u;
-
     p_screen->i_region_cx =
         0u;
 
@@ -366,12 +342,6 @@ feed_screen_cleanup(
         0u;
 
     p_screen->i_region_height =
-        0u;
-
-    p_screen->i_region_sx =
-        0u;
-
-    p_screen->i_region_sy =
         0u;
 
     p_screen->i_region_cx =
@@ -513,23 +483,13 @@ feed_screen_set_cursor_pos(
                     unsigned int i_screen_cy;
 
                     /* Calculate new screen cursor position */
-                    if (i_cursor_y < p_screen->i_region_sy)
+                    if (i_cursor_y < (p_screen->i_screen_height))
                     {
-                        i_screen_cy = 0u;
+                        i_screen_cy = i_cursor_y;
 
-                        i_screen_cx = 0u;
-                    }
-                    else if (i_cursor_y < (p_screen->i_region_sy + p_screen->i_screen_height))
-                    {
-                        i_screen_cy = i_cursor_y - p_screen->i_region_sy;
-
-                        if (i_cursor_x < p_screen->i_region_sx)
+                        if (i_cursor_x < (p_screen->i_screen_width))
                         {
-                            i_screen_cx = 0u;
-                        }
-                        else if (i_cursor_x < (p_screen->i_region_sx + p_screen->i_screen_width))
-                        {
-                            i_screen_cx = i_cursor_x - p_screen->i_region_sx;
+                            i_screen_cx = i_cursor_x;
                         }
                         else
                         {
@@ -613,9 +573,7 @@ feed_screen_newline(
     {
         if (
             (
-                p_screen->i_region_cy >= p_screen->i_region_sy)
-            && (
-                p_screen->i_region_cy < (p_screen->i_region_sy + p_screen->i_screen_height - 1u)))
+                p_screen->i_region_cy < (p_screen->i_screen_height - 1u)))
         {
             feed_screen_clear_line(
                 p_screen);
@@ -688,11 +646,9 @@ feed_screen_clear_line(
     {
         if (
             (
-                p_screen->i_region_cy >= p_screen->i_region_sy)
+                p_screen->i_region_cy < (p_screen->i_screen_height - 1u))
             && (
-                p_screen->i_region_cy < (p_screen->i_region_sy + p_screen->i_screen_height - 1u))
-            && (
-                p_screen->i_region_cx < (p_screen->i_region_sx + p_screen->i_screen_width)))
+                p_screen->i_region_cx < (p_screen->i_screen_width)))
         {
             struct feed_client * const
                 p_client =
@@ -727,12 +683,15 @@ feed_screen_get_cursor_pos(
     unsigned int * const
         p_cursor_y)
 {
-    *(p_cursor_x) =
-        p_screen->i_region_cx;
+    if (
+        p_screen)
+    {
+        *(p_cursor_x) =
+            p_screen->i_region_cx;
 
-    *(p_cursor_y) =
-        p_screen->i_region_cy;
-
+        *(p_cursor_y) =
+            p_screen->i_region_cy;
+    }
 }
 
 void
@@ -762,106 +721,6 @@ feed_screen_clear_region(
                     p_tty);
             }
         }
-    }
-}
-
-void
-feed_screen_get_visible_pos(
-    struct feed_screen * const
-        p_screen,
-    unsigned int * const
-        p_visible_x,
-    unsigned int * const
-        p_visible_y)
-{
-    if (
-        p_screen)
-    {
-        *(
-            p_visible_x) =
-            p_screen->i_region_sx;
-
-        *(
-            p_visible_y) =
-            p_screen->i_region_sy;
-    }
-}
-
-void
-feed_screen_set_visible_pos(
-    struct feed_screen * const
-        p_screen,
-    unsigned int const
-        i_visible_x,
-    unsigned int const
-        i_visible_y)
-{
-    if (
-        p_screen)
-    {
-        if (
-            i_visible_x < p_screen->i_screen_width)
-        {
-            p_screen->i_region_sx =
-                i_visible_x;
-        }
-
-        if (
-            i_visible_y < p_screen->i_region_height)
-        {
-            p_screen->i_region_sy =
-                i_visible_y;
-        }
-    }
-}
-
-void
-feed_screen_modify_visible_pos(
-    struct feed_screen * const
-        p_screen,
-    int const
-        i_modify_x,
-    int const
-        i_modify_y)
-{
-    if (
-        p_screen)
-    {
-        if (
-            (
-                ((int)(p_screen->i_region_sx) + i_modify_x) >= 0)
-            && (
-                ((int)(p_screen->i_region_sy) + i_modify_y) >= 0))
-        {
-            feed_screen_set_visible_pos(
-                p_screen,
-                (unsigned int)(
-                    (int)(p_screen->i_region_sx) + i_modify_x),
-                (unsigned int)(
-                    (int)(p_screen->i_region_sy) + i_modify_y));
-        }
-    }
-}
-
-void
-feed_screen_get_visible_size(
-    struct feed_screen * const
-        p_screen,
-    unsigned int * const
-        p_visible_width,
-    unsigned int * const
-        p_visible_height)
-{
-    if (
-        p_screen)
-    {
-        *(
-            p_visible_width) =
-            p_screen->i_screen_width;
-
-        *(
-            p_visible_height) =
-            p_screen->i_screen_height;
     }
 }
 
