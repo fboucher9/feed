@@ -82,6 +82,13 @@ struct feed_main_context
     struct feed_client
         o_client;
 
+    /* Page */
+    unsigned int
+        i_page_line_index;
+
+    unsigned int
+        i_page_glyph_index;
+
     /* Cursor */
     unsigned int
         i_cursor_line_index;
@@ -295,12 +302,6 @@ feed_main_refresh_text(
     unsigned int
         i_visible_height;
 
-    unsigned int
-        i_visible_left;
-
-    unsigned int
-        i_visible_top;
-
     p_screen =
         p_main_context->p_screen;
 
@@ -339,13 +340,6 @@ feed_main_refresh_text(
 
     /* Grow size of drawing region */
 
-    feed_screen_get_visible_pos(
-        p_main_context->p_screen,
-        &(
-            i_visible_left),
-        &(
-            i_visible_top));
-
     feed_screen_get_visible_size(
         p_main_context->p_screen,
         &(
@@ -357,7 +351,7 @@ feed_main_refresh_text(
     feed_screen_set_cursor_pos(
         p_main_context->p_screen,
         0u,
-        i_visible_top);
+        0u);
 
     /* Print state of body text */
     {
@@ -379,7 +373,7 @@ feed_main_refresh_text(
             && (
                 i_cursor_line_iterator
                 < (
-                    i_visible_top
+                    p_main_context->i_page_line_index
                     + i_visible_height)))
         {
             struct feed_line *
@@ -390,7 +384,7 @@ feed_main_refresh_text(
                     p_line_iterator);
 
             /* If line is within refresh window */
-            if (i_cursor_line_iterator >= i_visible_top)
+            if (i_cursor_line_iterator >= p_main_context->i_page_line_index)
             {
                 /* Return to home position */
 
@@ -412,7 +406,7 @@ feed_main_refresh_text(
                                 p_main_context->p_prompt);
                     }
 
-                    if (i_cursor_line_iterator > i_visible_top)
+                    if (i_cursor_line_iterator > p_main_context->i_page_line_index)
                     {
                         feed_screen_newline(
                             p_main_context->p_screen);
@@ -541,7 +535,7 @@ feed_main_refresh_text(
     if (1)
     {
         if (
-            i_cursor_line_iterator > i_visible_top)
+            i_cursor_line_iterator > p_main_context->i_page_line_index)
         {
             feed_screen_newline(p_screen);
         }
@@ -595,12 +589,6 @@ feed_main_refresh_cursor(
         i_visible_height;
 
     unsigned int
-        i_visible_left;
-
-    unsigned int
-        i_visible_top;
-
-    unsigned int
         i_emulated_x;
 
     unsigned int
@@ -632,13 +620,6 @@ feed_main_refresh_cursor(
 
     /* Grow size of drawing region */
 
-    feed_screen_get_visible_pos(
-        p_main_context->p_screen,
-        &(
-            i_visible_left),
-        &(
-            i_visible_top));
-
     feed_screen_get_visible_size(
         p_main_context->p_screen,
         &(
@@ -651,7 +632,7 @@ feed_main_refresh_cursor(
         0;
 
     i_emulated_y =
-        i_visible_top;
+        0;
 
     /* Print state of body text */
     {
@@ -673,7 +654,7 @@ feed_main_refresh_cursor(
             && (
                 i_cursor_line_iterator
                 < (
-                    i_visible_top
+                    p_main_context->i_page_line_index
                     + i_visible_height)))
         {
             struct feed_line *
@@ -684,7 +665,7 @@ feed_main_refresh_cursor(
                     p_line_iterator);
 
             /* If line is within refresh window */
-            if (i_cursor_line_iterator >= i_visible_top)
+            if (i_cursor_line_iterator >= p_main_context->i_page_line_index)
             {
                 /* Return to home position */
 
@@ -706,7 +687,7 @@ feed_main_refresh_cursor(
                                 p_main_context->p_prompt);
                     }
 
-                    if (i_cursor_line_iterator > i_visible_top)
+                    if (i_cursor_line_iterator > p_main_context->i_page_line_index)
                     {
                         i_emulated_x =
                             0u;
@@ -1250,10 +1231,8 @@ feed_main_event_callback(
                 {
                     p_main_context->i_cursor_line_index = 0u;
                 }
-                feed_screen_set_visible_pos(
-                    p_main_context->p_screen,
-                    0,
-                    p_main_context->i_cursor_line_index);
+                p_main_context->i_page_line_index =
+                    p_main_context->i_cursor_line_index;
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_PAGEDOWN) == p_event->i_code)
             {
@@ -1263,10 +1242,8 @@ feed_main_event_callback(
                     p_main_context->i_cursor_line_index = (p_main_context->p_text->i_line_count - 1u);
                 }
 
-                feed_screen_set_visible_pos(
-                    p_main_context->p_screen,
-                    0,
-                    p_main_context->i_cursor_line_index);
+                p_main_context->i_page_line_index =
+                    p_main_context->i_cursor_line_index;
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_ALT | FEED_KEY_UP) == p_event->i_code)
             {
