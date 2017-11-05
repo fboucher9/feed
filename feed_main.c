@@ -319,6 +319,24 @@ feed_main_refresh_text(
     p_main_context->i_cursor_visible_x =
         0u;
 
+    /* get window size has problem when keyboard is typed at same time */
+    {
+        if (
+            feed_tty_get_window_size(
+                p_main_context->p_client->p_tty,
+                &(
+                    i_visible_width),
+                &(
+                    i_visible_height),
+                0 /* no fallback */))
+        {
+            feed_screen_set_physical_size(
+                p_main_context->p_screen,
+                i_visible_width,
+                i_visible_height);
+        }
+    }
+
     /* Grow size of drawing region */
 
     feed_screen_get_visible_pos(
@@ -1026,6 +1044,10 @@ feed_main_event_callback(
                 {
                     b_refresh_text = 0;
                 }
+            }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'L') == p_event->i_code)
+            {
+                b_refresh_text = 1;
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_DELETE) == p_event->i_code)
             {
@@ -1757,13 +1779,18 @@ feed_main(
                     "get_cursor_position error!");
             }
 
+            p_main_context->p_screen =
+                feed_screen_create(
+                    p_main_context->p_client);
+
             if (
                 feed_tty_get_window_size(
                     p_main_context->p_client->p_tty,
                     &(
-                        y),
+                        x),
                     &(
-                        x)))
+                        y),
+                    1))
             {
                 if (0)
                 {
@@ -1773,12 +1800,10 @@ feed_main(
                         y);
                 }
 
-                p_main_context->p_screen =
-                    feed_screen_create(
-                        p_main_context->p_client,
-                        x,
-                        y);
-
+                feed_screen_set_physical_size(
+                    p_main_context->p_screen,
+                    x,
+                    y);
             }
             else
             {

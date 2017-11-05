@@ -49,16 +49,30 @@ struct feed_screen;
 struct feed_screen *
 feed_screen_create(
     struct feed_client * const
-        p_client,
-    unsigned int const
-        i_screen_width,
-    unsigned int const
-        i_screen_height);
+        p_client);
 
 void
 feed_screen_destroy(
     struct feed_screen * const
         p_screen);
+
+void
+feed_screen_get_physical_size(
+    struct feed_screen * const
+        p_screen,
+    unsigned int * const
+        p_physical_width,
+    unsigned int * const
+        p_physical_height);
+
+void
+feed_screen_set_physical_size(
+    struct feed_screen * const
+        p_screen,
+    unsigned int const
+        i_physical_width,
+    unsigned int const
+        i_physical_height);
 
 void
 feed_screen_get_cursor_pos(

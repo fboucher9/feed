@@ -43,9 +43,6 @@ struct feed_screen
         i_screen_cy;
 
     unsigned int
-        i_region_width;
-
-    unsigned int
         i_region_height;
 
     unsigned int
@@ -261,16 +258,6 @@ feed_screen_event_callback(
     }
 }
 
-struct feed_screen_descriptor
-{
-    unsigned int
-        i_screen_width;
-
-    unsigned int
-        i_screen_height;
-
-};
-
 static
 char
 feed_screen_init(
@@ -284,16 +271,12 @@ feed_screen_init(
     struct feed_screen *
         p_screen;
 
-    struct feed_screen_descriptor const *
-        p_screen_descriptor;
-
     p_screen =
         (struct feed_screen *)(
             p_buf);
 
-    p_screen_descriptor =
-        (struct feed_screen_descriptor const *)(
-            p_descriptor);
+    (void)(
+        p_descriptor);
 
     memset(
         p_screen,
@@ -309,19 +292,16 @@ feed_screen_init(
             p_client);
 
     p_screen->i_screen_width =
-        p_screen_descriptor->i_screen_width;
+        80u;
 
     p_screen->i_screen_height =
-        p_screen_descriptor->i_screen_height;
+        24u;
 
     p_screen->i_screen_cx =
         0u;
 
     p_screen->i_screen_cy =
         0u;
-
-    p_screen->i_region_width =
-        p_screen_descriptor->i_screen_width;
 
     p_screen->i_region_height =
         1u;
@@ -405,21 +385,8 @@ feed_screen_cleanup(
 struct feed_screen *
 feed_screen_create(
     struct feed_client * const
-        p_client,
-    unsigned int const
-        i_screen_width,
-    unsigned int const
-        i_screen_height)
+        p_client)
 {
-    struct feed_screen_descriptor
-        o_screen_descriptor;
-
-    o_screen_descriptor.i_screen_width =
-        i_screen_width;
-
-    o_screen_descriptor.i_screen_height =
-        i_screen_height;
-
     return
         (struct feed_screen *)(
             feed_object_create(
@@ -428,8 +395,7 @@ feed_screen_create(
                     struct feed_screen),
                 &(
                     feed_screen_init),
-                &(
-                    o_screen_descriptor)));
+                NULL));
 
 } /* feed_screen_create() */
 
@@ -458,6 +424,48 @@ feed_screen_destroy(
 }
 
 void
+feed_screen_get_physical_size(
+    struct feed_screen * const
+        p_screen,
+    unsigned int * const
+        p_physical_width,
+    unsigned int * const
+        p_physical_height)
+{
+    if (
+        p_screen)
+    {
+        *(
+            p_physical_width) =
+            p_screen->i_screen_width;
+
+        *(
+            p_physical_height) =
+            p_screen->i_screen_height;
+    }
+}
+
+void
+feed_screen_set_physical_size(
+    struct feed_screen * const
+        p_screen,
+    unsigned int const
+        i_physical_width,
+    unsigned int const
+        i_physical_height)
+{
+    if (
+        p_screen)
+    {
+        p_screen->i_screen_width =
+            i_physical_width;
+
+        p_screen->i_screen_height =
+            i_physical_height;
+    }
+}
+
+void
 feed_screen_set_cursor_pos(
     struct feed_screen * const
         p_screen,
@@ -469,11 +477,11 @@ feed_screen_set_cursor_pos(
     if (
         p_screen)
     {
-        if (i_cursor_x >= p_screen->i_region_width)
+        if (i_cursor_x >= p_screen->i_screen_width)
         {
             feed_screen_set_cursor_pos(
                 p_screen,
-                p_screen->i_region_width - 1u,
+                p_screen->i_screen_width - 1u,
                 i_cursor_y);
         }
         else if (i_cursor_y >= p_screen->i_region_height)
@@ -792,7 +800,7 @@ feed_screen_set_visible_pos(
         p_screen)
     {
         if (
-            i_visible_x < p_screen->i_region_width)
+            i_visible_x < p_screen->i_screen_width)
         {
             p_screen->i_region_sx =
                 i_visible_x;

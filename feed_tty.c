@@ -1370,9 +1370,11 @@ feed_tty_get_window_size(
     struct feed_tty * const
         p_tty,
     unsigned int * const
-        p_rows,
+        p_columns,
     unsigned int * const
-        p_columns)
+        p_rows,
+    char const
+        b_use_fallback)
 {
     char
         b_result;
@@ -1404,7 +1406,8 @@ feed_tty_get_window_size(
         b_result =
             1;
     }
-    /* else */
+    else if (
+        b_use_fallback)
     {
         /* Try to determine terminal size using escape sequences */
 
@@ -1480,6 +1483,11 @@ feed_tty_get_window_size(
                     (unsigned int)(
                         i_save_col));
         }
+    }
+    else
+    {
+        b_result =
+            0;
     }
 
     return
