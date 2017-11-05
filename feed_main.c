@@ -690,7 +690,7 @@ feed_main_refresh_cursor(
 
                             /* If char is within refresh window */
                             i_emulated_x += p_glyph->i_visible_width;
-                            if (i_emulated_x > i_visible_width)
+                            if (i_emulated_x >= i_visible_width)
                             {
                                 i_emulated_y ++;
                                 i_emulated_x -= i_visible_width;
@@ -736,9 +736,9 @@ feed_main_refresh_cursor(
                     /* If char is within refresh window */
 
                     i_emulated_x += p_glyph->i_visible_width;
-                    if (i_emulated_x > i_visible_width)
+                    if (i_emulated_x >= i_visible_width)
                     {
-                        i_emulated_x = 0u;
+                        i_emulated_x -= i_visible_width;
                         i_emulated_y ++;
                     }
 
