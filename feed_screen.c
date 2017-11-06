@@ -312,11 +312,6 @@ feed_screen_cleanup(
         (struct feed_screen *)(
             p_buf);
 
-    feed_screen_set_cursor_pos(
-        p_screen,
-        0u,
-        p_screen->i_region_height);
-
     feed_screen_newline_raw(
         p_screen);
 
