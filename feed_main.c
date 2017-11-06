@@ -412,6 +412,10 @@ feed_main_refresh_job(
             {
                 /* Return to home position */
 
+                /* Note: do not draw prompt if horizontal scroll is enabled */
+
+                if (((0 == p_main_context->i_page_glyph_index) && (i_cursor_line_iterator == p_main_context->i_page_line_index))
+                    || (i_cursor_line_iterator != p_main_context->i_page_line_index))
                 {
                     struct feed_line *
                         p_prompt_line;
@@ -443,8 +447,6 @@ feed_main_refresh_job(
 
                         i_emulated_y ++;
                     }
-
-                    /* Note: do not draw prompt if horizontal scroll is enabled */
 
                     if (p_prompt_line)
                     {
@@ -545,50 +547,54 @@ feed_main_refresh_job(
                         (struct feed_glyph const *)(
                             p_glyph_iterator);
 
-                    if (!b_cursor_only)
+                    if (((i_cursor_line_iterator == p_main_context->i_page_line_index) && (i_cursor_glyph_iterator >= p_main_context->i_page_glyph_index))
+                        || (i_cursor_line_iterator != p_main_context->i_page_line_index))
                     {
-                        unsigned char
-                            a_visible[15u];
+                        if (!b_cursor_only)
+                        {
+                            unsigned char
+                                a_visible[15u];
 
-                        unsigned char
-                            i_visible_length;
+                            unsigned char
+                                i_visible_length;
 
-                        /* If char is within refresh window */
-                        i_visible_length =
-                            feed_glyph_render_visible(
-                                p_glyph,
-                                a_visible);
+                            /* If char is within refresh window */
+                            i_visible_length =
+                                feed_glyph_render_visible(
+                                    p_glyph,
+                                    a_visible);
 
-                        feed_screen_write(
-                            p_screen,
-                            a_visible,
-                            i_visible_length);
+                            feed_screen_write(
+                                p_screen,
+                                a_visible,
+                                i_visible_length);
 
-                        p_main_context->i_final_line_index =
-                            i_cursor_line_iterator;
+                            p_main_context->i_final_line_index =
+                                i_cursor_line_iterator;
 
-                        p_main_context->i_final_glyph_index =
-                            i_cursor_glyph_iterator;
-                    }
+                            p_main_context->i_final_glyph_index =
+                                i_cursor_glyph_iterator;
+                        }
 
-                    i_emulated_x += feed_glyph_get_visible_width(p_glyph);
-                    if (i_emulated_x >= p_main_context->i_screen_width)
-                    {
-                        i_emulated_x -= p_main_context->i_screen_width;
-                        i_emulated_y ++;
-                    }
+                        i_emulated_x += feed_glyph_get_visible_width(p_glyph);
+                        if (i_emulated_x >= p_main_context->i_screen_width)
+                        {
+                            i_emulated_x -= p_main_context->i_screen_width;
+                            i_emulated_y ++;
+                        }
 
-                    if ((i_cursor_line_iterator == p_main_context->i_cursor_line_index)
-                        && (i_cursor_glyph_iterator < p_main_context->i_cursor_glyph_index))
-                    {
-                        p_main_context->i_cursor_visible_x =
-                            i_emulated_x;
+                        if ((i_cursor_line_iterator == p_main_context->i_cursor_line_index)
+                            && (i_cursor_glyph_iterator < p_main_context->i_cursor_glyph_index))
+                        {
+                            p_main_context->i_cursor_visible_x =
+                                i_emulated_x;
 
-                        p_main_context->i_cursor_visible_y =
-                            i_emulated_y;
+                            p_main_context->i_cursor_visible_y =
+                                i_emulated_y;
 
-                        p_main_context->b_cursor_visible =
-                            1;
+                            p_main_context->b_cursor_visible =
+                                1;
+                        }
                     }
 
                     i_cursor_glyph_iterator ++;
@@ -596,6 +602,8 @@ feed_main_refresh_job(
                     p_glyph_iterator =
                         p_glyph_iterator->p_next;
                 }
+
+                /* Was this line broken? */
             }
 
             i_cursor_line_iterator ++;
@@ -603,6 +611,8 @@ feed_main_refresh_job(
             p_line_iterator =
                 p_line_iterator->p_next;
         }
+
+        /* Was the line broken? */
     }
 
     /* Draw status line */
