@@ -1107,8 +1107,14 @@ feed_main_event_callback(
                             &(
                                 i_height));
 
-                        p_main_context->i_page_line_index =
-                            p_main_context->i_cursor_line_index + 1 - i_height;
+                        if (p_main_context->i_page_line_index > i_height)
+                        {
+                            p_main_context->i_page_line_index -= i_height;
+                        }
+                        else
+                        {
+                            p_main_context->i_page_line_index = 0u;
+                        }
                     }
                     else
                     {
