@@ -18,7 +18,7 @@ Description:
 
 #include "feed_tty.h"
 
-#include "feed_input.h"
+#include "feed_utf8.h"
 
 #include "feed_object.h"
 
@@ -26,9 +26,6 @@ struct feed_screen
 {
     struct feed_client *
         p_client;
-
-    struct feed_input *
-        p_input;
 
     unsigned int
         i_screen_width;
@@ -193,7 +190,7 @@ void
 feed_screen_event_callback(
     void * const
         p_context,
-    struct feed_event const * const
+    struct feed_utf8_code const * const
         p_event)
 {
     struct feed_screen * const
@@ -219,22 +216,10 @@ feed_screen_event_callback(
             if (
                 p_tty)
             {
-                if (FEED_EVENT_KEY_FLAG & p_event->i_code)
-                {
-                    /* Special keys should already by converted to visual... */
-                    /* This could be an attribute, send direct */
-                    feed_tty_write_character_array(
-                        p_tty,
-                        p_event->a_raw,
-                        p_event->i_raw_len);
-                }
-                else
-                {
-                    feed_screen_write_clip(
-                        p_screen,
-                        p_event->a_raw,
-                        p_event->i_raw_len);
-                }
+                feed_screen_write_clip(
+                    p_screen,
+                    p_event->a_raw,
+                    p_event->i_raw_len);
             }
         }
     }
@@ -268,10 +253,6 @@ feed_screen_init(
 
     p_screen->p_client =
         p_client;
-
-    p_screen->p_input =
-        feed_input_create(
-            p_client);
 
     p_screen->i_screen_width =
         80u;
@@ -314,17 +295,6 @@ feed_screen_cleanup(
 
     feed_screen_newline_raw(
         p_screen);
-
-    if (
-        p_screen->p_input)
-    {
-        feed_input_destroy(
-            p_screen->p_input);
-
-        p_screen->p_input =
-            (struct feed_input *)(
-                0);
-    }
 
     p_screen->p_client =
         (struct feed_client *)(
@@ -558,6 +528,45 @@ feed_screen_set_cursor_pos(
     }
 }
 
+static
+void
+feed_screen_clear_line(
+    struct feed_screen * const
+        p_screen)
+{
+    if (
+        p_screen)
+    {
+        if (
+            (
+                p_screen->i_region_cy < (p_screen->i_screen_height - 1u))
+            && (
+                p_screen->i_region_cx < (p_screen->i_screen_width)))
+        {
+            struct feed_client * const
+                p_client =
+                p_screen->p_client;
+
+            if (
+                p_client)
+            {
+                struct feed_tty * const
+                    p_tty =
+                    feed_client_get_tty(
+                        p_client);
+
+                if (
+                    p_tty)
+                {
+                    feed_tty_write_el(
+                        p_tty,
+                        0u);
+                }
+            }
+        }
+    }
+}
+
 void
 feed_screen_newline(
     struct feed_screen * const
@@ -601,71 +610,47 @@ feed_screen_write(
     unsigned int const
         i_count)
 {
-    unsigned int
-        i;
+    struct feed_utf8_parser
+        o_utf8_parser;
 
-    for (i=0u; i<i_count; i++)
-    {
-        int
-            i_result;
-
-        struct feed_event
-            o_event;
-
-        i_result =
-            feed_input_write(
-                p_screen->p_input,
-                p_data[i],
-                &(
-                    o_event));
-
-        if (
-            0
-            < i_result)
-        {
-            feed_screen_event_callback(
-                p_screen,
-                &(
-                    o_event));
-        }
-    }
-}
-
-void
-feed_screen_clear_line(
-    struct feed_screen * const
-        p_screen)
-{
     if (
-        p_screen)
+        feed_utf8_parser_init(
+            &(
+                o_utf8_parser)))
     {
-        if (
-            (
-                p_screen->i_region_cy < (p_screen->i_screen_height - 1u))
-            && (
-                p_screen->i_region_cx < (p_screen->i_screen_width)))
+        unsigned int
+            i;
+
+        for (i=0u; i<i_count; i++)
         {
-            struct feed_client * const
-                p_client =
-                p_screen->p_client;
+            int
+                i_result;
+
+            struct feed_utf8_code
+                o_utf8_code;
+
+            i_result =
+                feed_utf8_parser_write(
+                    &(
+                        o_utf8_parser),
+                    p_data[i],
+                    &(
+                        o_utf8_code));
 
             if (
-                p_client)
+                0
+                < i_result)
             {
-                struct feed_tty * const
-                    p_tty =
-                    feed_client_get_tty(
-                        p_client);
-
-                if (
-                    p_tty)
-                {
-                    feed_tty_write_el(
-                        p_tty,
-                        0u);
-                }
+                feed_screen_event_callback(
+                    p_screen,
+                    &(
+                        o_utf8_code));
             }
         }
+
+        feed_utf8_parser_cleanup(
+            &(
+                o_utf8_parser));
     }
 }
 

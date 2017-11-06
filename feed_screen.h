@@ -42,8 +42,6 @@ Comments:
 
 struct feed_client;
 
-struct feed_input;
-
 struct feed_screen;
 
 struct feed_screen *
@@ -105,11 +103,6 @@ feed_screen_write(
         p_data,
     unsigned int const
         i_count);
-
-void
-feed_screen_clear_line(
-    struct feed_screen * const
-        p_screen);
 
 void
 feed_screen_clear_region(
