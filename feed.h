@@ -78,6 +78,11 @@ int feed_prompt2(
     unsigned char const * const p_data,
     unsigned int const i_data_length);
 
+int feed_load(
+    struct feed_handle * const p_feed_handle,
+    unsigned char const * const p_data,
+    unsigned int const i_data_length);
+
 int feed_start(
     struct feed_handle * const p_feed_handle);
 

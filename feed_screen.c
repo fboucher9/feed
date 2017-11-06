@@ -27,6 +27,9 @@ struct feed_screen
     struct feed_client *
         p_client;
 
+    void *
+        pv_padding[1u];
+
     unsigned int
         i_screen_width;
 
@@ -49,11 +52,10 @@ struct feed_screen
         i_region_cy;
 
     unsigned int
-        ui_padding[2u];
+        ui_padding[1u];
 
 }; /* struct feed_screen */
 
-static
 void
 feed_screen_newline_raw(
     struct feed_screen * const
@@ -292,9 +294,6 @@ feed_screen_cleanup(
     p_screen =
         (struct feed_screen *)(
             p_buf);
-
-    feed_screen_newline_raw(
-        p_screen);
 
     p_screen->p_client =
         (struct feed_client *)(

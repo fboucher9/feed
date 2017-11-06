@@ -91,6 +91,11 @@ feed_screen_set_cursor_pos(
         i_cursor_y);
 
 void
+feed_screen_newline_raw(
+    struct feed_screen * const
+        p_screen);
+
+void
 feed_screen_newline(
     struct feed_screen * const
         p_screen);

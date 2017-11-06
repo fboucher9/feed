@@ -2,8 +2,11 @@
 
 #include "feed_os.h"
 
+#include "feed.h"
+
 #include "feed_main.h"
 
+#if 0
 #include "feed_client.h"
 
 #include "feed_tty.h"
@@ -29,7 +32,9 @@
 #include "feed_prompt.h"
 
 #include "feed_screen.h"
+#endif
 
+#if 0
 static
 void
 #if defined(__GNUC__)
@@ -137,6 +142,7 @@ struct feed_main_context
 
 };
 
+/* MOVE ME */
 static
 void
 feed_main_print_status(
@@ -299,6 +305,7 @@ feed_main_print_status(
 
 }
 
+/* DONE */
 static
 void
 feed_main_refresh_job(
@@ -419,6 +426,12 @@ feed_main_refresh_job(
                 {
                     struct feed_line *
                         p_prompt_line;
+
+                    p_main_context->i_final_line_index =
+                        i_cursor_line_iterator;
+
+                    p_main_context->i_final_glyph_index =
+                        0u;
 
                     if (0u == i_cursor_line_iterator)
                     {
@@ -658,6 +671,7 @@ feed_main_refresh_job(
 
 }
 
+/* DONE */
 static
 void
 feed_main_refresh_text(
@@ -669,6 +683,7 @@ feed_main_refresh_text(
         0);
 }
 
+/* DONE */
 static
 void
 feed_main_refresh_cursor(
@@ -680,6 +695,7 @@ feed_main_refresh_cursor(
         1);
 }
 
+/* DONE */
 static
 void
 feed_main_insert_event(
@@ -733,6 +749,7 @@ feed_main_insert_event(
 }
 
 
+/* DONE */
 static
 void
 feed_main_event_callback(
@@ -1080,22 +1097,9 @@ feed_main_event_callback(
 
                     if (p_main_context->i_cursor_line_index < p_main_context->i_page_line_index)
                     {
-                        unsigned int
-                            i_width;
-
-                        unsigned int
-                            i_height;
-
-                        feed_screen_get_physical_size(
-                            p_main_context->p_screen,
-                            &(
-                                i_width),
-                            &(
-                                i_height));
-
-                        if (p_main_context->i_page_line_index > i_height)
+                        if (p_main_context->i_page_line_index > p_main_context->i_screen_height)
                         {
-                            p_main_context->i_page_line_index -= i_height;
+                            p_main_context->i_page_line_index -= p_main_context->i_screen_height;
                         }
                         else
                         {
@@ -1144,26 +1148,13 @@ feed_main_event_callback(
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_PAGEUP) == p_event->i_code)
             {
-                unsigned int
-                    i_width;
-
-                unsigned int
-                    i_height;
-
-                feed_screen_get_physical_size(
-                    p_main_context->p_screen,
-                    &(
-                        i_width),
-                    &(
-                        i_height));
-
-                if (p_main_context->i_page_line_index > i_height)
+                if (p_main_context->i_page_line_index > p_main_context->i_screen_height)
                 {
-                    p_main_context->i_page_line_index -= i_height;
+                    p_main_context->i_page_line_index -= p_main_context->i_screen_height;
 
-                    if (p_main_context->i_cursor_line_index > i_height)
+                    if (p_main_context->i_cursor_line_index > p_main_context->i_screen_height)
                     {
-                        p_main_context->i_cursor_line_index -= i_height;
+                        p_main_context->i_cursor_line_index -= p_main_context->i_screen_height;
                     }
                 }
                 else
@@ -1178,24 +1169,11 @@ feed_main_event_callback(
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_PAGEDOWN) == p_event->i_code)
             {
-                unsigned int
-                    i_width;
-
-                unsigned int
-                    i_height;
-
-                feed_screen_get_physical_size(
-                    p_main_context->p_screen,
-                    &(
-                        i_width),
-                    &(
-                        i_height));
-
-                if ((p_main_context->i_page_line_index + i_height) < p_main_context->p_text->i_line_count)
+                if ((p_main_context->i_page_line_index + p_main_context->i_screen_height) < p_main_context->p_text->i_line_count)
                 {
-                    p_main_context->i_page_line_index += i_height;
+                    p_main_context->i_page_line_index += p_main_context->i_screen_height;
 
-                    p_main_context->i_cursor_line_index += i_height;
+                    p_main_context->i_cursor_line_index += p_main_context->i_screen_height;
 
                     if (p_main_context->i_cursor_line_index >= p_main_context->p_text->i_line_count)
                     {
@@ -1296,24 +1274,11 @@ feed_main_event_callback(
                         /* Adjust view */
                         if (p_main_context->i_cursor_line_index > p_main_context->i_final_line_index)
                         {
-                            unsigned int
-                                i_width;
-
-                            unsigned int
-                                i_height;
-
-                            feed_screen_get_physical_size(
-                                p_main_context->p_screen,
-                                &(
-                                    i_width),
-                                &(
-                                    i_height));
-
-                            if ((p_main_context->i_page_line_index + i_height) < p_main_context->p_text->i_line_count)
+                            if ((p_main_context->i_page_line_index + p_main_context->i_screen_height) < p_main_context->p_text->i_line_count)
                             {
-                                p_main_context->i_page_line_index += i_height;
+                                p_main_context->i_page_line_index += p_main_context->i_screen_height;
 
-                                p_main_context->i_cursor_line_index += i_height;
+                                p_main_context->i_cursor_line_index += p_main_context->i_screen_height;
 
                                 if (p_main_context->i_cursor_line_index >= p_main_context->p_text->i_line_count)
                                 {
@@ -1361,6 +1326,7 @@ feed_main_event_callback(
 
 }
 
+/* DONE */
 static
 void
 feed_main_set_callback(
@@ -1406,6 +1372,7 @@ feed_main_set_callback(
 
 }
 
+/* DONE */
 static
 char
 feed_main_set(
@@ -1629,6 +1596,7 @@ feed_time_read(void)
                 (unsigned long int)(o_time.tv_nsec) / (1000ul * 1000ul)));
 
 }
+#endif
 
 int
 feed_main(
@@ -1637,420 +1605,564 @@ feed_main(
     char const * const * const
         argv)
 {
-    struct feed_main_context
-        o_main_context;
 
-    struct feed_main_context *
-        p_main_context;
-
-    (void)(
-        argc);
-    (void)(
-        argv);
-
-    p_main_context =
-        &(
-            o_main_context);
-
-    memset(
-        p_main_context,
-        0x00u,
-        sizeof(
-            *(
-                p_main_context)));
-
-    p_main_context->p_client =
-        &(
-            p_main_context->o_client);
-
-    feed_client_init(
-        p_main_context->p_client);
-
-    p_main_context->p_heap =
-        feed_heap_create();
-
-    p_main_context->p_client->p_heap =
-        p_main_context->p_heap;
-
-    p_main_context->p_text =
-        feed_text_create(
-            p_main_context->p_client);
-
-    p_main_context->p_prompt =
-        feed_prompt_create(
-            p_main_context->p_client);
-
-    p_main_context->p_tty =
-    p_main_context->p_client->p_tty =
-        feed_tty_create(
-            p_main_context->p_client);
-
-    if (
-        p_main_context->p_tty)
+    if (1)
     {
-        if (
-            feed_tty_enable(
-                p_main_context->p_tty))
+        /* Test the library */
+        struct feed_handle *
+            p_feed_handle;
+
         {
-            unsigned int
-                x;
+            struct feed_descriptor
+                o_feed_descriptor;
 
-            unsigned int
-                y;
-
-            if (
-                feed_tty_get_cursor_position(
-                    p_main_context->p_tty,
-                    &(
-                        y),
-                    &(
-                        x)))
             {
-                if (0)
+                o_feed_descriptor.p_context =
+                    NULL;
+
+                o_feed_descriptor.p_complete =
+                    NULL;
+
+                o_feed_descriptor.p_notify =
+                    NULL;
+            }
+
+            p_feed_handle =
+                feed_create(
+                    &(
+                        o_feed_descriptor));
+        }
+
+        if (
+            p_feed_handle)
+        {
+            if (
+                argc > 1u)
+            {
+                FILE * const
+                    p_file_handle =
+                    fopen(
+                        argv[1u],
+                        "rt");
+
+                if (
+                    p_file_handle)
                 {
-                    feed_dbg_print(
-                        "pos = %d , %d",
-                        x,
-                        y);
+                    char
+                        b_eof;
+
+                    b_eof =
+                        0;
+
+                    while (
+                        (!b_eof))
+                    {
+                        unsigned char a_block[1024u];
+
+                        int iResult;
+
+                        iResult =
+                            (int)(
+                                fread(
+                                    a_block,
+                                    sizeof(a_block[0u]),
+                                    sizeof(a_block),
+                                    p_file_handle));
+
+                        if (
+                            iResult > 0)
+                        {
+                            feed_load(
+                                p_feed_handle,
+                                a_block,
+                                (unsigned int)(
+                                    iResult));
+                        }
+                        else
+                        {
+                            b_eof =
+                                1;
+                        }
+                    }
+
+                    fclose(
+                        p_file_handle);
                 }
             }
             else
             {
-                feed_dbg_print(
-                    "get_cursor_position error!");
+                {
+                    static unsigned char const s_prompt1[] =
+                    {
+                        'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                        'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                        'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                        'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                        'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                        'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                        'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                    };
+
+                    feed_prompt1(
+                        p_feed_handle,
+                        s_prompt1,
+                        sizeof(
+                            s_prompt1));
+                }
+
+                {
+                    static unsigned char const s_prompt2[] =
+                    {
+                        ' ',
+                        '>',
+                        ' '
+                    };
+
+                    feed_prompt2(
+                        p_feed_handle,
+                        s_prompt2,
+                        sizeof(
+                            s_prompt2));
+                }
             }
 
-            p_main_context->p_screen =
-                feed_screen_create(
-                    p_main_context->p_client);
+            feed_start(
+                p_feed_handle);
 
+#if 0
+            /* Note: get text buffer to flush */
+#endif
+
+            feed_destroy(
+                p_feed_handle);
+        }
+
+        return
+            0;
+    }
+#if 0
+    else
+    {
+        struct feed_main_context
+            o_main_context;
+
+        struct feed_main_context *
+            p_main_context;
+
+        (void)(
+            argc);
+        (void)(
+            argv);
+
+        p_main_context =
+            &(
+                o_main_context);
+
+        memset(
+            p_main_context,
+            0x00u,
+            sizeof(
+                *(
+                    p_main_context)));
+
+        p_main_context->p_client =
+            &(
+                p_main_context->o_client);
+
+        feed_client_init(
+            p_main_context->p_client);
+
+        p_main_context->p_heap =
+            feed_heap_create();
+
+        p_main_context->p_client->p_heap =
+            p_main_context->p_heap;
+
+        p_main_context->p_text =
+            feed_text_create(
+                p_main_context->p_client);
+
+        p_main_context->p_prompt =
+            feed_prompt_create(
+                p_main_context->p_client);
+
+        p_main_context->p_tty =
+        p_main_context->p_client->p_tty =
+            feed_tty_create(
+                p_main_context->p_client);
+
+        if (
+            p_main_context->p_tty)
+        {
             if (
-                feed_tty_get_window_size(
-                    p_main_context->p_tty,
-                    &(
-                        p_main_context->i_screen_width),
-                    &(
-                        p_main_context->i_screen_height),
-                    1))
+                feed_tty_enable(
+                    p_main_context->p_tty))
             {
-                if (0)
+                unsigned int
+                    x;
+
+                unsigned int
+                    y;
+
+                if (
+                    feed_tty_get_cursor_position(
+                        p_main_context->p_tty,
+                        &(
+                            y),
+                        &(
+                            x)))
+                {
+                    if (0)
+                    {
+                        feed_dbg_print(
+                            "pos = %d , %d",
+                            x,
+                            y);
+                    }
+                }
+                else
                 {
                     feed_dbg_print(
-                        "winsize = %d , %d",
+                        "get_cursor_position error!");
+                }
+
+                p_main_context->p_screen =
+                    feed_screen_create(
+                        p_main_context->p_client);
+
+                if (
+                    feed_tty_get_window_size(
+                        p_main_context->p_tty,
+                        &(
+                            p_main_context->i_screen_width),
+                        &(
+                            p_main_context->i_screen_height),
+                        1))
+                {
+                    if (0)
+                    {
+                        feed_dbg_print(
+                            "winsize = %d , %d",
+                            p_main_context->i_screen_width,
+                            p_main_context->i_screen_height);
+                    }
+
+                    feed_screen_set_physical_size(
+                        p_main_context->p_screen,
                         p_main_context->i_screen_width,
                         p_main_context->i_screen_height);
                 }
-
-                feed_screen_set_physical_size(
-                    p_main_context->p_screen,
-                    p_main_context->i_screen_width,
-                    p_main_context->i_screen_height);
-            }
-            else
-            {
-                feed_dbg_print(
-                    "get_window_size error!");
-            }
-
-            p_main_context->b_verbose =
-                0;
-
-#if 0
-            /* test line wrap enable */
-            {
-                static unsigned char const g_test_line_wrap_enable[] =
+                else
                 {
-                    '\r',
-                    '\n',
-                    'a',
-                    'a',
-                    'a',
-                    'a',
-                    'a',
-                    'a',
-                    'a',
-                    'a',
-                    'a',
-                    'a',
-                    'b',
-                    'b',
-                    'b',
-                    'b',
-                    'b',
-                    'b',
-                    'b',
-                    'b',
-                    'b',
-                    'b',
-                    'c',
-                    'c',
-                    'c',
-                    'c',
-                    'c',
-                    'c',
-                    'c',
-                    'c',
-                    'c',
-                    'c',
-                    'd',
-                    'd',
-                    'd',
-                    'd',
-                    'd',
-                    'd',
-                    'd',
-                    'd',
-                    'd',
-                    'd',
-                    'e',
-                    'e',
-                    'e',
-                    'e',
-                    'e',
-                    'e',
-                    'e',
-                    'e',
-                    'e',
-                    'e',
-                    'f',
-                    'f',
-                    'f',
-                    'f',
-                    'f',
-                    'f',
-                    'f',
-                    'f',
-                    'f',
-                    'f'
-                };
-
-                feed_tty_line_wrap(
-                    p_main_context->p_tty,
-                    1);
-
-                feed_tty_write_character_array(
-                    p_main_context->p_tty,
-                    g_test_line_wrap_enable,
-                    sizeof(
-                        g_test_line_wrap_enable));
-
-                feed_tty_move_cursor_backward(
-                    p_main_context->p_tty,
-                    20);
-
-                /* test line wrap disable */
-                feed_tty_line_wrap(
-                    p_main_context->p_tty,
-                    0);
-
-                feed_tty_write_character_array(
-                    p_main_context->p_tty,
-                    g_test_line_wrap_enable,
-                    sizeof(
-                        g_test_line_wrap_enable));
-
-                feed_tty_move_cursor_backward(
-                    p_main_context->p_tty,
-                    20);
-            }
-#endif
-
-#if 0
-
-            feed_tty_move_cursor_up(
-                p_main_context->p_tty,
-                3);
-
-            feed_tty_move_cursor_forward(
-                p_main_context->p_tty,
-                40);
-
-#endif
-
-            if (0)
-            {
-                p_main_context->b_more =
-                    1;
-
-                while (
-                    p_main_context->b_more)
-                {
-                    unsigned char
-                        a_escape[64u];
-
-                    unsigned int
-                        i_escape_len;
-
-                    if (
-                        feed_tty_read_escape_sequence(
-                            p_main_context->p_tty,
-                            a_escape,
-                            sizeof(
-                                a_escape),
-                            &(
-                                i_escape_len)))
-                    {
-                        feed_dbg_print(
-                            "read escape len=%u",
-                            i_escape_len);
-
-                        {
-                            unsigned int
-                                i_index;
-
-                            for (
-                                i_index = 0;
-                                i_index < i_escape_len;
-                                i_index ++)
-                            {
-                                feed_dbg_print(
-                                    " [%u] %u \'%c\'",
-                                    i_index,
-                                    (unsigned int)(
-                                        a_escape[i_index]),
-                                    (a_escape[i_index] >= 32 && a_escape[i_index] < 127) ? a_escape[i_index] : '.');
-                            }
-                        }
-
-                        if (1 == i_escape_len)
-                        {
-                            if ('q' == a_escape[0u])
-                            {
-                                p_main_context->b_more = 0;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        feed_dbg_print(
-                            "read escape error!");
-                    }
+                    feed_dbg_print(
+                        "get_window_size error!");
                 }
-            }
 
-            if (argc > 1u)
-            {
-                g_load_time =
-                    feed_time_read();
+                p_main_context->b_verbose =
+                    0;
 
-                feed_main_load_file(
-                    p_main_context,
-                    argv[1u]);
-
-                g_load_time =
-                    feed_time_read() - g_load_time;
-
-                /* move cursor to home */
-                p_main_context->i_cursor_glyph_index =
-                    0u;
-
-                p_main_context->i_cursor_line_index =
-                    0u;
-            }
-            else
-            {
-                static unsigned char const s_prompt1[] =
+#if 0
+                /* test line wrap enable */
                 {
-                    'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
-                    'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
-                    'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
-                    'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
-                    'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
-                    'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
-                    'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
-                };
-
-                static unsigned char const s_prompt2[] =
-                {
-                    ' ',
-                    '>',
-                    ' '
-                };
-
-                feed_prompt_set1(
-                    p_main_context->p_prompt,
-                    s_prompt1,
-                    sizeof(
-                        s_prompt1));
-
-                feed_prompt_set2(
-                    p_main_context->p_prompt,
-                    s_prompt2,
-                    sizeof(
-                        s_prompt2));
-            }
-
-            if (0)
-            {
-                static unsigned char const s_load[] =
-                {
-                    'a', 'b', 'c', '\n',
-                    '1', '2', '3', '\n',
-                    '\n',
-                    '\n',
-                    '!'
-                };
-
-                /* Load using direct */
-                feed_main_set(
-                    p_main_context,
-                    s_load,
-                    sizeof(
-                        s_load));
-            }
-
-            if (1)
-            {
-                struct feed_input *
-                    p_input;
-
-                p_main_context->b_more =
-                    1;
-
-                feed_main_refresh_text(
-                    p_main_context);
-
-                p_input =
-                    feed_input_create(
-                        p_main_context->p_client);
-
-                while (
-                    p_main_context->b_more)
-                {
-                    int
-                        c;
-
-                    c = getchar();
-
-                    if (
-                        EOF != c)
+                    static unsigned char const g_test_line_wrap_enable[] =
                     {
-                        int
-                            i_result;
+                        '\r',
+                        '\n',
+                        'a',
+                        'a',
+                        'a',
+                        'a',
+                        'a',
+                        'a',
+                        'a',
+                        'a',
+                        'a',
+                        'a',
+                        'b',
+                        'b',
+                        'b',
+                        'b',
+                        'b',
+                        'b',
+                        'b',
+                        'b',
+                        'b',
+                        'b',
+                        'c',
+                        'c',
+                        'c',
+                        'c',
+                        'c',
+                        'c',
+                        'c',
+                        'c',
+                        'c',
+                        'c',
+                        'd',
+                        'd',
+                        'd',
+                        'd',
+                        'd',
+                        'd',
+                        'd',
+                        'd',
+                        'd',
+                        'd',
+                        'e',
+                        'e',
+                        'e',
+                        'e',
+                        'e',
+                        'e',
+                        'e',
+                        'e',
+                        'e',
+                        'e',
+                        'f',
+                        'f',
+                        'f',
+                        'f',
+                        'f',
+                        'f',
+                        'f',
+                        'f',
+                        'f',
+                        'f'
+                    };
 
-                        struct feed_event
-                            o_event;
+                    feed_tty_line_wrap(
+                        p_main_context->p_tty,
+                        1);
 
-                        i_result =
-                            feed_input_write(
-                                p_input,
-                                (unsigned char)(
-                                    c),
-                                &(
-                                    o_event));
+                    feed_tty_write_character_array(
+                        p_main_context->p_tty,
+                        g_test_line_wrap_enable,
+                        sizeof(
+                            g_test_line_wrap_enable));
+
+                    feed_tty_move_cursor_backward(
+                        p_main_context->p_tty,
+                        20);
+
+                    /* test line wrap disable */
+                    feed_tty_line_wrap(
+                        p_main_context->p_tty,
+                        0);
+
+                    feed_tty_write_character_array(
+                        p_main_context->p_tty,
+                        g_test_line_wrap_enable,
+                        sizeof(
+                            g_test_line_wrap_enable));
+
+                    feed_tty_move_cursor_backward(
+                        p_main_context->p_tty,
+                        20);
+                }
+#endif
+
+#if 0
+
+                feed_tty_move_cursor_up(
+                    p_main_context->p_tty,
+                    3);
+
+                feed_tty_move_cursor_forward(
+                    p_main_context->p_tty,
+                    40);
+
+#endif
+
+                if (0)
+                {
+                    p_main_context->b_more =
+                        1;
+
+                    while (
+                        p_main_context->b_more)
+                    {
+                        unsigned char
+                            a_escape[64u];
+
+                        unsigned int
+                            i_escape_len;
 
                         if (
-                            0
-                            <= i_result)
+                            feed_tty_read_escape_sequence(
+                                p_main_context->p_tty,
+                                a_escape,
+                                sizeof(
+                                    a_escape),
+                                &(
+                                    i_escape_len)))
                         {
-                            if (
-                                0
-                                < i_result)
+                            feed_dbg_print(
+                                "read escape len=%u",
+                                i_escape_len);
+
                             {
-                                feed_main_event_callback(
-                                    p_main_context,
+                                unsigned int
+                                    i_index;
+
+                                for (
+                                    i_index = 0;
+                                    i_index < i_escape_len;
+                                    i_index ++)
+                                {
+                                    feed_dbg_print(
+                                        " [%u] %u \'%c\'",
+                                        i_index,
+                                        (unsigned int)(
+                                            a_escape[i_index]),
+                                        (a_escape[i_index] >= 32 && a_escape[i_index] < 127) ? a_escape[i_index] : '.');
+                                }
+                            }
+
+                            if (1 == i_escape_len)
+                            {
+                                if ('q' == a_escape[0u])
+                                {
+                                    p_main_context->b_more = 0;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            feed_dbg_print(
+                                "read escape error!");
+                        }
+                    }
+                }
+
+                if (argc > 1u)
+                {
+                    g_load_time =
+                        feed_time_read();
+
+                    feed_main_load_file(
+                        p_main_context,
+                        argv[1u]);
+
+                    g_load_time =
+                        feed_time_read() - g_load_time;
+
+                    /* move cursor to home */
+                    p_main_context->i_cursor_glyph_index =
+                        0u;
+
+                    p_main_context->i_cursor_line_index =
+                        0u;
+                }
+                else
+                {
+                    static unsigned char const s_prompt1[] =
+                    {
+                        'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                        'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                        'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                        'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                        'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                        'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                        'w', 'h', 'a', 'd', 'y', 'a', 'w', 'a', 'n', 't', '?', ' ',
+                    };
+
+                    static unsigned char const s_prompt2[] =
+                    {
+                        ' ',
+                        '>',
+                        ' '
+                    };
+
+                    feed_prompt_set1(
+                        p_main_context->p_prompt,
+                        s_prompt1,
+                        sizeof(
+                            s_prompt1));
+
+                    feed_prompt_set2(
+                        p_main_context->p_prompt,
+                        s_prompt2,
+                        sizeof(
+                            s_prompt2));
+                }
+
+                if (0)
+                {
+                    static unsigned char const s_load[] =
+                    {
+                        'a', 'b', 'c', '\n',
+                        '1', '2', '3', '\n',
+                        '\n',
+                        '\n',
+                        '!'
+                    };
+
+                    /* Load using direct */
+                    feed_main_set(
+                        p_main_context,
+                        s_load,
+                        sizeof(
+                            s_load));
+                }
+
+                if (1)
+                {
+                    struct feed_input *
+                        p_input;
+
+                    p_main_context->b_more =
+                        1;
+
+                    feed_main_refresh_text(
+                        p_main_context);
+
+                    p_input =
+                        feed_input_create(
+                            p_main_context->p_client);
+
+                    while (
+                        p_main_context->b_more)
+                    {
+                        int
+                            c;
+
+                        c = getchar();
+
+                        if (
+                            EOF != c)
+                        {
+                            int
+                                i_result;
+
+                            struct feed_event
+                                o_event;
+
+                            i_result =
+                                feed_input_write(
+                                    p_input,
+                                    (unsigned char)(
+                                        c),
                                     &(
                                         o_event));
+
+                            if (
+                                0
+                                <= i_result)
+                            {
+                                if (
+                                    0
+                                    < i_result)
+                                {
+                                    feed_main_event_callback(
+                                        p_main_context,
+                                        &(
+                                            o_event));
+                                }
+                            }
+                            else
+                            {
+                                p_main_context->b_more =
+                                    0;
                             }
                         }
                         else
@@ -2059,121 +2171,123 @@ feed_main(
                                 0;
                         }
                     }
-                    else
-                    {
-                        p_main_context->b_more =
-                            0;
-                    }
+
+                    feed_input_destroy(
+                        p_input);
                 }
 
-                feed_input_destroy(
-                    p_input);
+                feed_screen_set_cursor_pos(
+                    p_main_context->p_screen,
+                    p_main_context->i_final_cursor_x,
+                    p_main_context->i_final_cursor_y);
+
+                feed_screen_newline_raw(
+                    p_main_context->p_screen);
+
+                feed_tty_flush(
+                    p_main_context->p_tty);
+
+                feed_screen_destroy(
+                    p_main_context->p_screen);
+
+                feed_tty_disable(
+                    p_main_context->p_tty);
+            }
+            else
+            {
+                feed_dbg_print(
+                    "enable error!");
             }
 
-            feed_screen_set_cursor_pos(
-                p_main_context->p_screen,
-                p_main_context->i_final_cursor_x,
-                p_main_context->i_final_cursor_y);
-
-            feed_screen_destroy(
-                p_main_context->p_screen);
-
-            feed_tty_disable(
+            feed_tty_destroy(
                 p_main_context->p_tty);
         }
         else
         {
             feed_dbg_print(
-                "enable error!");
+                "init error!");
         }
 
-        feed_tty_destroy(
-            p_main_context->p_tty);
-    }
-    else
-    {
-        feed_dbg_print(
-            "init error!");
-    }
+        feed_prompt_destroy(
+            p_main_context->p_prompt);
 
-    feed_prompt_destroy(
-        p_main_context->p_prompt);
-
-    {
-        unsigned int
-            i_text_length;
-
-        /* Transfer text to a linear buffer */
-        i_text_length =
-            feed_text_get_raw_length(
-                p_main_context->p_text);
-
-        if (
-            i_text_length)
         {
-            unsigned char *
-                p_raw_buffer;
+            unsigned int
+                i_text_length;
 
-            p_raw_buffer =
-                (unsigned char *)(
-                    feed_heap_alloc(
-                        p_main_context->p_client->p_heap,
-                        i_text_length));
+            /* Transfer text to a linear buffer */
+            i_text_length =
+                feed_text_get_raw_length(
+                    p_main_context->p_text);
 
             if (
-                p_raw_buffer)
+                i_text_length)
             {
-                struct feed_buf
-                    o_raw_content;
+                unsigned char *
+                    p_raw_buffer;
+
+                p_raw_buffer =
+                    (unsigned char *)(
+                        feed_heap_alloc(
+                            p_main_context->p_client->p_heap,
+                            i_text_length));
 
                 if (
-                    feed_buf_init(
-                        &(
-                            o_raw_content),
-                        p_raw_buffer,
-                        i_text_length))
+                    p_raw_buffer)
                 {
-                    feed_text_get_raw_buffer(
-                        p_main_context->p_text,
-                        &(
-                            o_raw_content));
+                    struct feed_buf
+                        o_raw_content;
 
-                    if (0)
+                    if (
+                        feed_buf_init(
+                            &(
+                                o_raw_content),
+                            p_raw_buffer,
+                            i_text_length))
                     {
-                        printf("content: [\n%.*s]\n",
-                            (int)(
-                                o_raw_content.i_len),
-                            (char const *)(
-                                o_raw_content.p_buf));
+                        feed_text_get_raw_buffer(
+                            p_main_context->p_text,
+                            &(
+                                o_raw_content));
+
+                        if (0)
+                        {
+                            printf("content: [\n%.*s]\n",
+                                (int)(
+                                    o_raw_content.i_len),
+                                (char const *)(
+                                    o_raw_content.p_buf));
+                        }
+
+                        feed_buf_cleanup(
+                            &(
+                                o_raw_content));
                     }
 
-                    feed_buf_cleanup(
-                        &(
-                            o_raw_content));
+                    feed_heap_free(
+                        p_main_context->p_client->p_heap,
+                        (void *)(
+                            p_raw_buffer));
                 }
-
-                feed_heap_free(
-                    p_main_context->p_client->p_heap,
-                    (void *)(
-                        p_raw_buffer));
             }
         }
+
+        feed_text_destroy(
+            p_main_context->p_text);
+
+        feed_heap_destroy(
+            p_main_context->p_heap);
+
+        printf("*** load time %lu msec ***\n",
+            g_load_time);
+
+        feed_client_cleanup(
+            p_main_context->p_client);
+
+        return
+            0;
+
     }
-
-    feed_text_destroy(
-        p_main_context->p_text);
-
-    feed_heap_destroy(
-        p_main_context->p_heap);
-
-    printf("*** load time %lu msec ***\n",
-        g_load_time);
-
-    feed_client_cleanup(
-        p_main_context->p_client);
-
-    return
-        0;
-
+#endif
 }
 
