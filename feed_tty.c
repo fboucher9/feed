@@ -96,10 +96,10 @@ feed_tty_init(
                     p_tty->p_termios)
                 {
                     p_tty->i_output_file =
-                        STDOUT_FILENO;
+                        STDERR_FILENO;
 
                     p_tty->i_input_file =
-                        STDIN_FILENO;
+                        STDERR_FILENO;
 
                     p_tty->i_cache_len =
                         0u;

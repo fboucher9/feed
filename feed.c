@@ -1661,13 +1661,14 @@ feed_main_step(
     struct feed_handle * const
         p_this)
 {
-    int
+    unsigned char
         c;
 
-    c = getchar();
-
     if (
-        EOF != c)
+        feed_tty_read_character(
+            p_this->p_tty,
+            &(
+                c)))
     {
         int
             i_result;
@@ -1678,8 +1679,7 @@ feed_main_step(
         i_result =
             feed_input_write(
                 p_this->p_input,
-                (unsigned char)(
-                    c),
+                c,
                 &(
                     o_event));
 
