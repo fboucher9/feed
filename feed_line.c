@@ -443,10 +443,6 @@ feed_line_get_raw_buffer(
             p_iterator->p_next;
     }
 
-    feed_buf_write_character(
-        p_buf,
-        '\n');
-
 } /* feed_line_get_raw_buffer() */
 
 /* end-of-file: feed_line.c */

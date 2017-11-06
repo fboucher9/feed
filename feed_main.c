@@ -207,14 +207,34 @@ feed_main(
     if (
         p_feed_handle)
     {
+        unsigned long int
+            i_save_length;
+
+        unsigned char *
+            p_save_buffer;
+
         if (
             argc > 1u)
         {
-            FILE * const
+            FILE *
+                p_file_handle;
+
+            if (
+                0
+                == strcmp(
+                    argv[1u],
+                    "-"))
+            {
+                p_file_handle =
+                    stdin;
+            }
+            else
+            {
                 p_file_handle =
                 fopen(
                     argv[1u],
                     "rt");
+            }
 
             if (
                 p_file_handle)
@@ -256,8 +276,11 @@ feed_main(
                     }
                 }
 
-                fclose(
-                    p_file_handle);
+                if (stdin != p_file_handle)
+                {
+                    fclose(
+                        p_file_handle);
+                }
             }
         }
         else
@@ -300,72 +323,72 @@ feed_main(
         feed_start(
             p_feed_handle);
 
-#if 0
         /* Note: get text buffer to flush */
         {
-            unsigned int
-                i_text_length;
-
-            /* Transfer text to a linear buffer */
-            i_text_length =
-                feed_text_get_raw_length(
-                    p_main_context->p_text);
+            i_save_length =
+                feed_length(
+                    p_feed_handle);
 
             if (
-                i_text_length)
+                i_save_length)
             {
-                unsigned char *
-                    p_raw_buffer;
-
-                p_raw_buffer =
+                p_save_buffer =
                     (unsigned char *)(
-                        feed_heap_alloc(
-                            p_main_context->p_client->p_heap,
-                            i_text_length));
+                        malloc(
+                            i_save_length));
+            }
+            else
+            {
+                p_save_buffer =
+                    (unsigned char *)(
+                        0);
+            }
 
+            if (
+                p_save_buffer)
+            {
                 if (
-                    p_raw_buffer)
+                    0
+                    <= feed_save(
+                        p_feed_handle,
+                        p_save_buffer,
+                        i_save_length))
                 {
-                    struct feed_buf
-                        o_raw_content;
-
-                    if (
-                        feed_buf_init(
-                            &(
-                                o_raw_content),
-                            p_raw_buffer,
-                            i_text_length))
-                    {
-                        feed_text_get_raw_buffer(
-                            p_main_context->p_text,
-                            &(
-                                o_raw_content));
-
-                        if (0)
-                        {
-                            printf("content: [\n%.*s]\n",
-                                (int)(
-                                    o_raw_content.i_len),
-                                (char const *)(
-                                    o_raw_content.p_buf));
-                        }
-
-                        feed_buf_cleanup(
-                            &(
-                                o_raw_content));
-                    }
-
-                    feed_heap_free(
-                        p_main_context->p_client->p_heap,
-                        (void *)(
-                            p_raw_buffer));
+                }
+                else
+                {
+                    i_save_length =
+                        0ul;
                 }
             }
         }
-#endif
 
         feed_destroy(
             p_feed_handle);
+
+        /* Print the text buffer here. */
+        {
+            if (
+                p_save_buffer)
+            {
+                if (
+                    i_save_length)
+                {
+                    if (argc < 2u)
+                    {
+                        printf("content: [\n%.*s]\n",
+                            (int)(
+                                i_save_length),
+                            (char const *)(
+                                p_save_buffer));
+                    }
+                }
+
+                free(
+                    (void *)(
+                        p_save_buffer));
+            }
+        }
     }
 
     return

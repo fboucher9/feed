@@ -38,6 +38,8 @@ Description:
 
 #include "feed_text.h"
 
+#include "feed_buf.h"
+
 struct feed_handle
 {
     /* -- */
@@ -378,7 +380,7 @@ feed_prompt1(
         p_this,
     unsigned char const * const
         p_data,
-    unsigned int const
+    unsigned long int const
         i_data_length)
 {
     int
@@ -419,7 +421,7 @@ feed_prompt2(
         p_this,
     unsigned char const * const
         p_data,
-    unsigned int const
+    unsigned long int const
         i_data_length)
 {
     int
@@ -506,7 +508,7 @@ feed_main_set(
         p_this,
     unsigned char const * const
         p_data,
-    unsigned int const
+    unsigned long int const
         i_data_length)
 {
     char
@@ -527,7 +529,7 @@ feed_main_set(
                     &(
                         o_utf8_parser)))
             {
-                unsigned int
+                unsigned long int
                     i_data_iterator;
 
                 i_data_iterator =
@@ -612,7 +614,7 @@ feed_load(
         p_this,
     unsigned char const * const
         p_data,
-    unsigned int const
+    unsigned long int const
         i_data_length)
 {
     int
@@ -1837,7 +1839,7 @@ feed_suggest(
         p_this,
     unsigned char const * const
         p_data,
-    unsigned int const
+    unsigned long int const
         i_data_length)
 {
     (void)(
@@ -1851,5 +1853,61 @@ feed_suggest(
         -1;
 
 } /* feed_suggest() */
+
+unsigned long int
+feed_length(
+    struct feed_handle * const
+        p_this)
+{
+    return
+        feed_text_get_raw_length(
+            p_this->p_text);
+
+} /* feed_length() */
+
+int
+feed_save(
+    struct feed_handle * const
+        p_this,
+    unsigned char * const
+        p_data,
+    unsigned long int const
+        i_data_length)
+{
+    int
+        i_result;
+
+    struct feed_buf
+        o_raw_content;
+
+    if (
+        feed_buf_init(
+            &(
+                o_raw_content),
+            p_data,
+            i_data_length))
+    {
+        feed_text_get_raw_buffer(
+            p_this->p_text,
+            &(
+                o_raw_content));
+
+        i_result =
+            0;
+
+        feed_buf_cleanup(
+            &(
+                o_raw_content));
+    }
+    else
+    {
+        i_result =
+            -1;
+    }
+
+    return
+        i_result;
+
+} /* feed_save() */
 
 /* end-of-file: feed.c */

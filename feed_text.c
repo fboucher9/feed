@@ -384,8 +384,14 @@ feed_text_get_raw_buffer(
     struct feed_list *
         p_iterator;
 
+    unsigned int
+        i_line_iterator;
+
     p_iterator =
         p_text->o_lines.p_next;
+
+    i_line_iterator =
+        0u;
 
     while (
         p_iterator
@@ -398,9 +404,18 @@ feed_text_get_raw_buffer(
             (struct feed_line *)(
                 p_iterator);
 
+        if (i_line_iterator)
+        {
+            feed_buf_write_character(
+                p_buf,
+                '\n');
+        }
+
         feed_line_get_raw_buffer(
             p_line,
             p_buf);
+
+        i_line_iterator ++;
 
         p_iterator =
             p_iterator->p_next;

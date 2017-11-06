@@ -71,17 +71,17 @@ void feed_destroy(
 int feed_prompt1(
     struct feed_handle * const p_feed_handle,
     unsigned char const * const p_data,
-    unsigned int const i_data_length);
+    unsigned long int const i_data_length);
 
 int feed_prompt2(
     struct feed_handle * const p_feed_handle,
     unsigned char const * const p_data,
-    unsigned int const i_data_length);
+    unsigned long int const i_data_length);
 
 int feed_load(
     struct feed_handle * const p_feed_handle,
     unsigned char const * const p_data,
-    unsigned int const i_data_length);
+    unsigned long int const i_data_length);
 
 int feed_start(
     struct feed_handle * const p_feed_handle);
@@ -92,7 +92,15 @@ int feed_stop(
 int feed_suggest(
     struct feed_handle * const p_feed_handle,
     unsigned char const * const p_data,
-    unsigned int const i_data_length);
+    unsigned long int const i_data_length);
+
+unsigned long int feed_length(
+    struct feed_handle * const p_feed_handle);
+
+int feed_save(
+    struct feed_handle * const p_feed_handle,
+    unsigned char * const p_data,
+    unsigned long int const i_data_length);
 
 #if defined(__cplusplus)
 } /* extern "C" */
