@@ -451,6 +451,8 @@ feed_main_refresh_job(
                         i_emulated_y ++;
                     }
 
+                    /* Note: do not draw prompt if horizontal scroll is enabled */
+
                     if (p_prompt_line)
                     {
                         p_glyph_iterator =
@@ -495,7 +497,8 @@ feed_main_refresh_job(
                                     i_cursor_line_iterator;
 
                                 p_main_context->i_final_glyph_index =
-                                    i_cursor_glyph_iterator;
+                                    0u;
+
                             }
 
                             i_emulated_x +=
@@ -516,16 +519,6 @@ feed_main_refresh_job(
 
                 if (i_cursor_line_iterator == p_main_context->i_cursor_line_index)
                 {
-                    if (!b_cursor_only)
-                    {
-                        feed_screen_get_cursor_pos(
-                            p_screen,
-                            &(
-                                p_main_context->i_cursor_visible_x),
-                            &(
-                                p_main_context->i_cursor_visible_y));
-                    }
-
                     p_main_context->i_cursor_visible_x =
                         i_emulated_x;
 
@@ -555,18 +548,18 @@ feed_main_refresh_job(
                     struct feed_glyph const *
                         p_glyph;
 
-                    unsigned char
-                        a_visible[15u];
-
-                    unsigned char
-                        i_visible_length;
-
                     p_glyph =
                         (struct feed_glyph const *)(
                             p_glyph_iterator);
 
                     if (!b_cursor_only)
                     {
+                        unsigned char
+                            a_visible[15u];
+
+                        unsigned char
+                            i_visible_length;
+
                         /* If char is within refresh window */
                         i_visible_length =
                             feed_glyph_render_visible(
@@ -595,16 +588,6 @@ feed_main_refresh_job(
                     if ((i_cursor_line_iterator == p_main_context->i_cursor_line_index)
                         && (i_cursor_glyph_iterator < p_main_context->i_cursor_glyph_index))
                     {
-                        if (!b_cursor_only)
-                        {
-                            feed_screen_get_cursor_pos(
-                                p_screen,
-                                &(
-                                    p_main_context->i_cursor_visible_x),
-                                &(
-                                    p_main_context->i_cursor_visible_y));
-                        }
-
                         p_main_context->i_cursor_visible_x =
                             i_emulated_x;
 
@@ -1306,6 +1289,35 @@ feed_main_event_callback(
 
                         p_main_context->i_cursor_glyph_index =
                             0u;
+
+                        /* Adjust view */
+                        if (p_main_context->i_cursor_line_index > p_main_context->i_final_line_index)
+                        {
+                            unsigned int
+                                i_width;
+
+                            unsigned int
+                                i_height;
+
+                            feed_screen_get_physical_size(
+                                p_main_context->p_screen,
+                                &(
+                                    i_width),
+                                &(
+                                    i_height));
+
+                            if ((p_main_context->i_page_line_index + i_height) < p_main_context->p_text->i_line_count)
+                            {
+                                p_main_context->i_page_line_index += i_height;
+
+                                p_main_context->i_cursor_line_index += i_height;
+
+                                if (p_main_context->i_cursor_line_index >= p_main_context->p_text->i_line_count)
+                                {
+                                    p_main_context->i_cursor_line_index = (p_main_context->p_text->i_line_count - 1u);
+                                }
+                            }
+                        }
                     }
                     else
                     {
