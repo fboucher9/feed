@@ -36,27 +36,11 @@ struct feed_handle
 
     /* -- */
 
-    unsigned char *
-        p_prompt;
-
-    void *
-        a_padding_void[1u];
-
-    /* -- */
-
     struct feed_descriptor
         o_descriptor;
 
     struct feed_client
         o_client;
-
-    /* -- */
-
-    unsigned int
-        i_prompt_len;
-
-    unsigned int
-        a_padding_int[3u];
 
     /* -- */
 
@@ -122,21 +106,6 @@ feed_cleanup(
     struct feed_handle * const
         p_this)
 {
-    if (p_this->i_prompt_len)
-    {
-        feed_heap_free(
-            p_this->p_heap,
-            (void *)(
-                p_this->p_prompt));
-
-        p_this->p_prompt =
-            (unsigned char *)(
-                0);
-
-        p_this->i_prompt_len =
-            0u;
-    }
-
     if (
         p_this->p_client)
     {
@@ -243,7 +212,7 @@ feed_destroy(
 } /* feed_destroy() */
 
 int
-feed_prompt(
+feed_prompt1(
     struct feed_handle * const
         p_this,
     unsigned char const * const
@@ -254,64 +223,47 @@ feed_prompt(
     int
         i_result;
 
-    /* Free previous prompt */
-    if (p_this->i_prompt_len)
-    {
-        feed_heap_free(
-            p_this->p_heap,
-            (void *)(
-                p_this->p_prompt));
+    (void)(
+        p_this);
+    (void)(
+        p_data);
+    (void)(
+        i_data_length);
 
-        p_this->p_prompt =
-            (unsigned char *)(
-                0);
-
-        p_this->i_prompt_len =
-            0u;
-    }
-
-    /* Allocate new prompt */
-    if (i_data_length)
-    {
-        p_this->p_prompt =
-            (unsigned char *)(
-                feed_heap_alloc(
-                    p_this->p_heap,
-                    i_data_length));
-
-        if (p_this->p_prompt)
-        {
-            memcpy(
-                p_this->p_prompt,
-                p_data,
-                i_data_length);
-
-            p_this->i_prompt_len =
-                i_data_length;
-
-            /* Pass each character into input parser */
-
-            /* Store produced events into a character list */
-
-            i_result =
-                0;
-        }
-        else
-        {
-            i_result =
-                -1;
-        }
-    }
-    else
-    {
-        i_result =
-            0;
-    }
+    i_result =
+        -1;
 
     return
         i_result;
 
-} /* feed_prompt() */
+} /* feed_prompt1() */
+
+int
+feed_prompt2(
+    struct feed_handle * const
+        p_this,
+    unsigned char const * const
+        p_data,
+    unsigned int const
+        i_data_length)
+{
+    int
+        i_result;
+
+    (void)(
+        p_this);
+    (void)(
+        p_data);
+    (void)(
+        i_data_length);
+
+    i_result =
+        -1;
+
+    return
+        i_result;
+
+} /* feed_prompt2() */
 
 int
 feed_start(

@@ -93,15 +93,6 @@ feed_screen_set_cursor_pos(
         i_cursor_y);
 
 void
-feed_screen_get_visible_size(
-    struct feed_screen * const
-        p_screen,
-    unsigned int * const
-        p_visible_width,
-    unsigned int * const
-        p_visible_height);
-
-void
 feed_screen_newline(
     struct feed_screen * const
         p_screen);

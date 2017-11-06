@@ -38,18 +38,6 @@ enum feed_complete_type
 /* Descriptor for initialization of library handle */
 struct feed_descriptor
 {
-    /* read from terminal device */
-    int (* p_read)(
-        void * const p_context,
-        unsigned char * const p_data,
-        unsigned int const i_data_length);
-
-    /* write to terminal device */
-    int (* p_write)(
-        void * const p_context,
-        unsigned char const * const p_data,
-        unsigned int const i_data_length);
-
     /* application may preview and consume a line */
     int (* p_notify)(
         void * const p_context,
@@ -80,7 +68,12 @@ struct feed_handle * feed_create(
 void feed_destroy(
     struct feed_handle * const p_feed_handle);
 
-int feed_prompt(
+int feed_prompt1(
+    struct feed_handle * const p_feed_handle,
+    unsigned char const * const p_data,
+    unsigned int const i_data_length);
+
+int feed_prompt2(
     struct feed_handle * const p_feed_handle,
     unsigned char const * const p_data,
     unsigned int const i_data_length);
