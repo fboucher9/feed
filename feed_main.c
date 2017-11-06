@@ -85,6 +85,12 @@ struct feed_main_context
     struct feed_client
         o_client;
 
+    unsigned int
+        i_screen_width;
+
+    unsigned int
+        i_screen_height;
+
     /* Page */
     unsigned int
         i_page_line_index;
@@ -314,12 +320,6 @@ feed_main_refresh_job(
         i_cursor_glyph_iterator;
 
     unsigned int
-        i_visible_width;
-
-    unsigned int
-        i_visible_height;
-
-    unsigned int
         i_emulated_x;
 
     unsigned int
@@ -350,26 +350,19 @@ feed_main_refresh_job(
             feed_tty_get_window_size(
                 p_main_context->p_tty,
                 &(
-                    i_visible_width),
+                    p_main_context->i_screen_width),
                 &(
-                    i_visible_height),
+                    p_main_context->i_screen_height),
                 0 /* no fallback */))
         {
             feed_screen_set_physical_size(
                 p_main_context->p_screen,
-                i_visible_width,
-                i_visible_height);
+                p_main_context->i_screen_width,
+                p_main_context->i_screen_height);
         }
     }
 
     /* Grow size of drawing region */
-
-    feed_screen_get_physical_size(
-        p_main_context->p_screen,
-        &(
-            i_visible_width),
-        &(
-            i_visible_height));
 
     /* Move cursor to beginning of drawing region */
     i_emulated_x =
@@ -405,7 +398,7 @@ feed_main_refresh_job(
                     p_text->o_lines))
             && (
                 i_emulated_y
-                < i_visible_height))
+                < p_main_context->i_screen_height))
         {
             struct feed_line *
                 p_line;
@@ -465,7 +458,7 @@ feed_main_refresh_job(
                                     p_prompt_line->o_glyphs))
                             && (
                                 i_emulated_y
-                                < i_visible_height))
+                                < p_main_context->i_screen_height))
                         {
                             struct feed_glyph const *
                                 p_glyph;
@@ -504,11 +497,11 @@ feed_main_refresh_job(
                             i_emulated_x +=
                                 feed_glyph_get_visible_width(p_glyph);
 
-                            if (i_emulated_x >= i_visible_width)
+                            if (i_emulated_x >= p_main_context->i_screen_width)
                             {
                                 i_emulated_y ++;
 
-                                i_emulated_x -= i_visible_width;
+                                i_emulated_x -= p_main_context->i_screen_width;
                             }
 
                             p_glyph_iterator =
@@ -543,7 +536,7 @@ feed_main_refresh_job(
                             p_line->o_glyphs))
                     && (
                         i_emulated_y
-                        < i_visible_height))
+                        < p_main_context->i_screen_height))
                 {
                     struct feed_glyph const *
                         p_glyph;
@@ -579,9 +572,9 @@ feed_main_refresh_job(
                     }
 
                     i_emulated_x += feed_glyph_get_visible_width(p_glyph);
-                    if (i_emulated_x >= i_visible_width)
+                    if (i_emulated_x >= p_main_context->i_screen_width)
                     {
-                        i_emulated_x -= i_visible_width;
+                        i_emulated_x -= p_main_context->i_screen_width;
                         i_emulated_y ++;
                     }
 
@@ -1725,23 +1718,23 @@ feed_main(
                 feed_tty_get_window_size(
                     p_main_context->p_tty,
                     &(
-                        x),
+                        p_main_context->i_screen_width),
                     &(
-                        y),
+                        p_main_context->i_screen_height),
                     1))
             {
                 if (0)
                 {
                     feed_dbg_print(
                         "winsize = %d , %d",
-                        x,
-                        y);
+                        p_main_context->i_screen_width,
+                        p_main_context->i_screen_height);
                 }
 
                 feed_screen_set_physical_size(
                     p_main_context->p_screen,
-                    x,
-                    y);
+                    p_main_context->i_screen_width,
+                    p_main_context->i_screen_height);
             }
             else
             {
