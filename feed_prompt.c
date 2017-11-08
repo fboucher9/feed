@@ -168,7 +168,7 @@ feed_prompt_set(
         p_prompt,
     unsigned char const * const
         p_data,
-    unsigned int const
+    unsigned long int const
         i_data_length,
     unsigned int const
         i_index)
@@ -299,7 +299,7 @@ feed_prompt_set1(
         p_prompt,
     unsigned char const * const
         p_data,
-    unsigned int const
+    unsigned long int const
         i_data_length)
 {
     return
@@ -316,7 +316,7 @@ feed_prompt_set2(
         p_prompt,
     unsigned char const * const
         p_data,
-    unsigned int const
+    unsigned long int const
         i_data_length)
 {
     return

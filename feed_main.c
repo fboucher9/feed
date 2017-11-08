@@ -374,13 +374,13 @@ feed_main(
                 if (
                     i_save_length)
                 {
-                    if (argc < 2u)
+                    if (!isatty(STDOUT_FILENO))
                     {
-                        printf("content: [\n%.*s]\n",
-                            (int)(
-                                i_save_length),
-                            (char const *)(
-                                p_save_buffer));
+                        fwrite(
+                            p_save_buffer,
+                            i_save_length,
+                            1,
+                            stdout);
                     }
                 }
 

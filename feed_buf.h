@@ -26,10 +26,10 @@ struct feed_buf
     void *
         v_padding[1u];
 
-    unsigned int
+    unsigned long int
         i_max_len;
 
-    unsigned int
+    unsigned long int
         i_len;
 
     unsigned int
@@ -45,7 +45,7 @@ feed_buf_init(
         p_this,
     unsigned char * const
         p_buf,
-    unsigned int const
+    unsigned long int const
         i_max_len);
 
 void

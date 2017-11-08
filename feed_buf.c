@@ -12,7 +12,7 @@ feed_buf_init(
         p_this,
     unsigned char * const
         p_buf,
-    unsigned int const
+    unsigned long int const
         i_max_len)
 {
     char

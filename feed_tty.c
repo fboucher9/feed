@@ -490,7 +490,7 @@ feed_tty_read_character_array(
         p_tty,
     unsigned char * const
         p_buf,
-    unsigned int const
+    unsigned long int const
         i_buf_len)
 {
     char
@@ -499,7 +499,7 @@ feed_tty_read_character_array(
     int
         i_result;
 
-    unsigned int
+    unsigned long int
         i_index;
 
     i_index =
@@ -525,7 +525,7 @@ feed_tty_read_character_array(
             i_result > 0)
         {
             i_index +=
-                (unsigned int)(
+                (unsigned long int)(
                     i_result);
         }
         else
@@ -551,7 +551,7 @@ feed_tty_flush(
     if (
         p_tty->i_cache_len)
     {
-        unsigned int
+        unsigned long int
             i_index;
 
         b_result =
@@ -580,7 +580,7 @@ feed_tty_flush(
                 i_result > 0)
             {
                 i_index +=
-                    (unsigned int)(
+                    (unsigned long int)(
                         i_result);
 
                 b_result =
@@ -655,7 +655,7 @@ feed_tty_write_character_array(
         p_tty,
     unsigned char const * const
         p_buf,
-    unsigned int const
+    unsigned long int const
         i_buf_len)
 {
     char

@@ -50,7 +50,7 @@ feed_prompt_set1(
         p_prompt,
     unsigned char const * const
         p_data,
-    unsigned int const
+    unsigned long int const
         i_data_length);
 
 char
@@ -59,7 +59,7 @@ feed_prompt_set2(
         p_prompt,
     unsigned char const * const
         p_data,
-    unsigned int const
+    unsigned long int const
         i_data_length);
 
 struct feed_line *
