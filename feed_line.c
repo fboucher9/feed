@@ -402,9 +402,6 @@ feed_line_get_raw_length(
             p_iterator->p_next;
     }
 
-    /* Add one for newline */
-    i_buf_len ++;
-
     return
         i_buf_len;
 

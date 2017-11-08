@@ -214,16 +214,21 @@ feed_main(
             p_save_buffer;
 
         if (
-            argc > 1u)
+            (
+                argc > 1u)
+            || (
+                !isatty(STDIN_FILENO)))
         {
             FILE *
                 p_file_handle;
 
             if (
-                0
-                == strcmp(
-                    argv[1u],
-                    "-"))
+                (argc < 2u)
+                || (
+                    0
+                    == strcmp(
+                        argv[1u],
+                        "-")))
             {
                 p_file_handle =
                     stdin;

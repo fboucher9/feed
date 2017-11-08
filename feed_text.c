@@ -344,7 +344,13 @@ feed_text_get_raw_length(
     struct feed_list *
         p_iterator;
 
+    unsigned int
+        i_line_iterator;
+
     i_buf_len =
+        0u;
+
+    i_line_iterator =
         0u;
 
     p_iterator =
@@ -361,9 +367,17 @@ feed_text_get_raw_length(
             (struct feed_line *)(
                 p_iterator);
 
+        if (i_line_iterator)
+        {
+            /* Add one for newline */
+            i_buf_len ++;
+        }
+
         i_buf_len +=
             feed_line_get_raw_length(
                 p_line);
+
+        i_line_iterator ++;
 
         p_iterator =
             p_iterator->p_next;
