@@ -137,8 +137,14 @@ struct feed_handle
     char
         b_cursor_visible;
 
+    char
+        b_page_prompt;
+
+    char
+        b_final_prompt;
+
     unsigned char
-        uc_padding[5u];
+        uc_padding[3u];
 
 }; /* struct feed_handle */
 
@@ -640,6 +646,864 @@ feed_load(
 
 } /* feed_load() */
 
+/*
+
+Module: feed_screen_iterator
+
+Description:
+
+    Iterator for visible screen glyphs.
+
+*/
+struct feed_screen_iterator
+{
+    unsigned long int
+        i_cursor_address;
+
+    unsigned long int
+        ul_padding[1u];
+
+};
+
+static
+char
+feed_screen_iterator_init(
+    struct feed_handle * const
+        p_this,
+    struct  feed_screen_iterator * const
+        p_screen_iterator)
+{
+    char
+        b_result;
+
+    (void)(
+        p_this);
+
+    p_screen_iterator->i_cursor_address =
+        0ul;
+
+    b_result =
+        1;
+
+    return
+        b_result;
+
+}
+
+#if 0
+static
+void
+feed_screen_iterator_cleanup(
+    struct feed_handle * const
+        p_this,
+    struct  feed_screen_iterator * const
+        p_screen_iterator)
+{
+    (void)(
+        p_this);
+    (void)(
+        p_screen_iterator);
+
+}
+#endif
+
+#if 0
+static
+void
+feed_screen_iterator_home(
+    struct feed_handle * const
+        p_this,
+    struct  feed_screen_iterator * const
+        p_screen_iterator)
+{
+    (void)(
+        p_this);
+
+    p_screen_iterator->i_cursor_address =
+        0ul;
+
+}
+#endif
+
+#if 0
+static
+void
+feed_screen_iterator_end(
+    struct feed_handle * const
+        p_this,
+    struct  feed_screen_iterator * const
+        p_screen_iterator)
+{
+    p_screen_iterator->i_cursor_address =
+        (
+            (
+                (unsigned long int)(p_this->i_screen_width)
+                * (unsigned long int)(p_this->i_screen_height))
+            - 1ul);
+
+}
+#endif
+
+#if 0
+static
+char
+feed_screen_iterator_test_goto(
+    struct feed_handle * const
+        p_this,
+    struct  feed_screen_iterator * const
+        p_screen_iterator,
+    unsigned short int const
+        i_cursor_x,
+    unsigned short int const
+        i_cursor_y)
+{
+    char
+        b_result;
+
+    unsigned long int
+        i_cursor_address;
+
+    (void)(
+        p_screen_iterator);
+
+    i_cursor_address =
+        (unsigned long int)(
+            ((unsigned long int)(i_cursor_y) * (unsigned long int)(p_this->i_screen_width))
+            + (unsigned long int)(i_cursor_x));
+
+    if ((i_cursor_address + 1u) < (p_this->i_screen_width * p_this->i_screen_height))
+    {
+        b_result =
+            1;
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+}
+#endif
+
+#if 0
+static
+void
+feed_screen_iterator_goto(
+    struct feed_handle * const
+        p_this,
+    struct  feed_screen_iterator * const
+        p_screen_iterator,
+    unsigned short int const
+        i_cursor_x,
+    unsigned short int const
+        i_cursor_y)
+{
+    p_screen_iterator->i_cursor_address =
+        (unsigned long int)(
+            ((unsigned long int)(i_cursor_y) * (unsigned long int)(p_this->i_screen_width))
+            + (unsigned long int)(i_cursor_x));
+
+}
+#endif
+
+static
+char
+feed_screen_iterator_test_write(
+    struct feed_handle * const
+        p_this,
+    struct feed_screen_iterator * const
+        p_screen_iterator,
+    unsigned long int const
+        i_width)
+{
+    char
+        b_result;
+
+    if (
+        (p_screen_iterator->i_cursor_address + i_width) < (p_this->i_screen_width * p_this->i_screen_height))
+    {
+        b_result =
+            1;
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+}
+
+static
+void
+feed_screen_iterator_write(
+    struct feed_handle * const
+        p_this,
+    struct feed_screen_iterator * const
+        p_screen_iterator,
+    unsigned long int const
+        i_width)
+{
+    (void)(
+        p_this);
+
+    p_screen_iterator->i_cursor_address += i_width;
+
+}
+
+static
+unsigned short int
+feed_screen_iterator_get_cursor_x(
+    struct feed_handle * const
+        p_this,
+    struct feed_screen_iterator * const
+        p_screen_iterator)
+{
+    return
+        (unsigned short int)(
+            p_screen_iterator->i_cursor_address
+            % p_this->i_screen_width);
+
+}
+
+static
+unsigned short int
+feed_screen_iterator_get_cursor_y(
+    struct feed_handle * const
+        p_this,
+    struct feed_screen_iterator * const
+        p_screen_iterator)
+{
+    return
+        (unsigned short int)(
+            p_screen_iterator->i_cursor_address
+            / p_this->i_screen_width);
+
+}
+
+static
+char
+feed_screen_iterator_test_newline(
+    struct feed_handle * const
+        p_this,
+    struct feed_screen_iterator * const
+        p_screen_iterator)
+{
+    unsigned short int
+        i_cursor_x;
+
+    i_cursor_x =
+        feed_screen_iterator_get_cursor_x(
+            p_this,
+            p_screen_iterator);
+
+    return
+        feed_screen_iterator_test_write(
+            p_this,
+            p_screen_iterator,
+            (p_this->i_screen_width - i_cursor_x));
+
+}
+
+static
+void
+feed_screen_iterator_newline(
+    struct feed_handle * const
+        p_this,
+    struct feed_screen_iterator * const
+        p_screen_iterator)
+{
+    unsigned short int
+        i_cursor_x;
+
+    i_cursor_x =
+        feed_screen_iterator_get_cursor_x(
+            p_this,
+            p_screen_iterator);
+
+    feed_screen_iterator_write(
+        p_this,
+        p_screen_iterator,
+        (p_this->i_screen_width - i_cursor_x));
+
+}
+
+
+/*
+
+refresh engine
+
+Notes:
+
+    -   Coordinate system for page.  Specify a starting document line index
+        and an offset in number of wraps and number of columns.
+
+    -   If number of wraps exceeds actual number of wraps used for line, then
+        a new page coordinate is calculated.
+
+        i_page_offset_x = i_offset_x
+        i_page_offset_y = i_offset_y
+        i_page_line = i_document_y
+
+    -   Problem: what if nothing is visible in page?
+
+    -   Problem: automatic scroll on changes
+
+        Display has page_line+offset_y+offset_x -> final_line+offset_y+offset_x
+
+*/
+struct feed_main_iterator
+{
+    /* Pointer to documents line */
+    struct feed_line *
+        p_document_line;
+
+    /* Pointer to glyph object */
+    struct feed_glyph *
+        p_document_glyph;
+
+    /* Pointer to prompt line */
+    struct feed_line *
+        p_prompt_line;
+
+    /* Pointer to prompt glyph */
+    struct feed_glyph *
+        p_prompt_glyph;
+
+    /* Position in screen */
+    struct feed_screen_iterator
+        o_screen_iterator;
+
+    /* Position in document (x is valid if not in prompt) */
+    unsigned int
+        i_document_x;
+
+    unsigned int
+        i_document_y;
+
+    unsigned int
+        ui_padding[2u];
+
+    char
+        b_prompt;
+
+    unsigned char
+        uc_padding[7u];
+
+};
+
+static
+char
+feed_main_iterator_begin(
+    struct feed_handle * const
+        p_this,
+    struct feed_main_iterator * const
+        p_iterator)
+{
+    p_iterator->p_document_line =
+        feed_text_get_line(
+            p_this->p_text,
+            p_this->i_page_line_index);
+
+    if (p_iterator->p_document_line)
+    {
+        if (0 == p_this->i_page_line_index)
+        {
+            p_iterator->p_prompt_line =
+                feed_prompt_get1(
+                    p_this->p_prompt);
+        }
+        else
+        {
+            p_iterator->p_prompt_line =
+                feed_prompt_get2(
+                    p_this->p_prompt);
+        }
+    }
+    else
+    {
+        p_iterator->p_prompt_line =
+            NULL;
+    }
+
+    if (p_iterator->p_prompt_line)
+    {
+        if (p_this->b_page_prompt)
+        {
+            p_iterator->p_prompt_glyph =
+                feed_line_get_glyph(
+                    p_iterator->p_prompt_line,
+                    p_this->i_page_glyph_index);
+        }
+        else
+        {
+            p_iterator->p_prompt_glyph =
+                NULL;
+        }
+    }
+    else
+    {
+        p_iterator->p_prompt_glyph =
+            NULL;
+    }
+
+    if (!(p_iterator->p_prompt_glyph))
+    {
+        if (
+            p_iterator->p_document_line)
+        {
+            if (p_this->b_page_prompt)
+            {
+                p_iterator->p_document_glyph =
+                    feed_line_get_glyph(
+                        p_iterator->p_document_line,
+                        p_this->i_page_glyph_index);
+            }
+            else
+            {
+                p_iterator->p_document_glyph =
+                    NULL;
+            }
+        }
+        else
+        {
+            p_iterator->p_document_glyph =
+                NULL;
+        }
+    }
+
+    feed_screen_iterator_init(
+        p_this,
+        &(
+            p_iterator->o_screen_iterator));
+
+    p_iterator->i_document_y =
+        p_this->i_page_line_index;
+
+    p_iterator->i_document_x =
+        p_this->i_page_glyph_index;
+
+    p_iterator->b_prompt =
+        p_this->b_page_prompt;
+
+    return
+        1;
+
+}
+
+static
+char
+feed_main_iterator_test(
+    struct feed_handle * const
+        p_this,
+    struct feed_main_iterator * const
+        p_iterator)
+{
+    char
+        b_result;
+
+    if (p_iterator->p_prompt_glyph || p_iterator->p_document_glyph)
+    {
+        unsigned int i_glyph_width;
+
+        i_glyph_width =
+            feed_glyph_get_visible_width(
+                p_iterator->p_prompt_glyph
+                ? p_iterator->p_prompt_glyph
+                : p_iterator->p_document_glyph);
+
+        b_result =
+            feed_screen_iterator_test_write(
+                p_this,
+                &(
+                    p_iterator->o_screen_iterator),
+                i_glyph_width);
+    }
+    else if (p_iterator->p_document_line)
+    {
+        b_result =
+            feed_screen_iterator_test_newline(
+                p_this,
+                &(
+                    p_iterator->o_screen_iterator));
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+}
+
+static
+char
+feed_main_iterator_next(
+    struct feed_handle * const
+        p_this,
+    struct feed_main_iterator * const
+        p_iterator)
+{
+    char
+        b_result;
+
+    /* Advance screen position */
+    if (p_iterator->p_prompt_glyph || p_iterator->p_document_glyph)
+    {
+        unsigned int i_glyph_width;
+
+        i_glyph_width = feed_glyph_get_visible_width(p_iterator->p_prompt_glyph ? p_iterator->p_prompt_glyph : p_iterator->p_document_glyph);
+
+        feed_screen_iterator_write(
+            p_this,
+            &(
+                p_iterator->o_screen_iterator),
+            i_glyph_width);
+    }
+    else if (p_iterator->p_document_line)
+    {
+        /* Empty line, so do a newline */
+        feed_screen_iterator_newline(
+            p_this,
+            &(
+                p_iterator->o_screen_iterator));
+    }
+
+    /* Look for next glyph */
+    if (p_iterator->p_prompt_glyph)
+    {
+        p_iterator->i_document_x ++;
+
+        if (p_iterator->p_prompt_glyph->o_list.p_next != &(p_iterator->p_prompt_line->o_glyphs))
+        {
+            p_iterator->p_prompt_glyph =
+                (struct feed_glyph *)(
+                    p_iterator->p_prompt_glyph->o_list.p_next);
+        }
+        else
+        {
+            /* Next line in prompt? */
+
+            p_iterator->b_prompt = 0;
+
+            p_iterator->i_document_x = 0u;
+
+            p_iterator->p_prompt_glyph = NULL;
+
+            p_iterator->p_prompt_line = NULL;
+
+            if (
+                p_iterator->p_document_line)
+            {
+                p_iterator->p_document_glyph =
+                    feed_line_get_glyph(
+                        p_iterator->p_document_line,
+                        0u);
+            }
+            else
+            {
+                p_iterator->p_document_glyph =
+                    NULL;
+            }
+
+            if (!(p_iterator->p_document_glyph))
+            {
+                if (p_iterator->p_document_line)
+                {
+                    if (p_iterator->p_document_line->o_list.p_next != &(p_this->p_text->o_lines))
+                    {
+                    }
+                    else
+                    {
+                        p_iterator->p_document_line = NULL;
+                    }
+                }
+            }
+        }
+    }
+    else if (p_iterator->p_document_glyph)
+    {
+        p_iterator->i_document_x ++;
+
+        if (p_iterator->p_document_glyph->o_list.p_next != &(p_iterator->p_document_line->o_glyphs))
+        {
+            p_iterator->p_document_glyph =
+                (struct feed_glyph *)(
+                    p_iterator->p_document_glyph->o_list.p_next);
+        }
+        else
+        {
+            /* Next line in document */
+            p_iterator->p_document_glyph = NULL;
+
+            if (p_iterator->p_document_line)
+            {
+                if (p_iterator->p_document_line->o_list.p_next != &(p_this->p_text->o_lines))
+                {
+                }
+                else
+                {
+                    p_iterator->p_document_line = NULL;
+                }
+            }
+        }
+    }
+    else if (p_iterator->p_document_line)
+    {
+        /* Go to next line */
+        if (p_iterator->p_document_line->o_list.p_next != &(p_this->p_text->o_lines))
+        {
+            p_iterator->i_document_x = 0u;
+
+            p_iterator->i_document_y ++;
+
+            p_iterator->p_document_line =
+                (struct feed_line *)(
+                    p_iterator->p_document_line->o_list.p_next);
+
+            p_iterator->p_document_glyph =
+                feed_line_get_glyph(
+                    p_iterator->p_document_line,
+                    0u);
+
+            /* Switch to prompt mode */
+            p_iterator->b_prompt = 1;
+
+            p_iterator->p_prompt_line =
+                feed_prompt_get2(
+                    p_this->p_prompt);
+
+            if (p_iterator->p_prompt_line)
+            {
+                p_iterator->p_prompt_glyph =
+                    feed_line_get_glyph(
+                        p_iterator->p_prompt_line,
+                        0u);
+            }
+        }
+        else
+        {
+            /* End of file */
+            p_iterator->p_document_line = NULL;
+
+            p_iterator->p_document_glyph = NULL;
+        }
+    }
+    else
+    {
+        /* no more lines... */
+    }
+
+    b_result =
+        1;
+
+    return
+        b_result;
+
+}
+
+static
+void
+feed_main_refresh_job(
+    struct feed_handle * const
+        p_this,
+    char const
+        b_cursor_only)
+{
+    struct feed_main_iterator
+        o_iterator;
+
+    unsigned int
+        i_cursor_x;
+
+    unsigned int
+        i_cursor_y;
+
+    char
+        b_cursor;
+
+    i_cursor_x =
+        0;
+
+    i_cursor_y =
+        0;
+
+    b_cursor =
+        0;
+
+    if (!b_cursor_only)
+    {
+        if (
+            feed_tty_get_window_size(
+                p_this->p_tty,
+                &(
+                    p_this->i_screen_width),
+                &(
+                    p_this->i_screen_height),
+                0 /* no fallback */))
+        {
+            feed_screen_set_physical_size(
+                p_this->p_screen,
+                p_this->i_screen_width,
+                p_this->i_screen_height);
+        }
+
+        feed_screen_set_cursor_pos(
+            p_this->p_screen,
+            0u,
+            0u);
+    }
+
+    if (feed_main_iterator_begin(p_this, &(o_iterator)))
+    {
+        char
+            b_more;
+
+        b_more =
+            1;
+
+        while (
+            b_more)
+        {
+            /* Remember this line and glyph and offset */
+            p_this->i_final_line_index =
+                o_iterator.i_document_y;
+
+            p_this->i_final_glyph_index =
+                o_iterator.i_document_x;
+
+            p_this->b_final_prompt =
+                o_iterator.b_prompt;
+
+            /* Detect if cursor is visible */
+            if (
+                !(
+                    b_cursor)
+                && (
+                    p_this->i_cursor_line_index == o_iterator.i_document_y)
+                && (
+                    p_this->i_cursor_glyph_index == o_iterator.i_document_x)
+                && (
+                    !(o_iterator.b_prompt)))
+            {
+                i_cursor_x =
+                    feed_screen_iterator_get_cursor_x(
+                        p_this,
+                        &(
+                            o_iterator.o_screen_iterator));
+
+                i_cursor_y =
+                    feed_screen_iterator_get_cursor_y(
+                        p_this,
+                        &(
+                            o_iterator.o_screen_iterator));
+
+                b_cursor =
+                    1;
+            }
+
+            if (
+                feed_main_iterator_test(
+                    p_this,
+                    &(o_iterator)))
+            {
+                if (
+                    o_iterator.p_prompt_glyph || o_iterator.p_document_glyph)
+                {
+                    if (!b_cursor_only)
+                    {
+                        unsigned char
+                            a_visible[15u];
+
+                        unsigned char
+                            i_visible_length;
+
+                        i_visible_length =
+                            feed_glyph_render_visible(
+                                o_iterator.p_prompt_glyph
+                                ? o_iterator.p_prompt_glyph
+                                : o_iterator.p_document_glyph,
+                                a_visible);
+
+                        feed_screen_write(
+                            p_this->p_screen,
+                            a_visible,
+                            i_visible_length);
+                    }
+                }
+                else if (
+                    o_iterator.p_document_line)
+                {
+                    if (!b_cursor_only)
+                    {
+                        feed_screen_newline(
+                            p_this->p_screen);
+                    }
+                }
+                else
+                {
+                    b_more =
+                        0;
+                }
+
+                if (b_more)
+                {
+                    if (
+                        feed_main_iterator_next(
+                            p_this,
+                            &(
+                                o_iterator)))
+                    {
+                    }
+                    else
+                    {
+                        b_more =
+                            0;
+                    }
+                }
+            }
+            else
+            {
+                b_more =
+                    0;
+            }
+        }
+
+        if (!b_cursor_only)
+        {
+            feed_screen_get_cursor_pos(
+                p_this->p_screen,
+                &(
+                    p_this->i_final_cursor_x),
+                &(
+                    p_this->i_final_cursor_y));
+
+            feed_screen_clear_region(
+                p_this->p_screen);
+        }
+
+        if (b_cursor)
+        {
+            feed_screen_set_cursor_pos(
+                p_this->p_screen,
+                i_cursor_x,
+                i_cursor_y);
+        }
+
+        feed_tty_flush(
+            p_this->p_tty);
+    }
+}
+
+
+#if 0
 static
 void
 feed_main_refresh_job(
@@ -1006,6 +1870,7 @@ feed_main_refresh_job(
         p_this->p_tty);
 
 }
+#endif
 
 static
 void
@@ -1764,6 +2629,15 @@ feed_start(
 
                     p_this->i_cursor_line_index =
                         0u;
+
+                    p_this->i_page_line_index =
+                        0u;
+
+                    p_this->i_page_glyph_index =
+                        0u;
+
+                    p_this->b_page_prompt =
+                        1;
                 }
 
                 feed_main_refresh_text(
