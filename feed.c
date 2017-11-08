@@ -1428,14 +1428,8 @@ feed_main_event_callback(
 
                     if (p_this->i_cursor_line_index < p_this->i_page_line_index)
                     {
-                        if (p_this->i_page_line_index > p_this->i_screen_height)
-                        {
-                            p_this->i_page_line_index -= p_this->i_screen_height;
-                        }
-                        else
-                        {
-                            p_this->i_page_line_index = 0u;
-                        }
+                        /* Todo: find origin of previous page */
+                        p_this->i_page_line_index = p_this->i_cursor_line_index;
                     }
                     else
                     {
