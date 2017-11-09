@@ -1039,6 +1039,18 @@ feed_main_iterator_begin(
                 feed_line_get_glyph(
                     p_iterator->p_prompt_line,
                     p_this->i_page_glyph_index);
+
+            if (p_iterator->p_prompt_glyph)
+            {
+            }
+            else
+            {
+                p_this->i_page_glyph_index =
+                    0u;
+
+                p_this->b_page_prompt =
+                    0;
+            }
         }
         else
         {
@@ -1048,6 +1060,15 @@ feed_main_iterator_begin(
     }
     else
     {
+        if (p_this->b_page_prompt)
+        {
+            p_this->i_page_glyph_index =
+                0u;
+
+            p_this->b_page_prompt =
+                0;
+        }
+
         p_iterator->p_prompt_glyph =
             NULL;
     }
@@ -1296,6 +1317,18 @@ feed_main_iterator_next(
                     feed_line_get_glyph(
                         p_iterator->p_prompt_line,
                         0u);
+
+                if (p_iterator->p_prompt_glyph)
+                {
+                }
+                else
+                {
+                    p_iterator->b_prompt = 0;
+                }
+            }
+            else
+            {
+                p_iterator->b_prompt = 0;
             }
         }
         else
@@ -1305,6 +1338,8 @@ feed_main_iterator_next(
 
             p_iterator->i_document_y =
                 p_this->p_text->i_line_count;
+
+            p_iterator->b_prompt = 0;
 
             p_iterator->p_document_line = NULL;
 
