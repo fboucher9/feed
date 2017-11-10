@@ -1836,6 +1836,23 @@ feed_main_event_callback(
                     p_this->i_cursor_line_index ++;
 
                     p_this->i_cursor_glyph_index = 0u;
+
+                    /* Todo: find origin of previous page */
+                    if (p_this->i_cursor_line_index < p_this->i_final_line_index)
+                    {
+                        b_refresh_cursor = 1;
+
+                        b_refresh_text = 0;
+                    }
+                    else
+                    {
+                        if (p_this->i_final_line_index < (p_this->p_text->i_line_count - 1u))
+                        {
+                            p_this->i_page_line_index = p_this->i_final_line_index;
+                            p_this->i_page_glyph_index = p_this->i_final_glyph_index;
+                            p_this->b_page_prompt = p_this->b_final_prompt;
+                        }
+                    }
                 }
                 else
                 {
@@ -1844,14 +1861,18 @@ feed_main_event_callback(
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_PAGEUP) == p_event->i_code)
             {
+                p_this->i_cursor_line_index = 0;
+                p_this->i_cursor_glyph_index = 0;
                 p_this->i_page_line_index = 0;
                 p_this->i_page_glyph_index = 0;
                 p_this->b_page_prompt = 1;
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_PAGEDOWN) == p_event->i_code)
             {
-                if (p_this->i_final_line_index < p_this->p_text->i_line_count)
+                if (p_this->i_final_line_index < (p_this->p_text->i_line_count - 1u))
                 {
+                    p_this->i_cursor_line_index = p_this->i_final_line_index;
+                    p_this->i_cursor_glyph_index = p_this->i_final_glyph_index;
                     p_this->i_page_line_index = p_this->i_final_line_index;
                     p_this->i_page_glyph_index = p_this->i_final_glyph_index;
                     p_this->b_page_prompt = p_this->b_final_prompt;
