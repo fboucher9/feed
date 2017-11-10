@@ -1930,6 +1930,8 @@ feed_main_event_callback(
                 p_this->i_cursor_glyph_index =
                     0;
 
+                /* Adjust visible cursor position */
+
                 b_refresh_text = 0;
 
                 b_refresh_cursor = 1;
@@ -1952,10 +1954,14 @@ feed_main_event_callback(
                     p_this->i_cursor_glyph_index =
                         p_line->i_glyph_count;
 
+                    /* Adjust visible cursor position */
+
                     b_refresh_cursor = 1;
                 }
-
-                b_refresh_text = 0;
+                else
+                {
+                    b_refresh_text = 0;
+                }
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_LEFT) == p_event->i_code)
             {
@@ -1965,13 +1971,44 @@ feed_main_event_callback(
 
                     /* Adjust visible cursor position */
                     b_refresh_cursor = 1;
+
+                    b_refresh_text = 0;
                 }
                 else
                 {
                     /* Go to previous line */
-                }
+                    if (p_this->i_cursor_line_index)
+                    {
+                        struct feed_line *
+                            p_line;
 
-                b_refresh_text = 0;
+                        p_line =
+                            feed_text_get_line(
+                                p_text,
+                                p_this->i_cursor_line_index - 1);
+
+                        if (
+                            p_line)
+                        {
+                            p_this->i_cursor_line_index --;
+
+                            p_this->i_cursor_glyph_index =
+                                p_line->i_glyph_count;
+
+                            b_refresh_cursor = 1;
+
+                            b_refresh_text = 0;
+                        }
+                        else
+                        {
+                            b_refresh_text = 0;
+                        }
+                    }
+                    else
+                    {
+                        b_refresh_text = 0;
+                    }
+                }
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_RIGHT) == p_event->i_code)
             {
@@ -1989,13 +2026,41 @@ feed_main_event_callback(
                     if (p_this->i_cursor_glyph_index < p_line->i_glyph_count)
                     {
                         p_this->i_cursor_glyph_index ++;
+                    }
+                    else
+                    {
+                        if ((p_this->i_cursor_line_index + 1u) < p_text->i_line_count)
+                        {
+                            p_this->i_cursor_line_index ++;
 
-                        /* Adjust visible cursor position */
+                            p_this->i_cursor_glyph_index = 0u;
+                        }
+                    }
+
+                    /* Adjust visible cursor position */
+                    if ((p_this->i_cursor_line_index < p_this->i_final_line_index)
+                        || (
+                            (p_this->i_cursor_line_index == p_this->i_final_line_index)
+                            && (p_this->i_cursor_glyph_index < p_this->i_final_glyph_index)))
+                    {
                         b_refresh_cursor = 1;
+
+                        b_refresh_text = 0;
+                    }
+                    else
+                    {
+                        if (p_this->i_final_line_index <= (p_this->p_text->i_line_count - 1u))
+                        {
+                            p_this->i_page_line_index = p_this->i_final_line_index;
+                            p_this->i_page_glyph_index = p_this->i_final_glyph_index;
+                            p_this->b_page_prompt = p_this->b_final_prompt;
+                        }
                     }
                 }
-
-                b_refresh_text = 0;
+                else
+                {
+                    b_refresh_text = 0;
+                }
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_UP) == p_event->i_code)
             {
