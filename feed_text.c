@@ -277,6 +277,7 @@ feed_text_get_line(
 
 }
 
+static
 void
 feed_text_append_utf8_code(
     struct feed_text * const
@@ -438,167 +439,6 @@ feed_text_get_raw_buffer(
 }
 
 static
-void
-feed_text_set_callback(
-    void * const
-        p_context,
-    struct feed_utf8_code const * const
-        p_utf8_code)
-{
-    if (
-        p_context)
-    {
-        struct feed_text *
-            p_text;
-
-        p_text =
-            (struct feed_text *)(
-                p_context);
-
-        feed_text_append_utf8_code(
-            p_text,
-            p_utf8_code);
-    }
-
-} /* feed_prompt_set_callback() */
-
-char
-feed_text_set(
-    struct feed_text * const
-        p_text,
-    unsigned char const * const
-        p_data,
-    unsigned int const
-        i_data_length)
-{
-    char
-        b_result;
-
-    if (p_text)
-    {
-        /* Go to end of buffer */
-
-        if (
-            i_data_length)
-        {
-            unsigned int
-                i_data_iterator;
-
-            i_data_iterator =
-                0u;
-
-            b_result =
-                1;
-
-            while (
-                b_result
-                && (
-                    i_data_iterator
-                    < i_data_length))
-            {
-                if ('\n' == p_data[i_data_iterator])
-                {
-                    struct feed_line *
-                        p_line;
-
-                    p_line =
-                        feed_line_create(
-                            p_text->p_client);
-
-                    if (
-                        p_line)
-                    {
-                        feed_list_join(
-                            &(
-                                p_line->o_list),
-                            &(
-                                p_text->o_lines));
-
-                        p_text->i_line_count ++;
-
-                        i_data_iterator ++;
-                    }
-                    else
-                    {
-                        b_result =
-                            0;
-                    }
-                }
-                else
-                {
-                    int
-                        i_result;
-
-                    struct feed_utf8_parser
-                        o_utf8_parser;
-
-                    if (
-                        feed_utf8_parser_init(
-                            &(
-                                o_utf8_parser)))
-                    {
-                        struct feed_utf8_code
-                            o_utf8_code;
-
-                        i_result =
-                            feed_utf8_parser_write(
-                                &(
-                                    o_utf8_parser),
-                                p_data[i_data_iterator],
-                                &(
-                                    o_utf8_code));
-
-                        if (
-                            0
-                            <= i_result)
-                        {
-                            if (
-                                0
-                                < i_result)
-                            {
-                                feed_text_set_callback(
-                                    p_text,
-                                    &(
-                                        o_utf8_code));
-                            }
-
-                            i_data_iterator ++;
-                        }
-                        else
-                        {
-                            b_result =
-                                0;
-                        }
-
-                        feed_utf8_parser_cleanup(
-                            &(
-                                o_utf8_parser));
-                    }
-                    else
-                    {
-                        b_result =
-                            0;
-                    }
-                }
-            }
-        }
-        else
-        {
-            b_result =
-                1;
-        }
-    }
-    else
-    {
-        b_result =
-            0;
-    }
-
-    return
-        b_result;
-
-}
-
 struct feed_line *
 feed_text_append_line(
     struct feed_text * const
@@ -625,6 +465,141 @@ feed_text_append_line(
 
     return
         p_line;
+
+}
+
+static
+void
+feed_text_load_callback(
+    struct feed_text * const
+        p_text,
+    struct feed_utf8_code const * const
+        p_utf8_code)
+{
+    if ('\n' == p_utf8_code->a_raw[0u])
+    {
+        /* Notify currently accumulated lines */
+
+        /* Split current line */
+
+        /* Create a new line */
+        if (
+            feed_text_append_line(
+                p_text))
+        {
+        }
+    }
+    else
+    {
+        feed_text_append_utf8_code(
+            p_text,
+            p_utf8_code);
+    }
+
+}
+
+char
+feed_text_load(
+    struct feed_text * const
+        p_text,
+    unsigned char const * const
+        p_data,
+    unsigned long int const
+        i_data_length)
+{
+    char
+        b_result;
+
+    if (
+        p_text)
+    {
+        if (
+            i_data_length)
+        {
+            struct feed_utf8_parser
+                o_utf8_parser;
+
+            if (
+                feed_utf8_parser_init(
+                    &(
+                        o_utf8_parser)))
+            {
+                unsigned long int
+                    i_data_iterator;
+
+                i_data_iterator =
+                    0u;
+
+                b_result =
+                    1;
+
+                while (
+                    b_result
+                    && (
+                        i_data_iterator
+                        < i_data_length))
+                {
+                    int
+                        i_result;
+
+                    struct feed_utf8_code
+                        o_utf8_code;
+
+                    i_result =
+                        feed_utf8_parser_write(
+                            &(
+                                o_utf8_parser),
+                            p_data[i_data_iterator],
+                            &(
+                                o_utf8_code));
+
+                    if (
+                        0
+                        <= i_result)
+                    {
+                        if (
+                            0
+                            < i_result)
+                        {
+                            feed_text_load_callback(
+                                p_text,
+                                &(
+                                    o_utf8_code));
+                        }
+
+                        i_data_iterator ++;
+                    }
+                    else
+                    {
+                        b_result =
+                            0;
+                    }
+                }
+
+                feed_utf8_parser_cleanup(
+                    &(
+                        o_utf8_parser));
+            }
+            else
+            {
+                b_result =
+                    0;
+            }
+        }
+        else
+        {
+            b_result =
+                1;
+        }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
 
 }
 

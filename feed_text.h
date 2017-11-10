@@ -84,13 +84,6 @@ feed_text_write_utf8_code(
     unsigned int const
         i_glyph_index);
 
-void
-feed_text_append_utf8_code(
-    struct feed_text * const
-        p_text,
-    struct feed_utf8_code const * const
-        p_utf8_code);
-
 unsigned int
 feed_text_get_raw_length(
     struct feed_text * const
@@ -104,17 +97,12 @@ feed_text_get_raw_buffer(
         p_buf);
 
 char
-feed_text_set(
+feed_text_load(
     struct feed_text * const
         p_text,
     unsigned char const * const
         p_data,
-    unsigned int const
-        i_count);
-
-struct feed_line *
-feed_text_append_line(
-    struct feed_text * const
-        p_text);
+    unsigned long int const
+        i_data_length);
 
 /* end-of-file: feed_text.h */
