@@ -98,4 +98,13 @@ feed_line_get_raw_buffer(
     struct feed_buf * const
         p_buf);
 
+char
+feed_line_set(
+    struct feed_line * const
+        p_line,
+    unsigned char const * const
+        p_data,
+    unsigned long int const
+        i_data_length);
+
 /* end-of-file: feed_line.h */

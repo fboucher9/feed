@@ -134,33 +134,6 @@ feed_prompt_destroy(
     }
 }
 
-/* Create a char and add to prompt line */
-static
-void
-feed_prompt_set_callback(
-    void * const
-        p_context,
-    struct feed_utf8_code const * const
-        p_utf8_code)
-{
-    if (
-        p_context)
-    {
-        struct feed_line *
-            p_line;
-
-        p_line =
-            (struct feed_line *)(
-                p_context);
-
-        feed_line_write_utf8_code(
-            p_line,
-            p_utf8_code,
-            p_line->i_glyph_count);
-    }
-
-} /* feed_prompt_set_callback() */
-
 static
 char
 feed_prompt_set(
@@ -200,75 +173,11 @@ feed_prompt_set(
             if (
                 p_prompt->a_prompt[i_index])
             {
-                struct feed_utf8_parser
-                    o_utf8_parser;
+                feed_line_set(
+                    p_prompt->a_prompt[i_index],
+                    p_data,
+                    i_data_length);
 
-                if (
-                    feed_utf8_parser_init(
-                        &(
-                            o_utf8_parser)))
-                {
-                    unsigned int
-                        i_data_iterator;
-
-                    i_data_iterator =
-                        0u;
-
-                    b_result =
-                        1;
-
-                    while (
-                        b_result
-                        && (
-                            i_data_iterator
-                            < i_data_length))
-                    {
-                        int
-                            i_result;
-
-                        struct feed_utf8_code
-                            o_utf8_code;
-
-                        i_result =
-                            feed_utf8_parser_write(
-                                &(
-                                    o_utf8_parser),
-                                p_data[i_data_iterator],
-                                &(
-                                    o_utf8_code));
-
-                        if (
-                            0
-                            <= i_result)
-                        {
-                            if (
-                                0
-                                < i_result)
-                            {
-                                feed_prompt_set_callback(
-                                    p_prompt->a_prompt[i_index],
-                                    &(
-                                        o_utf8_code));
-                            }
-
-                            i_data_iterator ++;
-                        }
-                        else
-                        {
-                            b_result =
-                                0;
-                        }
-                    }
-
-                    feed_utf8_parser_cleanup(
-                        &(
-                            o_utf8_parser));
-                }
-                else
-                {
-                    b_result =
-                        0;
-                }
             }
             else
             {
