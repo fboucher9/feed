@@ -12,6 +12,8 @@ Description:
 
 #include "feed_os.h"
 
+#include "feed_cfg.h"
+
 #include "feed.h"
 
 #include "feed_client.h"
@@ -783,6 +785,34 @@ feed_screen_iterator_newline(
     }
 }
 
+static
+char
+feed_screen_iterator_test_clear(
+    struct feed_handle * const
+        p_this,
+    struct feed_screen_iterator * const
+        p_screen_iterator)
+{
+    return
+        feed_screen_iterator_test_write(
+            p_this,
+            p_screen_iterator,
+            1u);
+
+}
+
+static
+void
+feed_screen_iterator_clear(
+    struct feed_handle * const
+        p_this,
+    struct feed_screen_iterator * const
+        p_screen_iterator)
+{
+    feed_screen_iterator_end(
+        p_this,
+        p_screen_iterator);
+}
 
 /*
 
@@ -1039,7 +1069,10 @@ feed_main_iterator_test(
     else
     {
         b_result =
-            0;
+            feed_screen_iterator_test_clear(
+                p_this,
+                &(
+                    p_iterator->o_screen_iterator));
     }
 
     return
@@ -1075,6 +1108,13 @@ feed_main_iterator_write(
     {
         /* Empty line, so do a newline */
         feed_screen_iterator_newline(
+            p_this,
+            &(
+                p_iterator->o_screen_iterator));
+    }
+    else
+    {
+        feed_screen_iterator_clear(
             p_this,
             &(
                 p_iterator->o_screen_iterator));
@@ -1192,6 +1232,10 @@ feed_main_iterator_next(
     }
     else
     {
+        feed_main_iterator_get_glyph(
+            p_this,
+            p_iterator);
+
         b_result =
             0;
     }
@@ -1476,8 +1520,10 @@ feed_main_refresh_job(
                 }
                 else
                 {
-                    b_more =
-                        0;
+                    /* todo: call clear region */
+                    if (b_refresh_text)
+                    {
+                    }
                 }
 
                 if (b_more)
@@ -1495,6 +1541,13 @@ feed_main_refresh_job(
                     }
                     else
                     {
+#if defined(FEED_CFG_DEBUG)
+                        printf("next_false (%u,%c%u) ",
+                            o_iterator.i_line_index,
+                            o_iterator.b_prompt ? 'P' : 'T',
+                            o_iterator.i_glyph_index);
+#endif /* #if defined(FEED_CFG_DEBUG) */
+
                         b_more =
                             0;
                     }
@@ -1502,34 +1555,26 @@ feed_main_refresh_job(
             }
             else
             {
+#if defined(FEED_CFG_DEBUG)
+                printf("test_false (%u,%c%u) ",
+                    o_iterator.i_line_index,
+                    o_iterator.b_prompt ? 'P' : 'T',
+                    o_iterator.i_glyph_index);
+#endif /* #if defined(FEED_CFG_DEBUG) */
+
                 b_more =
                     0;
             }
         }
 
-        /* Remember this line and glyph and offset */
-        if (o_iterator.p_document_line)
-        {
-            p_this->i_final_line_index =
-                o_iterator.i_line_index;
+        p_this->i_final_line_index =
+            o_iterator.i_line_index;
 
-            p_this->i_final_glyph_index =
-                o_iterator.i_glyph_index;
+        p_this->i_final_glyph_index =
+            o_iterator.i_glyph_index;
 
-            p_this->b_final_prompt =
-                o_iterator.b_prompt;
-        }
-        else
-        {
-            p_this->i_final_line_index =
-                p_this->p_text->i_line_count;
-
-            p_this->i_final_glyph_index =
-                0u;
-
-            p_this->b_final_prompt =
-                0;
-        }
+        p_this->b_final_prompt =
+            o_iterator.b_prompt;
 
         if (b_refresh_text)
         {
@@ -1543,6 +1588,23 @@ feed_main_refresh_job(
             feed_screen_clear_region(
                 p_this->p_screen);
         }
+
+#if defined(FEED_CFG_DEBUG)
+        printf("final:%u/%u,%c%u cur:%u,%u page:%u,%c%u last:%u/%u,%u/%u\r\n",
+            p_this->i_final_line_index,
+            p_this->p_text->i_line_count,
+            (p_this->b_final_prompt ? 'P' : 'T'),
+            p_this->i_final_glyph_index,
+            p_this->i_cursor_line_index,
+            p_this->i_cursor_glyph_index,
+            p_this->i_page_line_index,
+            (p_this->b_page_prompt ? 'P' : 'T'),
+            p_this->i_page_glyph_index,
+            p_this->i_final_cursor_y,
+            p_this->i_screen_height,
+            p_this->i_final_cursor_x,
+            p_this->i_screen_width);
+#endif /* #if defined(FEED_CFG_DEBUG) */
 
         if (b_refresh_text || b_refresh_cursor)
         {
