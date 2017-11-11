@@ -42,6 +42,20 @@ Description:
 
 #include "feed_buf.h"
 
+enum feed_main_state
+{
+    feed_main_state_prompt = 1,
+
+    feed_main_state_text,
+
+    feed_main_state_eol,
+
+    feed_main_state_eof,
+
+    feed_main_state_null
+
+};
+
 struct feed_handle
 {
     /* -- */
@@ -130,6 +144,17 @@ struct feed_handle
 
     /* -- */
 
+    enum feed_main_state
+        e_final_state;
+
+    enum feed_main_state
+        e_page_state;
+
+    unsigned int
+        ui_padding[2u];
+
+    /* -- */
+
     char
         b_started;
 
@@ -139,14 +164,8 @@ struct feed_handle
     char
         b_cursor_visible;
 
-    char
-        b_page_prompt;
-
-    char
-        b_final_prompt;
-
     unsigned char
-        uc_padding[3u];
+        uc_padding[5u];
 
 }; /* struct feed_handle */
 
@@ -847,15 +866,6 @@ Notes:
             eof
 
 */
-enum feed_main_state
-{
-    feed_main_state_prompt = 1,
-    feed_main_state_text,
-    feed_main_state_eol,
-    feed_main_state_eof,
-    feed_main_state_null
-};
-
 struct feed_main_iterator
 {
     /* Pointer to documents line */
@@ -885,14 +895,11 @@ struct feed_main_iterator
     unsigned int
         i_line_index;
 
+    enum feed_main_state
+        e_state;
+
     unsigned int
-        ui_padding[2u];
-
-    char
-        b_prompt;
-
-    unsigned char
-        uc_padding[7u];
+        ui_padding[1u];
 
 };
 
@@ -906,7 +913,7 @@ feed_main_iterator_get_glyph(
 {
     if (p_iterator->p_document_line)
     {
-        if (p_iterator->b_prompt)
+        if (feed_main_state_prompt == p_iterator->e_state)
         {
             if (0 == p_iterator->i_line_index)
             {
@@ -923,66 +930,80 @@ feed_main_iterator_get_glyph(
 
             if (p_iterator->p_prompt_line)
             {
-                if (p_iterator->b_prompt)
-                {
-                    p_iterator->p_prompt_glyph =
-                        feed_line_get_glyph(
-                            p_iterator->p_prompt_line,
-                            p_iterator->i_glyph_index);
-                }
-                else
-                {
-                    p_iterator->p_prompt_glyph =
-                        NULL;
-                }
+                p_iterator->p_prompt_glyph =
+                    feed_line_get_glyph(
+                        p_iterator->p_prompt_line,
+                        p_iterator->i_glyph_index);
             }
             else
             {
                 p_iterator->p_prompt_glyph =
                     NULL;
             }
-        }
-        else
-        {
-            p_iterator->p_prompt_glyph =
-                NULL;
-        }
 
-        if (p_iterator->p_prompt_glyph)
-        {
-        }
-        else
-        {
-            if (p_iterator->b_prompt)
+            if (p_iterator->p_prompt_glyph)
+            {
+            }
+            else
             {
                 p_iterator->i_glyph_index =
                     0u;
 
-                p_iterator->b_prompt =
-                    0;
-            }
+                p_iterator->e_state =
+                    feed_main_state_text;
 
-            p_iterator->p_document_glyph =
-                feed_line_get_glyph(
-                    p_iterator->p_document_line,
-                    p_iterator->i_glyph_index);
+            }
+        }
+
+        if (feed_main_state_text == p_iterator->e_state)
+        {
+            if (p_iterator->p_document_line)
+            {
+                p_iterator->p_document_glyph =
+                    feed_line_get_glyph(
+                        p_iterator->p_document_line,
+                        p_iterator->i_glyph_index);
+            }
+            else
+            {
+                p_iterator->p_document_glyph =
+                    NULL;
+            }
 
             if (p_iterator->p_document_glyph)
             {
             }
             else
             {
-                if (p_iterator->p_document_line)
+                p_iterator->e_state = feed_main_state_eol;
+            }
+        }
+
+        if (feed_main_state_eol == p_iterator->e_state)
+        {
+            if (p_iterator->p_document_line)
+            {
+                if (p_iterator->p_document_line->o_list.p_next != &(p_this->p_text->o_lines))
                 {
-                    if (p_iterator->p_document_line->o_list.p_next != &(p_this->p_text->o_lines))
-                    {
-                    }
-                    else
-                    {
-                        p_iterator->p_document_line = NULL;
-                    }
+                }
+                else
+                {
+                    p_iterator->p_document_line = NULL;
+
+                    p_iterator->e_state = feed_main_state_eof;
                 }
             }
+            else
+            {
+                p_iterator->e_state = feed_main_state_eof;
+            }
+        }
+
+        if (feed_main_state_eof == p_iterator->e_state)
+        {
+        }
+        else
+        {
         }
     }
     else
@@ -993,9 +1014,6 @@ feed_main_iterator_get_glyph(
         p_iterator->i_glyph_index =
             0u;
 
-        p_iterator->b_prompt =
-            0;
-
         p_iterator->p_prompt_line =
             NULL;
 
@@ -1004,6 +1022,9 @@ feed_main_iterator_get_glyph(
 
         p_iterator->p_document_glyph =
             NULL;
+
+        p_iterator->e_state =
+            feed_main_state_null;
     }
 }
 
@@ -1018,8 +1039,8 @@ feed_main_iterator_begin(
         i_page_line_index,
     unsigned int const
         i_page_glyph_index,
-    char const
-        b_page_prompt)
+    enum feed_main_state const
+        e_page_state)
 {
     p_iterator->i_line_index =
         i_page_line_index;
@@ -1027,8 +1048,22 @@ feed_main_iterator_begin(
     p_iterator->i_glyph_index =
         i_page_glyph_index;
 
-    p_iterator->b_prompt =
-        b_page_prompt;
+    if (feed_main_state_prompt == e_page_state)
+    {
+        p_iterator->e_state =
+            feed_main_state_prompt;
+    }
+    else
+    {
+        p_iterator->e_state =
+            feed_main_state_text;
+    }
+
+    p_iterator->p_prompt_glyph =
+        NULL;
+
+    p_iterator->p_document_glyph =
+        NULL;
 
     p_iterator->p_document_line =
         feed_text_get_line(
@@ -1162,7 +1197,7 @@ feed_main_iterator_next(
     if (p_iterator->p_document_line)
     {
         /* Look for next glyph */
-        if (p_iterator->b_prompt)
+        if (p_iterator->p_prompt_glyph)
         {
             p_iterator->i_glyph_index ++;
 
@@ -1175,10 +1210,11 @@ feed_main_iterator_next(
             else
             {
                 /* Next line in prompt? */
-
-                p_iterator->b_prompt = 0;
+                p_iterator->p_prompt_glyph = NULL;
 
                 p_iterator->i_glyph_index = 0u;
+
+                p_iterator->e_state = feed_main_state_text;
 
                 feed_main_iterator_get_glyph(
                     p_this,
@@ -1200,16 +1236,11 @@ feed_main_iterator_next(
                 /* Next line in document */
                 p_iterator->p_document_glyph = NULL;
 
-                if (p_iterator->p_document_line)
-                {
-                    if (p_iterator->p_document_line->o_list.p_next != &(p_this->p_text->o_lines))
-                    {
-                    }
-                    else
-                    {
-                        p_iterator->p_document_line = NULL;
-                    }
-                }
+                p_iterator->e_state = feed_main_state_eol;
+
+                feed_main_iterator_get_glyph(
+                    p_this,
+                    p_iterator);
             }
         }
         else if (p_iterator->p_document_line)
@@ -1226,7 +1257,7 @@ feed_main_iterator_next(
                         p_iterator->p_document_line->o_list.p_next);
 
                 /* Switch to prompt mode */
-                p_iterator->b_prompt = 1;
+                p_iterator->e_state = feed_main_state_prompt;
 
                 feed_main_iterator_get_glyph(
                     p_this,
@@ -1236,6 +1267,8 @@ feed_main_iterator_next(
             {
                 /* End of file */
                 p_iterator->p_document_line = NULL;
+
+                p_iterator->e_state = feed_main_state_eof;
 
                 feed_main_iterator_get_glyph(
                     p_this,
@@ -1295,7 +1328,7 @@ feed_main_look_down(
                 &(o_iterator),
                 p_this->i_cursor_line_index,
                 p_this->i_cursor_glyph_index,
-                0))
+                feed_main_state_text))
         {
             char
                 b_more;
@@ -1319,7 +1352,7 @@ feed_main_look_down(
                 if (
                     i_cursor_offset >= p_this->i_screen_width)
                 {
-                    if (o_iterator.b_prompt)
+                    if (o_iterator.e_state == feed_main_state_prompt)
                     {
                         p_this->i_cursor_line_index =
                             o_iterator.i_line_index;
@@ -1334,6 +1367,34 @@ feed_main_look_down(
 
                         p_this->i_cursor_line_index =
                             o_iterator.i_line_index;
+                    }
+
+                    b_found =
+                        1;
+                }
+                else if (
+                    (o_iterator.i_line_index > p_this->i_cursor_line_index)
+                    && ((o_iterator.e_state == feed_main_state_eol)
+                        || (o_iterator.e_state == feed_main_state_eof)))
+                {
+                    p_this->i_cursor_glyph_index =
+                        o_iterator.i_glyph_index;
+
+                    p_this->i_cursor_line_index =
+                        o_iterator.i_line_index;
+
+                    b_found =
+                        1;
+                }
+                else if (
+                    o_iterator.i_line_index > (p_this->i_cursor_line_index + 1u))
+                {
+                    if ((p_this->i_cursor_line_index + 1u) < p_this->p_text->i_line_count)
+                    {
+                        p_this->i_cursor_line_index ++;
+
+                        p_this->i_cursor_glyph_index =
+                            0u;
                     }
 
                     b_found =
@@ -1425,7 +1486,7 @@ feed_main_refresh_job(
             &(o_iterator),
             p_this->i_page_line_index,
             p_this->i_page_glyph_index,
-            p_this->b_page_prompt))
+            p_this->e_page_state))
     {
         char
             b_more;
@@ -1445,7 +1506,7 @@ feed_main_refresh_job(
                 && (
                     p_this->i_cursor_glyph_index == o_iterator.i_glyph_index)
                 && (
-                    !(o_iterator.b_prompt)))
+                    (o_iterator.e_state != feed_main_state_prompt)))
             {
                 p_this->i_cursor_visible_x =
                     feed_screen_iterator_get_cursor_x(
@@ -1529,7 +1590,7 @@ feed_main_refresh_job(
 #if defined(FEED_CFG_DEBUG)
                         printf("next_false (%u,%c%u) ",
                             o_iterator.i_line_index,
-                            o_iterator.b_prompt ? 'P' : 'T',
+                            o_iterator.e_state == feed_main_state_prompt ? 'P' : 'T',
                             o_iterator.i_glyph_index);
 #endif /* #if defined(FEED_CFG_DEBUG) */
 
@@ -1543,7 +1604,7 @@ feed_main_refresh_job(
 #if defined(FEED_CFG_DEBUG)
                 printf("test_false (%u,%c%u) ",
                     o_iterator.i_line_index,
-                    o_iterator.b_prompt ? 'P' : 'T',
+                    o_iterator.e_state == feed_main_state_prompt ? 'P' : 'T',
                     o_iterator.i_glyph_index);
 #endif /* #if defined(FEED_CFG_DEBUG) */
 
@@ -1558,8 +1619,8 @@ feed_main_refresh_job(
         p_this->i_final_glyph_index =
             o_iterator.i_glyph_index;
 
-        p_this->b_final_prompt =
-            o_iterator.b_prompt;
+        p_this->e_final_state =
+            o_iterator.e_state;
 
         if (b_refresh_text)
         {
@@ -1572,16 +1633,16 @@ feed_main_refresh_job(
         }
 
 #if defined(FEED_CFG_DEBUG)
-        printf("final:%u/%u,%c%u cur:%u,%u page:%u,%c%u last:%u/%u,%u/%u\r\n",
+        printf("final:%u/%u,%u(%d) cur:%u,%u page:%u,%u(%d) last:%u/%u,%u/%u\r\n",
             p_this->i_final_line_index,
             p_this->p_text->i_line_count,
-            (p_this->b_final_prompt ? 'P' : 'T'),
             p_this->i_final_glyph_index,
+            p_this->e_final_state,
             p_this->i_cursor_line_index,
             p_this->i_cursor_glyph_index,
             p_this->i_page_line_index,
-            (p_this->b_page_prompt ? 'P' : 'T'),
             p_this->i_page_glyph_index,
+            p_this->e_page_state,
             p_this->i_final_cursor_y,
             p_this->i_screen_height,
             p_this->i_final_cursor_x,
@@ -1727,11 +1788,11 @@ feed_main_event_callback(
         }
         else
         {
-            if (p_this->i_final_line_index <= (p_this->p_text->i_line_count - 1u))
+            if (p_this->e_final_state != feed_main_state_null)
             {
                 p_this->i_page_line_index = p_this->i_final_line_index;
                 p_this->i_page_glyph_index = p_this->i_final_glyph_index;
-                p_this->b_page_prompt = p_this->b_final_prompt;
+                p_this->e_page_state = p_this->e_final_state;
             }
         }
 
@@ -2093,11 +2154,11 @@ feed_main_event_callback(
                     }
                     else
                     {
-                        if (p_this->i_final_line_index <= (p_this->p_text->i_line_count - 1u))
+                        if (p_this->e_final_state != feed_main_state_null)
                         {
                             p_this->i_page_line_index = p_this->i_final_line_index;
                             p_this->i_page_glyph_index = p_this->i_final_glyph_index;
-                            p_this->b_page_prompt = p_this->b_final_prompt;
+                            p_this->e_page_state = p_this->e_final_state;
                         }
                     }
                 }
@@ -2140,11 +2201,11 @@ feed_main_event_callback(
                     }
                     else
                     {
-                        if (p_this->i_final_line_index <= (p_this->p_text->i_line_count - 1u))
+                        if (p_this->e_final_state != feed_main_state_null)
                         {
                             p_this->i_page_line_index = p_this->i_final_line_index;
                             p_this->i_page_glyph_index = p_this->i_final_glyph_index;
-                            p_this->b_page_prompt = p_this->b_final_prompt;
+                            p_this->e_page_state = p_this->e_final_state;
                         }
                     }
                 }
@@ -2155,17 +2216,17 @@ feed_main_event_callback(
                 p_this->i_cursor_glyph_index = 0;
                 p_this->i_page_line_index = 0;
                 p_this->i_page_glyph_index = 0;
-                p_this->b_page_prompt = 1;
+                p_this->e_page_state = feed_main_state_prompt;
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_PAGEDOWN) == p_event->i_code)
             {
-                if (p_this->i_final_line_index <= (p_this->p_text->i_line_count - 1u))
+                if (p_this->e_final_state != feed_main_state_null)
                 {
                     p_this->i_cursor_line_index = p_this->i_final_line_index;
                     p_this->i_cursor_glyph_index = p_this->i_final_glyph_index;
                     p_this->i_page_line_index = p_this->i_final_line_index;
                     p_this->i_page_glyph_index = p_this->i_final_glyph_index;
-                    p_this->b_page_prompt = p_this->b_final_prompt;
+                    p_this->e_page_state = p_this->e_final_state;
                 }
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
@@ -2266,11 +2327,11 @@ feed_main_event_callback(
                         }
                         else
                         {
-                            if (p_this->i_final_line_index <= (p_this->p_text->i_line_count - 1u))
+                            if (p_this->e_final_state != feed_main_state_null)
                             {
                                 p_this->i_page_line_index = p_this->i_final_line_index;
                                 p_this->i_page_glyph_index = p_this->i_final_glyph_index;
-                                p_this->b_page_prompt = p_this->b_final_prompt;
+                                p_this->e_page_state = p_this->e_final_state;
                             }
                         }
                     }
@@ -2309,11 +2370,11 @@ feed_main_event_callback(
                 }
                 else
                 {
-                    if (p_this->i_final_line_index <= (p_this->p_text->i_line_count - 1u))
+                    if (p_this->e_final_state != feed_main_state_null)
                     {
                         p_this->i_page_line_index = p_this->i_final_line_index;
                         p_this->i_page_glyph_index = p_this->i_final_glyph_index;
-                        p_this->b_page_prompt = p_this->b_final_prompt;
+                        p_this->e_page_state = p_this->e_final_state;
                     }
                 }
             }
@@ -2447,8 +2508,8 @@ feed_start(
                     p_this->i_page_glyph_index =
                         0u;
 
-                    p_this->b_page_prompt =
-                        1;
+                    p_this->e_page_state =
+                        feed_main_state_prompt;
                 }
 
                 feed_main_refresh_text(
