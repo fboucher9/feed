@@ -557,7 +557,6 @@ feed_screen_iterator_cleanup(
 }
 #endif
 
-#if 0
 static
 void
 feed_screen_iterator_home(
@@ -573,7 +572,6 @@ feed_screen_iterator_home(
         0ul;
 
 }
-#endif
 
 static
 void
@@ -1255,6 +1253,9 @@ feed_main_look_down(
         o_iterator;
 
     unsigned long int
+        i_cursor_offset;
+
+    unsigned long int
         i_cursor_address;
 
     char
@@ -1262,6 +1263,9 @@ feed_main_look_down(
 
     char
         b_found;
+
+    i_cursor_offset =
+        0ul;
 
     i_cursor_address =
         0ul;
@@ -1276,8 +1280,8 @@ feed_main_look_down(
         feed_main_iterator_begin(
             p_this,
             &(o_iterator),
-            p_this->i_cursor_line_index,
-            p_this->i_cursor_glyph_index,
+            p_this->i_page_line_index,
+            p_this->i_page_glyph_index,
             0))
     {
         char
@@ -1311,7 +1315,7 @@ feed_main_look_down(
             if (
                 b_cursor
                 && (
-                    o_iterator.o_screen_iterator.i_cursor_address
+                    o_iterator.o_screen_iterator.i_cursor_address + i_cursor_offset
                     >= (i_cursor_address + p_this->i_screen_width)))
             {
                 if (o_iterator.b_prompt)
@@ -1372,8 +1376,18 @@ feed_main_look_down(
                 }
                 else
                 {
-                    b_more =
-                        0;
+                    feed_screen_iterator_home(
+                        p_this,
+                        &(
+                            o_iterator.o_screen_iterator));
+
+                    i_cursor_offset +=
+                        (
+                            (
+                                (unsigned long int)(
+                                    p_this->i_screen_width)
+                                * (unsigned long int)(
+                                    p_this->i_screen_height)));
                 }
             }
         }
