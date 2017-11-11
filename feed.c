@@ -2169,10 +2169,7 @@ feed_main_event_callback(
             p_this);
 
         /* Detect that cursor is visible? */
-        if ((p_this->i_cursor_line_index < p_this->i_final_line_index)
-            || (
-                (p_this->i_cursor_line_index == p_this->i_final_line_index)
-                && (p_this->i_cursor_glyph_index < p_this->i_final_glyph_index)))
+        if (p_this->b_cursor_visible)
         {
         }
         else
@@ -2449,8 +2446,25 @@ feed_main_event_callback(
                         p_line->i_glyph_count;
 
                     /* Adjust visible cursor position */
+                    feed_main_refresh_info(
+                        p_this);
 
-                    b_refresh_cursor = 1;
+                    /* Adjust visible cursor position */
+                    if (p_this->b_cursor_visible)
+                    {
+                        b_refresh_cursor = 1;
+
+                        b_refresh_text = 0;
+                    }
+                    else
+                    {
+                        if (p_this->e_final_state != feed_main_state_null)
+                        {
+                            p_this->i_page_line_index = p_this->i_final_line_index;
+                            p_this->i_page_glyph_index = p_this->i_final_glyph_index;
+                            p_this->e_page_state = p_this->e_final_state;
+                        }
+                    }
                 }
                 else
                 {
@@ -2532,10 +2546,7 @@ feed_main_event_callback(
                     }
 
                     /* Adjust visible cursor position */
-                    if ((p_this->i_cursor_line_index < p_this->i_final_line_index)
-                        || (
-                            (p_this->i_cursor_line_index == p_this->i_final_line_index)
-                            && (p_this->i_cursor_glyph_index < p_this->i_final_glyph_index)))
+                    if (p_this->b_cursor_visible)
                     {
                         b_refresh_cursor = 1;
 
@@ -2591,10 +2602,7 @@ feed_main_event_callback(
                 if (feed_main_look_down(p_this))
                 {
                     /* Detect that cursor is visible? */
-                    if ((p_this->i_cursor_line_index < p_this->i_final_line_index)
-                        || (
-                            (p_this->i_cursor_line_index == p_this->i_final_line_index)
-                            && (p_this->i_cursor_glyph_index < p_this->i_final_glyph_index)))
+                    if (p_this->b_cursor_visible)
                     {
                         b_refresh_cursor = 1;
 
@@ -2726,10 +2734,7 @@ feed_main_event_callback(
                             p_this);
 
                         /* Detect that cursor is visible? */
-                        if ((p_this->i_cursor_line_index < p_this->i_final_line_index)
-                            || (
-                                (p_this->i_cursor_line_index == p_this->i_final_line_index)
-                                && (p_this->i_cursor_glyph_index < p_this->i_final_glyph_index)))
+                        if (p_this->b_cursor_visible)
                         {
                         }
                         else
@@ -2769,10 +2774,7 @@ feed_main_event_callback(
                     p_this);
 
                 /* Detect that cursor is visible? */
-                if ((p_this->i_cursor_line_index < p_this->i_final_line_index)
-                    || (
-                        (p_this->i_cursor_line_index == p_this->i_final_line_index)
-                        && (p_this->i_cursor_glyph_index < p_this->i_final_glyph_index)))
+                if (p_this->b_cursor_visible)
                 {
                 }
                 else
