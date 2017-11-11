@@ -42,19 +42,47 @@ Description:
 
 #include "feed_buf.h"
 
+/*
+
+Enumeration: feed_main_state
+
+Description:
+
+    States used by feed_main_iterator state machine.
+
+Comments:
+
+    Each line is composed of the following parts:
+
+        [prompt] [text] [eol | eof]
+
+    The null state is after a eof.
+
+*/
 enum feed_main_state
 {
+    /* Display of a prompt character, if the prompt is empty then the
+    state machine will automatically switch to the text state */
     feed_main_state_prompt = 1,
 
+    /* Display of a text character, if the text is empty then the state
+    machine will automatically switch to the eol state */
     feed_main_state_text,
 
+    /* Display an end-of-line.  If this is the last line of the text then
+    the state machine will automatically switch to the eof state */
     feed_main_state_eol,
 
+    /* Display an end-of-file.  The state machine should remain in this state
+    until forced to go to next state, in that case it will switch to null
+    state. */
     feed_main_state_eof,
 
+    /* After the end-of-file.  This is used to detect that the end of the file
+    is within the current page. */
     feed_main_state_null
 
-};
+}; /* enum feed_main_state */
 
 struct feed_handle
 {
@@ -1436,6 +1464,367 @@ feed_main_look_down(
 }
 
 static
+char
+feed_main_look_up(
+    struct feed_handle * const
+        p_this)
+{
+    struct feed_main_iterator
+        o_iterator;
+
+    char
+        b_found;
+
+    b_found =
+        0;
+
+    if (
+        p_this->b_cursor_visible
+        && p_this->i_cursor_visible_y)
+    {
+        unsigned long int
+            i_cursor_address;
+
+        i_cursor_address =
+            ((p_this->i_cursor_visible_y - 1u) * p_this->i_screen_width)
+            + p_this->i_cursor_visible_x;
+
+        if (
+            feed_main_iterator_begin(
+                p_this,
+                &(o_iterator),
+                p_this->i_page_line_index,
+                p_this->i_page_glyph_index,
+                p_this->e_page_state))
+        {
+            char
+                b_more;
+
+            b_more =
+                1;
+
+            while (
+                b_more
+                && (!b_found))
+            {
+                if (
+                    o_iterator.o_screen_iterator.i_cursor_address >= i_cursor_address)
+                {
+                    if (o_iterator.e_state == feed_main_state_prompt)
+                    {
+                        p_this->i_cursor_line_index =
+                            o_iterator.i_line_index;
+
+                        p_this->i_cursor_glyph_index =
+                            0u;
+                    }
+                    else
+                    {
+                        p_this->i_cursor_glyph_index =
+                            o_iterator.i_glyph_index;
+
+                        p_this->i_cursor_line_index =
+                            o_iterator.i_line_index;
+                    }
+
+                    b_found =
+                        1;
+                }
+                else
+                {
+                    if (
+                        feed_main_iterator_test(
+                            p_this,
+                            &(o_iterator)))
+                    {
+                        feed_main_iterator_write(
+                            p_this,
+                            &(o_iterator));
+
+                        if (
+                            (o_iterator.o_screen_iterator.i_cursor_address > i_cursor_address)
+                            && ((o_iterator.e_state == feed_main_state_eol)
+                                || (o_iterator.e_state == feed_main_state_eof)))
+                        {
+                            p_this->i_cursor_glyph_index =
+                                o_iterator.i_glyph_index;
+
+                            p_this->i_cursor_line_index =
+                                o_iterator.i_line_index;
+
+                            b_found =
+                                1;
+                        }
+                        else
+                        {
+                            b_more =
+                                feed_main_iterator_next(
+                                    p_this,
+                                    &(
+                                        o_iterator));
+                        }
+                    }
+                    else
+                    {
+                        b_more =
+                            0;
+                    }
+                }
+            }
+        }
+    }
+
+    return b_found;
+}
+
+static
+char
+feed_main_look_pageup(
+    struct feed_handle * const
+        p_this)
+{
+    struct feed_main_iterator
+        o_iterator;
+
+    unsigned int
+        i_found_cursor_line_index;
+
+    unsigned int
+        i_found_cursor_glyph_index;
+
+    unsigned int
+        i_this_page_line_index;
+
+    unsigned int
+        i_this_page_glyph_index;
+
+    enum feed_main_state
+        e_this_page_state;
+
+    unsigned int
+        i_prev_page_line_index;
+
+    unsigned int
+        i_prev_page_glyph_index;
+
+    enum feed_main_state
+        e_prev_page_state;
+
+    char
+        b_found;
+
+    b_found =
+        0;
+
+    (void)(
+        i_found_cursor_line_index);
+    (void)(
+        i_found_cursor_glyph_index);
+
+    if (
+        p_this->b_cursor_visible)
+    {
+        unsigned long int
+            i_cursor_address;
+
+        /* get x and y of cursor */
+        i_cursor_address =
+            (p_this->i_cursor_visible_y * p_this->i_screen_width)
+            + p_this->i_cursor_visible_x;
+
+        /* how to calculate address of page? */
+
+        if (
+            feed_main_iterator_begin(
+                p_this,
+                &(o_iterator),
+                0u,
+                0u,
+                feed_main_state_prompt))
+        {
+            char
+                b_found_cursor_valid;
+
+            char
+                b_more;
+
+            char
+                b_found_in_page;
+
+            b_more =
+                1;
+
+            b_found_in_page =
+                0;
+
+            b_found_cursor_valid =
+                0;
+
+            i_prev_page_line_index =
+            i_this_page_line_index =
+                o_iterator.i_line_index;
+
+            i_prev_page_glyph_index =
+            i_this_page_glyph_index =
+                o_iterator.i_glyph_index;
+
+            e_prev_page_state =
+            e_this_page_state =
+                o_iterator.e_state;
+
+            while (
+                b_more
+                && (!b_found))
+            {
+                if (
+                    feed_main_iterator_test(
+                        p_this,
+                        &(o_iterator)))
+                {
+                    /* Detect if cursor is visible */
+                    if (
+                        (
+                            p_this->i_cursor_line_index == o_iterator.i_line_index)
+                        && (
+                            p_this->i_cursor_glyph_index == o_iterator.i_glyph_index)
+                        && (
+                            (o_iterator.e_state != feed_main_state_prompt)))
+                    {
+                        b_found =
+                            1;
+                    }
+                    else
+                    {
+                        /* Locate a glyph that is at same coord as cursor */
+                        if (
+                            !b_found_in_page
+                            && (o_iterator.o_screen_iterator.i_cursor_address >= i_cursor_address))
+                        {
+                            if (o_iterator.e_state == feed_main_state_prompt)
+                            {
+                                i_found_cursor_line_index =
+                                    o_iterator.i_line_index;
+
+                                i_found_cursor_glyph_index =
+                                    0u;
+                            }
+                            else
+                            {
+                                i_found_cursor_line_index =
+                                    o_iterator.i_line_index;
+
+                                i_found_cursor_glyph_index =
+                                    o_iterator.i_glyph_index;
+                            }
+
+                            b_found_cursor_valid =
+                                1;
+
+                            b_found_in_page =
+                                1;
+                        }
+
+                        feed_main_iterator_write(
+                            p_this,
+                            &(o_iterator));
+
+                        if (
+                            !b_found_in_page
+                            && (o_iterator.o_screen_iterator.i_cursor_address > i_cursor_address)
+                            && ((o_iterator.e_state == feed_main_state_eol)
+                                || (o_iterator.e_state == feed_main_state_eof)))
+                        {
+                            i_found_cursor_glyph_index =
+                                o_iterator.i_glyph_index;
+
+                            i_found_cursor_line_index =
+                                o_iterator.i_line_index;
+
+                            b_found_cursor_valid =
+                                1;
+
+                            b_found_in_page =
+                                1;
+                        }
+
+                        b_more =
+                            feed_main_iterator_next(
+                                p_this,
+                                &(
+                                    o_iterator));
+                    }
+                }
+                else
+                {
+                    /* Remember this is last page */
+                    i_prev_page_line_index =
+                        i_this_page_line_index;
+
+                    i_prev_page_glyph_index =
+                        i_this_page_glyph_index;
+
+                    e_prev_page_state =
+                        e_this_page_state;
+
+                    i_this_page_line_index =
+                        o_iterator.i_line_index;
+
+                    i_this_page_glyph_index =
+                        o_iterator.i_glyph_index;
+
+                    e_this_page_state =
+                        o_iterator.e_state;
+
+                    b_found_in_page =
+                        0;
+
+                    feed_screen_iterator_home(
+                        p_this,
+                        &(
+                            o_iterator.o_screen_iterator));
+                }
+            }
+
+            if (
+                b_found)
+            {
+                if (b_found_cursor_valid)
+                {
+                    p_this->i_page_line_index =
+                        i_prev_page_line_index;
+
+                    p_this->i_page_glyph_index =
+                        i_prev_page_glyph_index;
+
+                    p_this->e_page_state =
+                        e_prev_page_state;
+
+                    p_this->i_cursor_line_index =
+                        i_found_cursor_line_index;
+
+                    p_this->i_cursor_glyph_index =
+                        i_found_cursor_glyph_index;
+                }
+            }
+
+#if defined(FEED_CFG_DEBUG)
+            printf("look pageup %u,%u (%d) %u,%u -> %d,%d\r\n",
+                p_this->i_page_line_index,
+                p_this->i_page_glyph_index,
+                p_this->e_page_state,
+                p_this->i_cursor_line_index,
+                p_this->i_cursor_glyph_index,
+                b_found,
+                b_found_cursor_valid);
+#endif /* #if defined(FEED_CFG_DEBUG) */
+
+        }
+    }
+
+    return b_found;
+}
+
+static
 void
 feed_main_refresh_job(
     struct feed_handle * const
@@ -2169,20 +2558,32 @@ feed_main_event_callback(
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_UP) == p_event->i_code)
             {
-                if (p_this->i_cursor_line_index)
+                if (feed_main_look_up(p_this))
                 {
-                    p_this->i_cursor_line_index --;
-
-                    p_this->i_cursor_glyph_index = 0u;
-
-                    /* Todo: find origin of previous page */
                     b_refresh_cursor = 1;
 
                     b_refresh_text = 0;
                 }
                 else
                 {
-                    b_refresh_text = 0;
+                    if (p_this->i_cursor_line_index)
+                    {
+                        p_this->i_cursor_line_index --;
+
+                        p_this->i_cursor_glyph_index = 0u;
+
+                        p_this->i_page_line_index = p_this->i_cursor_line_index;
+
+                        p_this->i_page_glyph_index = 0u;
+
+                        p_this->e_page_state = feed_main_state_prompt;
+
+                        /* Todo: find origin of previous page */
+                    }
+                    else
+                    {
+                        b_refresh_text = 0;
+                    }
                 }
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_DOWN) == p_event->i_code)
@@ -2212,11 +2613,17 @@ feed_main_event_callback(
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_PAGEUP) == p_event->i_code)
             {
-                p_this->i_cursor_line_index = 0;
-                p_this->i_cursor_glyph_index = 0;
-                p_this->i_page_line_index = 0;
-                p_this->i_page_glyph_index = 0;
-                p_this->e_page_state = feed_main_state_prompt;
+                if (feed_main_look_pageup(p_this))
+                {
+                }
+                else
+                {
+                    p_this->i_cursor_line_index = 0;
+                    p_this->i_cursor_glyph_index = 0;
+                    p_this->i_page_line_index = 0;
+                    p_this->i_page_glyph_index = 0;
+                    p_this->e_page_state = feed_main_state_prompt;
+                }
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_PAGEDOWN) == p_event->i_code)
             {
