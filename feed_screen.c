@@ -538,7 +538,7 @@ feed_screen_clear_line(
     {
         if (
             (
-                p_screen->i_region_cy < (p_screen->i_screen_height - 1u))
+                p_screen->i_region_cy < (p_screen->i_screen_height))
             && (
                 p_screen->i_region_cx < (p_screen->i_screen_width)))
         {
@@ -574,13 +574,13 @@ feed_screen_newline(
     if (
         p_screen)
     {
+        feed_screen_clear_line(
+            p_screen);
+
         if (
             (
                 p_screen->i_region_cy < (p_screen->i_screen_height - 1u)))
         {
-            feed_screen_clear_line(
-                p_screen);
-
             feed_screen_newline_raw(
                 p_screen);
 

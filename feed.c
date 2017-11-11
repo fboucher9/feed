@@ -573,23 +573,6 @@ feed_screen_iterator_home(
 
 }
 
-static
-void
-feed_screen_iterator_end(
-    struct feed_handle * const
-        p_this,
-    struct  feed_screen_iterator * const
-        p_screen_iterator)
-{
-    p_screen_iterator->i_cursor_address =
-        (
-            (
-                (unsigned long int)(p_this->i_screen_width)
-                * (unsigned long int)(p_this->i_screen_height))
-            - 1ul);
-
-}
-
 #if 0
 static
 char
@@ -634,7 +617,7 @@ feed_screen_iterator_test_goto(
 }
 #endif
 
-#if 0
+#if 1
 static
 void
 feed_screen_iterator_goto(
@@ -749,13 +732,41 @@ feed_screen_iterator_test_newline(
 }
 
 static
-void
+unsigned long int
+feed_screen_iterator_clear(
+    struct feed_handle * const
+        p_this,
+    struct feed_screen_iterator * const
+        p_screen_iterator)
+{
+    unsigned long int
+        i_width;
+
+    i_width =
+        (unsigned long int)(
+            (
+                (unsigned long int)(p_this->i_screen_width)
+                * (unsigned long int)(p_this->i_screen_height))
+            - 1ul
+            - p_screen_iterator->i_cursor_address);
+
+    p_screen_iterator->i_cursor_address += i_width;
+
+    return
+        i_width;
+}
+
+static
+unsigned long int
 feed_screen_iterator_newline(
     struct feed_handle * const
         p_this,
     struct feed_screen_iterator * const
         p_screen_iterator)
 {
+    unsigned long int
+        i_width;
+
     unsigned short int
         i_cursor_x;
 
@@ -764,23 +775,30 @@ feed_screen_iterator_newline(
             p_this,
             p_screen_iterator);
 
+    i_width = (unsigned long int)(p_this->i_screen_width - i_cursor_x);
+
     if (
         feed_screen_iterator_test_write(
             p_this,
             p_screen_iterator,
-            (p_this->i_screen_width - i_cursor_x)))
+            i_width))
     {
         feed_screen_iterator_write(
             p_this,
             p_screen_iterator,
-            (p_this->i_screen_width - i_cursor_x));
+            i_width);
     }
     else
     {
-        feed_screen_iterator_end(
-            p_this,
-            p_screen_iterator);
+        i_width =
+            feed_screen_iterator_clear(
+                p_this,
+                p_screen_iterator);
     }
+
+    return
+        i_width;
+
 }
 
 static
@@ -797,19 +815,6 @@ feed_screen_iterator_test_clear(
             p_screen_iterator,
             1u);
 
-}
-
-static
-void
-feed_screen_iterator_clear(
-    struct feed_handle * const
-        p_this,
-    struct feed_screen_iterator * const
-        p_screen_iterator)
-{
-    feed_screen_iterator_end(
-        p_this,
-        p_screen_iterator);
 }
 
 /*
@@ -834,7 +839,23 @@ Notes:
 
         Display has page_line+offset_y+offset_x -> final_line+offset_y+offset_x
 
+    -   State of iterator:
+
+            prompt
+            text
+            eol
+            eof
+
 */
+enum feed_main_state
+{
+    feed_main_state_prompt = 1,
+    feed_main_state_text,
+    feed_main_state_eol,
+    feed_main_state_eof,
+    feed_main_state_null
+};
+
 struct feed_main_iterator
 {
     /* Pointer to documents line */
@@ -1079,50 +1100,51 @@ feed_main_iterator_test(
 }
 
 static
-char
+unsigned long int
 feed_main_iterator_write(
     struct feed_handle * const
         p_this,
     struct feed_main_iterator * const
         p_iterator)
 {
-    char
-         b_result;
+    unsigned long int
+        i_width;
 
     /* Advance screen position */
     if (p_iterator->p_prompt_glyph || p_iterator->p_document_glyph)
     {
-        unsigned int i_glyph_width;
-
-        i_glyph_width = feed_glyph_get_visible_width(p_iterator->p_prompt_glyph ? p_iterator->p_prompt_glyph : p_iterator->p_document_glyph);
+        i_width =
+            feed_glyph_get_visible_width(
+                p_iterator->p_prompt_glyph
+                ? p_iterator->p_prompt_glyph
+                : p_iterator->p_document_glyph);
 
         feed_screen_iterator_write(
             p_this,
             &(
                 p_iterator->o_screen_iterator),
-            i_glyph_width);
+            i_width);
     }
     else if (p_iterator->p_document_line)
     {
         /* Empty line, so do a newline */
-        feed_screen_iterator_newline(
-            p_this,
-            &(
-                p_iterator->o_screen_iterator));
+        i_width =
+            feed_screen_iterator_newline(
+                p_this,
+                &(
+                    p_iterator->o_screen_iterator));
     }
     else
     {
-        feed_screen_iterator_clear(
-            p_this,
-            &(
-                p_iterator->o_screen_iterator));
+        i_width =
+            feed_screen_iterator_clear(
+                p_this,
+                &(
+                    p_iterator->o_screen_iterator));
     }
 
-    b_result =
-        1;
-
     return
-        b_result;
+        i_width;
 
 }
 
@@ -1255,139 +1277,95 @@ feed_main_look_down(
     unsigned long int
         i_cursor_offset;
 
-    unsigned long int
-        i_cursor_address;
-
-    char
-        b_cursor;
-
     char
         b_found;
 
     i_cursor_offset =
         0ul;
 
-    i_cursor_address =
-        0ul;
-
-    b_cursor =
-        0;
-
     b_found =
         0;
 
     if (
-        feed_main_iterator_begin(
-            p_this,
-            &(o_iterator),
-            p_this->i_page_line_index,
-            p_this->i_page_glyph_index,
-            0))
+        p_this->b_cursor_visible)
     {
-        char
-            b_more;
-
-        b_more =
-            1;
-
-        while (
-            b_more
-            && (!b_found))
+        if (
+            feed_main_iterator_begin(
+                p_this,
+                &(o_iterator),
+                p_this->i_cursor_line_index,
+                p_this->i_cursor_glyph_index,
+                0))
         {
-            /* Detect if cursor is visible */
-            if (
-                !(
-                    b_cursor)
-                && (
-                    p_this->i_cursor_line_index == o_iterator.i_line_index)
-                && (
-                    p_this->i_cursor_glyph_index == o_iterator.i_glyph_index)
-                && (
-                    !(o_iterator.b_prompt)))
+            char
+                b_more;
+
+            b_more =
+                1;
+
+            feed_screen_iterator_goto(
+                p_this,
+                &(
+                    o_iterator.o_screen_iterator),
+                (unsigned short int)(
+                    p_this->i_cursor_visible_x),
+                (unsigned short int)(
+                    p_this->i_cursor_visible_y));
+
+            while (
+                b_more
+                && (!b_found))
             {
-                i_cursor_address =
-                    o_iterator.o_screen_iterator.i_cursor_address;
-
-                b_cursor =
-                    1;
-            }
-
-            if (
-                b_cursor
-                && (
-                    o_iterator.o_screen_iterator.i_cursor_address + i_cursor_offset
-                    >= (i_cursor_address + p_this->i_screen_width)))
-            {
-                if (o_iterator.b_prompt)
-                {
-                    p_this->i_cursor_line_index =
-                        o_iterator.i_line_index;
-
-                    p_this->i_cursor_glyph_index =
-                        0u;
-                }
-                else
-                {
-                    p_this->i_cursor_glyph_index =
-                        o_iterator.i_glyph_index;
-
-                    p_this->i_cursor_line_index =
-                        o_iterator.i_line_index;
-                }
-
-                b_found =
-                    1;
-            }
-
-            if (
-                !b_found)
-            {
-                /* Do not exceed end of next line */
                 if (
-                    b_cursor
-                    && (o_iterator.i_line_index == (p_this->i_cursor_line_index + 1u))
-                    && (!o_iterator.b_prompt)
-                    && (!o_iterator.p_document_glyph))
+                    i_cursor_offset >= p_this->i_screen_width)
                 {
-                    p_this->i_cursor_glyph_index =
-                        o_iterator.i_glyph_index;
+                    if (o_iterator.b_prompt)
+                    {
+                        p_this->i_cursor_line_index =
+                            o_iterator.i_line_index;
 
-                    p_this->i_cursor_line_index =
-                        o_iterator.i_line_index;
+                        p_this->i_cursor_glyph_index =
+                            0u;
+                    }
+                    else
+                    {
+                        p_this->i_cursor_glyph_index =
+                            o_iterator.i_glyph_index;
+
+                        p_this->i_cursor_line_index =
+                            o_iterator.i_line_index;
+                    }
 
                     b_found =
                         1;
                 }
-
-                if (
-                    feed_main_iterator_test(
-                        p_this,
-                        &(o_iterator)))
-                {
-                    feed_main_iterator_write(
-                        p_this,
-                        &(o_iterator));
-
-                    b_more =
-                        feed_main_iterator_next(
-                            p_this,
-                            &(
-                                o_iterator));
-                }
                 else
                 {
-                    feed_screen_iterator_home(
-                        p_this,
-                        &(
-                            o_iterator.o_screen_iterator));
+                    if (
+                        feed_main_iterator_test(
+                            p_this,
+                            &(o_iterator)))
+                    {
+                        i_cursor_offset +=
+                            feed_main_iterator_write(
+                                p_this,
+                                &(o_iterator));
 
-                    i_cursor_offset +=
-                        (
-                            (
-                                (unsigned long int)(
-                                    p_this->i_screen_width)
-                                * (unsigned long int)(
-                                    p_this->i_screen_height)));
+                        b_more =
+                            feed_main_iterator_next(
+                                p_this,
+                                &(
+                                    o_iterator));
+                    }
+                    else
+                    {
+                        feed_screen_iterator_home(
+                            p_this,
+                            &(
+                                o_iterator.o_screen_iterator));
+
+                        i_cursor_offset ++;
+                    }
                 }
             }
         }
@@ -1409,23 +1387,14 @@ feed_main_refresh_job(
     struct feed_main_iterator
         o_iterator;
 
-    unsigned int
-        i_cursor_x;
-
-    unsigned int
-        i_cursor_y;
-
-    char
-        b_cursor;
-
-    i_cursor_x =
+    p_this->b_cursor_visible =
         0;
 
-    i_cursor_y =
-        0;
+    p_this->i_cursor_visible_x =
+        0u;
 
-    b_cursor =
-        0;
+    p_this->i_cursor_visible_y =
+        0u;
 
     if (b_refresh_text)
     {
@@ -1470,7 +1439,7 @@ feed_main_refresh_job(
             /* Detect if cursor is visible */
             if (
                 !(
-                    b_cursor)
+                    p_this->b_cursor_visible)
                 && (
                     p_this->i_cursor_line_index == o_iterator.i_line_index)
                 && (
@@ -1478,19 +1447,19 @@ feed_main_refresh_job(
                 && (
                     !(o_iterator.b_prompt)))
             {
-                i_cursor_x =
+                p_this->i_cursor_visible_x =
                     feed_screen_iterator_get_cursor_x(
                         p_this,
                         &(
                             o_iterator.o_screen_iterator));
 
-                i_cursor_y =
+                p_this->i_cursor_visible_y =
                     feed_screen_iterator_get_cursor_y(
                         p_this,
                         &(
                             o_iterator.o_screen_iterator));
 
-                b_cursor =
+                p_this->b_cursor_visible =
                     1;
             }
 
@@ -1537,6 +1506,8 @@ feed_main_refresh_job(
                     /* todo: call clear region */
                     if (b_refresh_text)
                     {
+                        feed_screen_clear_region(
+                            p_this->p_screen);
                     }
                 }
 
@@ -1598,9 +1569,6 @@ feed_main_refresh_job(
                     p_this->i_final_cursor_x),
                 &(
                     p_this->i_final_cursor_y));
-
-            feed_screen_clear_region(
-                p_this->p_screen);
         }
 
 #if defined(FEED_CFG_DEBUG)
@@ -1622,12 +1590,12 @@ feed_main_refresh_job(
 
         if (b_refresh_text || b_refresh_cursor)
         {
-            if (b_cursor)
+            if (p_this->b_cursor_visible)
             {
                 feed_screen_set_cursor_pos(
                     p_this->p_screen,
-                    i_cursor_x,
-                    i_cursor_y);
+                    p_this->i_cursor_visible_x,
+                    p_this->i_cursor_visible_y);
             }
 
             feed_tty_flush(
