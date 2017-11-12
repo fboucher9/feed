@@ -1423,6 +1423,45 @@ feed_main_look_xy(
 
 static
 char
+feed_main_latch_next_page(
+    struct feed_handle * const
+        p_this)
+{
+    char
+        b_result;
+
+    if (p_this->e_final_state != feed_main_state_null)
+    {
+        p_this->i_page_line_index = p_this->i_final_line_index;
+
+        p_this->i_page_glyph_index = p_this->i_final_glyph_index;
+
+        if (p_this->e_final_state == feed_main_state_prompt)
+        {
+            p_this->e_page_state = feed_main_state_prompt;
+        }
+        else
+        {
+            p_this->e_page_state = feed_main_state_text;
+        }
+
+        b_result =
+            1;
+
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+}
+
+static
+char
 feed_main_look_down(
     struct feed_handle * const
         p_this)
@@ -1446,14 +1485,8 @@ feed_main_look_down(
         }
         else
         {
-            if (p_this->e_final_state != feed_main_state_null)
+            if (feed_main_latch_next_page(p_this))
             {
-                p_this->i_page_line_index = p_this->i_final_line_index;
-
-                p_this->i_page_glyph_index = p_this->i_final_glyph_index;
-
-                p_this->e_page_state = p_this->e_final_state;
-
                 feed_main_look_xy(
                     p_this,
                     p_this->i_cursor_visible_x);
@@ -1837,17 +1870,8 @@ feed_main_look_pagedown(
     if (
         p_this->b_cursor_visible)
     {
-        if (p_this->e_final_state != feed_main_state_null)
+        if (feed_main_latch_next_page(p_this))
         {
-            p_this->i_page_line_index =
-                p_this->i_final_line_index;
-
-            p_this->i_page_glyph_index =
-                p_this->i_final_glyph_index;
-
-            p_this->e_page_state =
-                p_this->e_final_state;
-
             feed_main_look_xy(
                 p_this,
                 p_this->i_cursor_visible_y * p_this->i_screen_width
@@ -2221,12 +2245,7 @@ feed_main_event_callback(
         }
         else
         {
-            if (p_this->e_final_state != feed_main_state_null)
-            {
-                p_this->i_page_line_index = p_this->i_final_line_index;
-                p_this->i_page_glyph_index = p_this->i_final_glyph_index;
-                p_this->e_page_state = p_this->e_final_state;
-            }
+            feed_main_latch_next_page(p_this);
         }
 
         feed_main_refresh_text(
@@ -2468,11 +2487,55 @@ feed_main_event_callback(
                 p_this->i_cursor_glyph_index =
                     0;
 
-                /* Adjust visible cursor position */
+                /* detect that cursor is still visible? */
+                if ((p_this->i_cursor_line_index > p_this->i_page_line_index)
+                    || (
+                        (p_this->i_cursor_line_index == p_this->i_page_line_index)
+                        && (p_this->e_page_state != feed_main_state_text))
+                    || (
+                        (p_this->i_cursor_line_index == p_this->i_page_line_index)
+                        && (p_this->e_page_state == feed_main_state_text)
+                        && (p_this->i_page_glyph_index == 0u))
+                    )
+                {
+                    b_refresh_text = 0;
 
-                b_refresh_text = 0;
+                    b_refresh_cursor = 1;
+                }
+                else
+                {
+                    feed_main_refresh_info(
+                        p_this);
 
-                b_refresh_cursor = 1;
+                    /* Adjust visible cursor position */
+                    if (p_this->b_cursor_visible)
+                    {
+                        b_refresh_text = 0;
+
+                        b_refresh_cursor = 1;
+                    }
+                    else
+                    {
+                        unsigned int
+                            i_prev_page_line_index;
+
+                        unsigned int
+                            i_prev_page_glyph_index;
+
+                        enum feed_main_state
+                            e_prev_page_state;
+
+                        feed_main_look_realign_page(
+                            p_this,
+                            &(
+                                i_prev_page_line_index),
+                            &(
+                                i_prev_page_glyph_index),
+                            &(
+                                e_prev_page_state));
+                    }
+                }
+
             }
             else if (
                 ((FEED_EVENT_KEY_FLAG | FEED_KEY_END) == p_event->i_code)
@@ -2505,12 +2568,7 @@ feed_main_event_callback(
                     }
                     else
                     {
-                        if (p_this->e_final_state != feed_main_state_null)
-                        {
-                            p_this->i_page_line_index = p_this->i_final_line_index;
-                            p_this->i_page_glyph_index = p_this->i_final_glyph_index;
-                            p_this->e_page_state = p_this->e_final_state;
-                        }
+                        feed_main_latch_next_page(p_this);
                     }
                 }
                 else
@@ -2601,12 +2659,7 @@ feed_main_event_callback(
                     }
                     else
                     {
-                        if (p_this->e_final_state != feed_main_state_null)
-                        {
-                            p_this->i_page_line_index = p_this->i_final_line_index;
-                            p_this->i_page_glyph_index = p_this->i_final_glyph_index;
-                            p_this->e_page_state = p_this->e_final_state;
-                        }
+                        feed_main_latch_next_page(p_this);
                     }
                 }
                 else
@@ -2756,12 +2809,7 @@ feed_main_event_callback(
                         }
                         else
                         {
-                            if (p_this->e_final_state != feed_main_state_null)
-                            {
-                                p_this->i_page_line_index = p_this->i_final_line_index;
-                                p_this->i_page_glyph_index = p_this->i_final_glyph_index;
-                                p_this->e_page_state = p_this->e_final_state;
-                            }
+                            feed_main_latch_next_page(p_this);
                         }
                     }
                     else
@@ -2796,12 +2844,7 @@ feed_main_event_callback(
                 }
                 else
                 {
-                    if (p_this->e_final_state != feed_main_state_null)
-                    {
-                        p_this->i_page_line_index = p_this->i_final_line_index;
-                        p_this->i_page_glyph_index = p_this->i_final_glyph_index;
-                        p_this->e_page_state = p_this->e_final_state;
-                    }
+                    feed_main_latch_next_page(p_this);
                 }
             }
 
