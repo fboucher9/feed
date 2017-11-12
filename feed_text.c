@@ -234,42 +234,65 @@ feed_text_get_line(
     struct feed_line *
         p_line;
 
-    struct feed_list *
-        p_iterator;
-
-    unsigned int
-        i_line_iterator;
-
-    i_line_iterator =
-        0u;
-
-    p_iterator =
-        p_text->o_lines.p_next;
-
-    while (
-        (
-            i_line_iterator < i_line_index)
-        && (
-            p_iterator != &(p_text->o_lines)))
-    {
-        i_line_iterator ++;
-
-        p_iterator =
-            p_iterator->p_next;
-    }
-
     if (
-        p_iterator != &(p_text->o_lines))
+        i_line_index >= p_text->i_line_count)
+    {
+        p_line =
+            NULL;
+    }
+    else if (
+        0u == i_line_index)
     {
         p_line =
             (struct feed_line *)(
-                p_iterator);
+                p_text->o_lines.p_next);
+    }
+    else if (
+        i_line_index == (p_text->i_line_count - 1u))
+    {
+        p_line =
+            (struct feed_line *)(
+                p_text->o_lines.p_prev);
     }
     else
     {
-        p_line =
-            (struct feed_line *)(
-                0);
+        struct feed_list *
+            p_iterator;
+
+        unsigned int
+            i_line_iterator;
+
+        i_line_iterator =
+            0u;
+
+        p_iterator =
+            p_text->o_lines.p_next;
+
+        while (
+            (
+                i_line_iterator < i_line_index)
+            && (
+                p_iterator != &(p_text->o_lines)))
+        {
+            i_line_iterator ++;
+
+            p_iterator =
+                p_iterator->p_next;
+        }
+
+        if (
+            p_iterator != &(p_text->o_lines))
+        {
+            p_line =
+                (struct feed_line *)(
+                    p_iterator);
+        }
+        else
+        {
+            p_line =
+                (struct feed_line *)(
+                    0);
+        }
     }
 
     return

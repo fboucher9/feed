@@ -324,42 +324,66 @@ feed_line_get_glyph(
     struct feed_glyph *
         p_glyph;
 
-    struct feed_list *
-        p_glyph_iterator;
-
-    unsigned int
-        i_glyph_iterator;
-
-    i_glyph_iterator =
-        0u;
-
-    p_glyph_iterator =
-        p_line->o_glyphs.p_next;
-
-    while (
-        (
-            i_glyph_iterator < i_glyph_index)
-        && (
-            p_glyph_iterator != &(p_line->o_glyphs)))
-    {
-        i_glyph_iterator ++;
-
-        p_glyph_iterator =
-            p_glyph_iterator->p_next;
-    }
-
     if (
-        p_glyph_iterator != &(p_line->o_glyphs))
-    {
-        p_glyph =
-            (struct feed_glyph *)(
-                p_glyph_iterator);
-    }
-    else
+        i_glyph_index >= p_line->i_glyph_count)
     {
         p_glyph =
             (struct feed_glyph *)(
                 0);
+    }
+    else if (
+        0u == i_glyph_index)
+    {
+        p_glyph =
+            (struct feed_glyph *)(
+                p_line->o_glyphs.p_next);
+    }
+    else if (
+        i_glyph_index == (p_line->i_glyph_count - 1u))
+    {
+        p_glyph =
+            (struct feed_glyph *)(
+                p_line->o_glyphs.p_prev);
+    }
+    else
+    {
+        struct feed_list *
+            p_glyph_iterator;
+
+        unsigned int
+            i_glyph_iterator;
+
+        i_glyph_iterator =
+            0u;
+
+        p_glyph_iterator =
+            p_line->o_glyphs.p_next;
+
+        while (
+            (
+                i_glyph_iterator < i_glyph_index)
+            && (
+                p_glyph_iterator != &(p_line->o_glyphs)))
+        {
+            i_glyph_iterator ++;
+
+            p_glyph_iterator =
+                p_glyph_iterator->p_next;
+        }
+
+        if (
+            p_glyph_iterator != &(p_line->o_glyphs))
+        {
+            p_glyph =
+                (struct feed_glyph *)(
+                    p_glyph_iterator);
+        }
+        else
+        {
+            p_glyph =
+                (struct feed_glyph *)(
+                    0);
+        }
     }
 
     return
