@@ -472,7 +472,6 @@ feed_text_iterator_prev_glyph(
 
 }
 
-#if 0
 char
 feed_text_iterator_home_glyph(
     struct feed_text const * const
@@ -480,6 +479,12 @@ feed_text_iterator_home_glyph(
     struct feed_text_iterator * const
         p_text_iterator)
 {
+    return
+        feed_text_iterator_set_glyph(
+            p_text,
+            p_text_iterator,
+            0ul);
+
 }
 
 char
@@ -489,8 +494,33 @@ feed_text_iterator_end_glyph(
     struct feed_text_iterator * const
         p_text_iterator)
 {
+    char
+        b_result;
+
+    feed_text_iterator_validate_line(
+        p_text,
+        p_text_iterator);
+
+    if (p_text_iterator->p_line)
+    {
+        b_result =
+            feed_text_iterator_set_glyph(
+                p_text,
+                p_text_iterator,
+                p_text_iterator->p_line->i_glyph_count);
+    }
+    else
+    {
+        b_result =
+            feed_text_iterator_home_glyph(
+                p_text,
+                p_text_iterator);
+    }
+
+    return
+        b_result;
+
 }
-#endif
 
 struct feed_glyph *
 feed_text_iterator_remove_glyph(
@@ -546,6 +576,112 @@ feed_text_iterator_remove_glyph(
 
     return
         p_glyph;
+
+}
+
+void
+feed_text_iterator_append_glyph(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    struct feed_glyph * const
+        p_glyph)
+{
+    feed_text_iterator_validate_line(
+        p_text,
+        p_text_iterator);
+
+    if (p_text_iterator->p_line)
+    {
+        feed_list_join(
+            &(
+                p_glyph->o_list),
+            &(
+                p_text_iterator->p_line->o_glyphs));
+
+        p_text_iterator->p_line->i_glyph_count ++;
+    }
+}
+
+char
+feed_text_iterator_join_lines(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator)
+{
+    char
+        b_result;
+
+    struct feed_text_iterator
+        o_next_line;
+
+    feed_text_iterator_end_glyph(
+        p_text,
+        p_text_iterator);
+
+    o_next_line =
+        *(p_text_iterator);
+
+    if (
+        feed_text_iterator_next_line(
+            p_text,
+            &(
+                o_next_line)))
+    {
+        feed_text_iterator_home_glyph(
+            p_text,
+            &(
+                o_next_line));
+
+        feed_text_iterator_validate_line(
+            p_text,
+            &(
+                o_next_line));
+
+        while (
+            o_next_line.p_line->i_glyph_count)
+        {
+            struct feed_glyph *
+                p_glyph;
+
+            p_glyph =
+                feed_text_iterator_remove_glyph(
+                    p_text,
+                    &(
+                        o_next_line));
+
+            if (
+                p_glyph)
+            {
+                feed_text_iterator_append_glyph(
+                    p_text,
+                    p_text_iterator,
+                    p_glyph);
+            }
+        }
+
+        feed_line_destroy(
+            o_next_line.p_line);
+
+        p_text->i_line_count --;
+
+        feed_text_iterator_invalidate_glyph(
+            p_text,
+            p_text_iterator);
+
+        b_result =
+            1;
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
 
 }
 

@@ -109,6 +109,8 @@ FEED_SRCS = \
     $(FEED_DST_PATH)/_obj_feed_line.o \
     $(FEED_DST_PATH)/_obj_feed_text.o \
     $(FEED_DST_PATH)/_obj_feed_screen.o \
+    $(FEED_DST_PATH)/_obj_feed_screen_info.o \
+    $(FEED_DST_PATH)/_obj_feed_screen_iterator.o \
     $(FEED_DST_PATH)/_obj_feed_prompt.o \
     $(FEED_DST_PATH)/_obj_feed_object.o \
     $(FEED_DST_PATH)/_obj_feed_utf8.o \
