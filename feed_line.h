@@ -33,6 +33,8 @@ struct feed_utf8_code;
 
 struct feed_buf;
 
+struct feed_glyph;
+
 struct feed_line
 {
     struct feed_list
@@ -47,6 +49,10 @@ struct feed_line
     /* Number of characters */
     unsigned long int
         i_glyph_count;
+
+    /* Number of visible characters */
+    unsigned long int
+        i_width;
 
     unsigned long int
         a_padding[1u];
@@ -71,6 +77,13 @@ feed_line_write_utf8_code(
         p_utf8_code,
     unsigned long int const
         i_glyph_index);
+
+void
+feed_line_append_glyph(
+    struct feed_line * const
+        p_line,
+    struct feed_glyph * const
+        p_glyph);
 
 void
 feed_line_append_utf8_code(
@@ -106,5 +119,12 @@ feed_line_set(
         p_data,
     unsigned long int const
         i_data_length);
+
+void
+feed_line_remove_glyph(
+    struct feed_line * const
+        p_line,
+    struct feed_glyph * const
+        p_glyph);
 
 /* end-of-file: feed_line.h */

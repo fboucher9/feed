@@ -556,16 +556,10 @@ feed_text_iterator_remove_glyph(
         }
 
         /* Remove the selected char from the linked list */
-        feed_list_join(
-            &(
-                p_glyph->o_list),
-            &(
-                p_glyph->o_list));
+        feed_line_remove_glyph(
+            p_text_iterator->p_line,
+            p_glyph);
 
-        if (p_text_iterator->p_line->i_glyph_count)
-        {
-            p_text_iterator->p_line->i_glyph_count --;
-        }
     }
     else
     {
@@ -594,13 +588,9 @@ feed_text_iterator_append_glyph(
 
     if (p_text_iterator->p_line)
     {
-        feed_list_join(
-            &(
-                p_glyph->o_list),
-            &(
-                p_text_iterator->p_line->o_glyphs));
-
-        p_text_iterator->p_line->i_glyph_count ++;
+        feed_line_append_glyph(
+            p_text_iterator->p_line,
+            p_glyph);
     }
 }
 

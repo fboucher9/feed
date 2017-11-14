@@ -47,7 +47,10 @@ feed_line_init(
             p_line->o_glyphs));
 
     p_line->i_glyph_count =
-        0u;
+        0ul;
+
+    p_line->i_width =
+        0ul;
 
     b_result =
         1;
@@ -128,6 +131,9 @@ feed_line_reset(
 
     p_line->i_glyph_count =
         0u;
+
+    p_line->i_width =
+        0ul;
 
 }
 
@@ -215,6 +221,26 @@ feed_line_destroy(
 }
 
 void
+feed_line_append_glyph(
+    struct feed_line * const
+        p_line,
+    struct feed_glyph * const
+        p_glyph)
+{
+    feed_list_join(
+        &(
+            p_glyph->o_list),
+        &(
+            p_line->o_glyphs));
+
+    p_line->i_width +=
+        feed_glyph_get_visible_width(
+            p_glyph);
+
+    p_line->i_glyph_count ++;
+}
+
+void
 feed_line_append_utf8_code(
     struct feed_line * const
         p_line,
@@ -243,13 +269,10 @@ feed_line_append_utf8_code(
                 p_glyph)
             {
                 /* Store the char into the list */
-                feed_list_join(
-                    &(
-                        p_glyph->o_list),
-                    &(
-                        p_line->o_glyphs));
+                feed_line_append_glyph(
+                    p_line,
+                    p_glyph);
 
-                p_line->i_glyph_count ++;
             }
         }
     }
@@ -309,6 +332,10 @@ feed_line_write_utf8_code(
                 &(
                     p_line->o_glyphs));
         }
+
+        p_line->i_width +=
+            feed_glyph_get_visible_width(
+                p_glyph);
 
         p_line->i_glyph_count ++;
     }
@@ -578,6 +605,43 @@ feed_line_set(
     return
         b_result;
 
+}
+
+void
+feed_line_remove_glyph(
+    struct feed_line * const
+        p_line,
+    struct feed_glyph * const
+        p_glyph)
+{
+    feed_list_join(
+        &(
+            p_glyph->o_list),
+        &(
+            p_glyph->o_list));
+
+    {
+        unsigned char
+            i_glyph_width;
+
+        i_glyph_width =
+            feed_glyph_get_visible_width(
+                p_glyph);
+
+        if (p_line->i_width > i_glyph_width)
+        {
+            p_line->i_width -= i_glyph_width;
+        }
+        else
+        {
+            p_line->i_width = 0ul;
+        }
+    }
+
+    if (p_line->i_glyph_count)
+    {
+        p_line->i_glyph_count --;
+    }
 }
 
 /* end-of-file: feed_line.c */

@@ -2272,6 +2272,8 @@ feed_main_insert_event(
                     p_this->p_text,
                     &(
                         p_this->o_cursor));
+
+                /* Advance the cursor position */
             }
         }
 
@@ -2315,6 +2317,8 @@ feed_main_event_callback(
         feed_main_insert_event(
             p_this,
             p_event);
+
+        /* Detect that cursor is still within page */
 
         feed_main_refresh_info(
             p_this);
@@ -2710,21 +2714,13 @@ feed_main_event_callback(
                                     (struct feed_glyph *)(
                                         p_glyph->o_list.p_next);
 
-                                feed_list_join(
-                                    &(
-                                        p_glyph->o_list),
-                                    &(
-                                        p_glyph->o_list));
+                                feed_line_remove_glyph(
+                                    p_this->o_cursor.p_line,
+                                    p_glyph);
 
-                                p_this->o_cursor.p_line->i_glyph_count --;
-
-                                feed_list_join(
-                                    &(
-                                        p_glyph->o_list),
-                                    &(
-                                        p_line_down->o_glyphs));
-
-                                p_line_down->i_glyph_count ++;
+                                feed_line_append_glyph(
+                                    p_line_down,
+                                    p_glyph);
 
                                 p_glyph =
                                     p_glyph_next;
