@@ -36,87 +36,111 @@ struct feed_text_iterator
 
 void
 feed_text_iterator_init(
-    struct feed_text * const
+    struct feed_text const * const
         p_text,
     struct feed_text_iterator * const
         p_text_iterator);
 
 void
 feed_text_iterator_cleanup(
-    struct feed_text * const
+    struct feed_text const * const
         p_text,
     struct feed_text_iterator * const
         p_text_iterator);
 
 void
 feed_text_iterator_invalidate(
-    struct feed_text * const
+    struct feed_text const * const
         p_text,
     struct feed_text_iterator * const
         p_text_iterator);
 
 void
 feed_text_iterator_validate(
-    struct feed_text * const
+    struct feed_text const * const
         p_text,
     struct feed_text_iterator * const
         p_text_iterator);
 
 char
+feed_text_iterator_set_line(
+    struct feed_text const * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    unsigned long int const
+        i_line_index);
+
+char
 feed_text_iterator_next_line(
-    struct feed_text * const
+    struct feed_text const * const
         p_text,
     struct feed_text_iterator * const
         p_text_iterator);
 
 char
 feed_text_iterator_prev_line(
-    struct feed_text * const
+    struct feed_text const * const
         p_text,
     struct feed_text_iterator * const
         p_text_iterator);
 
 char
 feed_text_iterator_home_line(
-    struct feed_text * const
+    struct feed_text const * const
         p_text,
     struct feed_text_iterator * const
         p_text_iterator);
 
 char
 feed_text_iterator_end_line(
-    struct feed_text * const
+    struct feed_text const * const
         p_text,
     struct feed_text_iterator * const
         p_text_iterator);
 
 char
+feed_text_iterator_set_glyph(
+    struct feed_text const * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    unsigned long int const
+        i_glyph_index);
+
+char
 feed_text_iterator_next_glyph(
-    struct feed_text * const
+    struct feed_text const * const
         p_text,
     struct feed_text_iterator * const
         p_text_iterator);
 
 char
 feed_text_iterator_prev_glyph(
-    struct feed_text * const
+    struct feed_text const * const
         p_text,
     struct feed_text_iterator * const
         p_text_iterator);
 
 char
 feed_text_iterator_home_glyph(
-    struct feed_text * const
+    struct feed_text const * const
         p_text,
     struct feed_text_iterator * const
         p_text_iterator);
 
 char
 feed_text_iterator_end_glyph(
-    struct feed_text * const
+    struct feed_text const * const
         p_text,
     struct feed_text_iterator * const
         p_text_iterator);
 
+struct feed_glyph *
+feed_text_iterator_remove_glyph(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator);
 
 /* end-of-file: feed_text_iterator.h */
