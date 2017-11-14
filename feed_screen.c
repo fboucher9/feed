@@ -657,19 +657,21 @@ void
 feed_screen_get_cursor_pos(
     struct feed_screen * const
         p_screen,
-    unsigned int * const
+    unsigned short int * const
         p_cursor_x,
-    unsigned int * const
+    unsigned short int * const
         p_cursor_y)
 {
     if (
         p_screen)
     {
         *(p_cursor_x) =
-            p_screen->i_region_cx;
+            (unsigned short int)(
+                p_screen->i_region_cx);
 
         *(p_cursor_y) =
-            p_screen->i_region_cy;
+            (unsigned short int)(
+                p_screen->i_region_cy);
     }
 }
 

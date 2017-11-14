@@ -76,9 +76,9 @@ void
 feed_screen_get_cursor_pos(
     struct feed_screen * const
         p_screen,
-    unsigned int * const
+    unsigned short int * const
         p_cursor_x,
-    unsigned int * const
+    unsigned short int * const
         p_cursor_y);
 
 void

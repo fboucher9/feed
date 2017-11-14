@@ -48,11 +48,11 @@ struct feed_text
         o_last_event;
 
     /* Number of lines */
-    unsigned int
+    unsigned long int
         i_line_count;
 
-    unsigned int
-        a_padding[3u];
+    unsigned long int
+        a_padding[1u];
 
 }; /* struct feed_text */
 
@@ -68,9 +68,9 @@ feed_text_destroy(
 
 struct feed_line *
 feed_text_get_line(
-    struct feed_text * const
+    struct feed_text const * const
         p_text,
-    unsigned int const
+    unsigned long int const
         i_line_index);
 
 void
@@ -79,9 +79,9 @@ feed_text_write_utf8_code(
         p_text,
     struct feed_utf8_code const * const
         p_utf8_code,
-    unsigned int const
+    unsigned long int const
         i_line_index,
-    unsigned int const
+    unsigned long int const
         i_glyph_index);
 
 unsigned int

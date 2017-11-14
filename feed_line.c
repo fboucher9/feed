@@ -261,7 +261,7 @@ feed_line_write_utf8_code(
         p_line,
     struct feed_utf8_code const * const
         p_utf8_code,
-    unsigned int const
+    unsigned long int const
         i_glyph_index)
 {
     struct feed_client *
@@ -318,7 +318,7 @@ struct feed_glyph *
 feed_line_get_glyph(
     struct feed_line * const
         p_line,
-    unsigned int const
+    unsigned long int const
         i_glyph_index)
 {
     struct feed_glyph *

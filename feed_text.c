@@ -226,9 +226,9 @@ feed_text_destroy(
 
 struct feed_line *
 feed_text_get_line(
-    struct feed_text * const
+    struct feed_text const * const
         p_text,
-    unsigned int const
+    unsigned long int const
         i_line_index)
 {
     struct feed_line *
@@ -333,9 +333,9 @@ feed_text_write_utf8_code(
         p_text,
     struct feed_utf8_code const * const
         p_utf8_code,
-    unsigned int const
+    unsigned long int const
         i_line_index,
-    unsigned int const
+    unsigned long int const
         i_glyph_index)
 {
     struct feed_line *

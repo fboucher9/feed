@@ -1369,9 +1369,9 @@ char
 feed_tty_get_window_size(
     struct feed_tty * const
         p_tty,
-    unsigned int * const
+    unsigned short int * const
         p_columns,
-    unsigned int * const
+    unsigned short int * const
         p_rows,
     char const
         b_use_fallback)
@@ -1397,11 +1397,13 @@ feed_tty_get_window_size(
     {
         *(
             p_columns) =
-            o_winsize.ws_col;
+            (unsigned short int)(
+                o_winsize.ws_col);
 
         *(
             p_rows) =
-            o_winsize.ws_row;
+            (unsigned short int)(
+                o_winsize.ws_row);
 
         b_result =
             1;
@@ -1465,11 +1467,13 @@ feed_tty_get_window_size(
                     {
                         *(
                             p_columns) =
-                            i_last_col;
+                            (unsigned short int)(
+                                i_last_col);
 
                         *(
                             p_rows) =
-                            i_last_row;
+                            (unsigned short int)(
+                                i_last_row);
                     }
                 }
             }
