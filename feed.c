@@ -2404,6 +2404,8 @@ feed_main_event_callback(
                     }
                 }
 
+                p_this->p_page_line = NULL;
+
                 feed_main_refresh_info(
                     p_this);
 
