@@ -1,11 +1,33 @@
 /* See LICENCE for license details */
 
+/*
+
+Module: feed_heap.c
+
+Description:
+
+    Memory manager.
+
+*/
+
+/* Precompiled header file */
 #include "feed_os.h"
 
+/* Compile-time configuration options */
+#include "feed_cfg.h"
+
+/* Heap */
 #include "feed_heap.h"
 
-#include "feed_client.h"
+/*
 
+Structure: feed_heap
+
+Description:
+
+    State and statistics for memory manager.
+
+*/
 struct feed_heap
 {
     signed long int
@@ -25,6 +47,15 @@ struct feed_heap
 
 };
 
+/*
+
+Function: feed_heap_create
+
+Description:
+
+    Create a heap object.
+
+*/
 struct feed_heap *
 feed_heap_create(void)
 {
@@ -62,25 +93,34 @@ feed_heap_create(void)
 
 } /* feed_heap_create() */
 
+/*
+
+Function: feed_heap_destroy
+
+Description:
+
+    Destroy a heap object that was created by feed_heap_create.
+
+*/
 void
 feed_heap_destroy(
     struct feed_heap * const
         p_heap)
 {
+#if defined(FEED_CFG_DEBUG)
     if (
         p_heap->i_leak_count)
     {
-        fprintf(
-            stderr,
+        printf(
             "*** detected %ld memory leaks ***\n",
             p_heap->i_leak_count);
     }
     else
     {
-        fprintf(
-            stderr,
+        printf(
             "*** no memory leaks ***\n");
     }
+#endif /* #if defined(FEED_CFG_DEBUG) */
 
     free(
         (void *)(
@@ -88,6 +128,15 @@ feed_heap_destroy(
 
 } /* feed_heap_destroy() */
 
+/*
+
+Function: feed_heap_alloc
+
+Description:
+
+    Allocate memory
+
+*/
 void *
 feed_heap_alloc(
     struct feed_heap * const
@@ -132,6 +181,15 @@ feed_heap_alloc(
 
 } /* feed_heap_alloc() */
 
+/*
+
+Function: feed_heap_free
+
+Description:
+
+    Free memory that was allocated by feed_heap_alloc
+
+*/
 void
 feed_heap_free(
     struct feed_heap * const

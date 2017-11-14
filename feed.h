@@ -48,10 +48,8 @@ struct feed_descriptor
     int (* p_complete)(
         void * const p_context,
         unsigned char const * const p_data,
-        unsigned int const i_data_length,
-        unsigned char const * const p_word,
-        unsigned int const i_word_length,
-        unsigned int const i_cursor,
+        unsigned long int const i_data_length,
+        unsigned long int const i_cursor,
         enum feed_complete_type const e_type);
 
     void * p_context;
@@ -62,41 +60,51 @@ struct feed_descriptor
 extern "C" {
 #endif /* #if defined(__cplusplus) */
 
+/* create a feed handle, register callbacks */
 struct feed_handle * feed_create(
     struct feed_descriptor const * const p_feed_descriptor);
 
+/* destroy a feed handle */
 void feed_destroy(
     struct feed_handle * const p_feed_handle);
 
+/* setup prompt of first line */
 int feed_prompt1(
     struct feed_handle * const p_feed_handle,
     unsigned char const * const p_data,
     unsigned long int const i_data_length);
 
+/* setup prompt of other lines */
 int feed_prompt2(
     struct feed_handle * const p_feed_handle,
     unsigned char const * const p_data,
     unsigned long int const i_data_length);
 
+/* load initial text into the buffer */
 int feed_load(
     struct feed_handle * const p_feed_handle,
     unsigned char const * const p_data,
     unsigned long int const i_data_length);
 
+/* start the editor engine */
 int feed_start(
     struct feed_handle * const p_feed_handle);
 
+/* stop the editor engine.  this may be called from one of the callbacks */
 int feed_stop(
     struct feed_handle * const p_feed_handle);
 
+/* provide suggestions for completion mode */
 int feed_suggest(
     struct feed_handle * const p_feed_handle,
     unsigned char const * const p_data,
     unsigned long int const i_data_length);
 
+/* query length in bytes of save buffer */
 unsigned long int feed_length(
     struct feed_handle * const p_feed_handle);
 
+/* query contents of save buffer */
 int feed_save(
     struct feed_handle * const p_feed_handle,
     unsigned char * const p_data,

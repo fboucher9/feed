@@ -346,6 +346,16 @@ feed_cleanup(
 
 } /* feed_cleanup() */
 
+/*
+
+Function: feed_create
+
+Description:
+
+    Create a feed handle and register application callbacks.  Initialize
+    all objects used by feed library.
+
+*/
 struct feed_handle *
 feed_create(
     struct feed_descriptor const * const
@@ -433,6 +443,9 @@ feed_destroy(
             feed_heap_free(
                 p_heap,
                 p_this);
+
+            feed_heap_destroy(
+                p_heap);
         }
     }
 
