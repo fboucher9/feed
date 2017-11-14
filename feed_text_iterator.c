@@ -604,6 +604,40 @@ feed_text_iterator_append_glyph(
     }
 }
 
+void
+feed_text_iterator_write_glyph(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    struct feed_glyph * const
+        p_glyph)
+{
+    feed_text_iterator_validate(
+        p_text,
+        p_text_iterator);
+
+    if (p_text_iterator->p_glyph)
+    {
+        feed_list_join(
+            &(
+                p_glyph->o_list),
+            &(
+                p_text_iterator->p_glyph->o_list));
+
+        p_text_iterator->p_line->i_glyph_count ++;
+    }
+    else
+    {
+        feed_text_iterator_append_glyph(
+            p_text,
+            p_text_iterator,
+            p_glyph);
+    }
+
+    p_text_iterator->i_glyph_index ++;
+}
+
 char
 feed_text_iterator_join_lines(
     struct feed_text * const

@@ -2261,17 +2261,24 @@ feed_main_insert_event(
                     &(
                         o_utf8_code)))
             {
-                feed_text_write_utf8_code(
-                    p_this->p_text,
-                    &(
-                        o_utf8_code),
-                    p_this->o_cursor.i_line_index,
-                    p_this->o_cursor.i_glyph_index);
+                struct feed_glyph *
+                    p_glyph;
 
-                feed_text_iterator_next_glyph(
-                    p_this->p_text,
-                    &(
-                        p_this->o_cursor));
+                p_glyph =
+                    feed_glyph_create(
+                        p_this->p_client,
+                        &(
+                            o_utf8_code));
+
+                if (
+                    p_glyph)
+                {
+                    feed_text_iterator_write_glyph(
+                        p_this->p_text,
+                        &(
+                            p_this->o_cursor),
+                        p_glyph);
+                }
             }
         }
 
