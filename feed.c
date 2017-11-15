@@ -715,18 +715,10 @@ feed_main_iterator_get_glyph(
 
         if (feed_main_state_text == p_iterator->e_state)
         {
-            if (p_iterator->p_document_line)
-            {
-                p_iterator->p_document_glyph =
-                    feed_line_get_glyph(
-                        p_iterator->p_document_line,
-                        p_iterator->i_glyph_index);
-            }
-            else
-            {
-                p_iterator->p_document_glyph =
-                    NULL;
-            }
+            p_iterator->p_document_glyph =
+                feed_line_get_glyph(
+                    p_iterator->p_document_line,
+                    p_iterator->i_glyph_index);
 
             if (p_iterator->p_document_glyph)
             {
@@ -739,17 +731,8 @@ feed_main_iterator_get_glyph(
 
         if (feed_main_state_eol == p_iterator->e_state)
         {
-            if (p_iterator->p_document_line)
+            if (p_iterator->p_document_line->o_list.p_next != &(p_this->p_text->o_lines))
             {
-                if (p_iterator->p_document_line->o_list.p_next != &(p_this->p_text->o_lines))
-                {
-                }
-                else
-                {
-                    p_iterator->p_document_line = NULL;
-
-                    p_iterator->e_state = feed_main_state_eof;
-                }
             }
             else
             {
@@ -759,9 +742,7 @@ feed_main_iterator_get_glyph(
 
         if (feed_main_state_eof == p_iterator->e_state)
         {
-        }
-        else
-        {
+            p_iterator->p_document_line = NULL;
         }
     }
     else
@@ -1690,195 +1671,6 @@ feed_main_look_down(
     return b_found;
 }
 
-#if 0
-static
-char
-feed_main_look_realign_page(
-    struct feed_handle * const
-        p_this,
-    struct feed_line * * const
-        pp_prev_line,
-    unsigned long int * const
-        p_prev_line_index,
-    unsigned long int * const
-        p_prev_glyph_index,
-    enum feed_main_state * const
-        p_prev_state)
-{
-    char
-        b_found;
-
-    struct feed_main_iterator
-        o_iterator;
-
-    b_found =
-        0;
-
-    p_this->b_cursor_visible =
-        0;
-
-    p_this->i_cursor_visible_x =
-        0u;
-
-    p_this->i_cursor_visible_y =
-        0u;
-
-    if (
-        feed_main_iterator_begin(
-            p_this,
-            &(o_iterator),
-            NULL,
-            0u,
-            0u,
-            feed_main_state_prompt))
-    {
-        char
-            b_more;
-
-        struct feed_line *
-            p_prev_page_line;
-
-        unsigned long int
-            i_prev_page_line_index;
-
-        unsigned long int
-            i_prev_page_glyph_index;
-
-        enum feed_main_state
-            e_prev_page_state;
-
-        b_more =
-            1;
-
-        p_prev_page_line =
-        p_this->p_page_line =
-            o_iterator.p_document_line;
-
-        i_prev_page_line_index =
-        p_this->i_page_line_index =
-            o_iterator.i_line_index;
-
-        i_prev_page_glyph_index =
-        p_this->i_page_glyph_index =
-            o_iterator.i_glyph_index;
-
-        e_prev_page_state =
-        p_this->e_page_state =
-            o_iterator.e_state;
-
-        while (
-            b_more
-            && (!b_found))
-        {
-            if (
-                feed_main_iterator_test(
-                    p_this,
-                    &(o_iterator)))
-            {
-                /* Detect if cursor is visible */
-                if (
-                    (
-                        p_this->o_cursor.i_line_index == o_iterator.i_line_index)
-                    && (
-                        p_this->o_cursor.i_glyph_index == o_iterator.i_glyph_index)
-                    && (
-                        (o_iterator.e_state != feed_main_state_prompt)))
-                {
-                    p_this->i_cursor_visible_x =
-                        feed_screen_iterator_get_cursor_x(
-                            &(
-                                p_this->o_screen_info),
-                            &(
-                                o_iterator.o_screen_iterator));
-
-                    p_this->i_cursor_visible_y =
-                        feed_screen_iterator_get_cursor_y(
-                            &(
-                                p_this->o_screen_info),
-                            &(
-                                o_iterator.o_screen_iterator));
-
-                    p_this->b_cursor_visible =
-                        1;
-
-                    b_found =
-                        1;
-                }
-                else
-                {
-                    feed_main_iterator_write(
-                        p_this,
-                        &(o_iterator));
-
-                    b_more =
-                        feed_main_iterator_next(
-                            p_this,
-                            &(
-                                o_iterator));
-                }
-            }
-            else
-            {
-                /* Remember this is last page */
-                p_prev_page_line =
-                    p_this->p_page_line;
-
-                i_prev_page_line_index =
-                    p_this->i_page_line_index;
-
-                i_prev_page_glyph_index =
-                    p_this->i_page_glyph_index;
-
-                e_prev_page_state =
-                    p_this->e_page_state;
-
-                p_this->p_page_line =
-                    o_iterator.p_document_line;
-
-                p_this->i_page_line_index =
-                    o_iterator.i_line_index;
-
-                p_this->i_page_glyph_index =
-                    o_iterator.i_glyph_index;
-
-                p_this->e_page_state =
-                    o_iterator.e_state;
-
-                feed_screen_iterator_home(
-                    &(
-                        p_this->o_screen_info),
-                    &(
-                        o_iterator.o_screen_iterator));
-            }
-        }
-
-        if (
-            b_found)
-        {
-            *(
-                pp_prev_line) =
-                p_prev_page_line;
-
-            *(
-                p_prev_line_index) =
-                i_prev_page_line_index;
-
-            *(
-                p_prev_glyph_index) =
-                i_prev_page_glyph_index;
-
-            *(
-                p_prev_state) =
-                e_prev_page_state;
-        }
-    }
-
-    return
-        b_found;
-
-}
-#endif
-
 static
 char
 feed_main_scroll_pageup(
@@ -1891,35 +1683,6 @@ feed_main_scroll_pageup(
     struct feed_main_iterator
         o_iterator;
 
-#if 0
-    if (p_this->i_page_line_index >= p_this->p_text->i_line_count)
-    {
-        printf("fix page start\r\n");
-
-        p_this->i_page_line_index =
-            (p_this->p_text->i_line_count - 1u);
-
-        p_this->p_page_line =
-            feed_text_get_line(
-                p_this->p_text,
-                p_this->i_page_line_index);
-
-        if (p_this->p_page_line
-            && (p_this->p_page_line->i_glyph_count))
-        {
-            p_this->i_page_glyph_index =
-                (p_this->p_page_line->i_glyph_count - 1ul);
-        }
-        else
-        {
-            p_this->i_page_glyph_index =
-                0ul;
-        }
-
-        p_this->e_page_state = feed_main_state_text;
-    }
-#endif
-
     if (
         feed_main_iterator_begin_reverse(
             p_this,
@@ -1931,6 +1694,9 @@ feed_main_scroll_pageup(
     {
         char
             b_more;
+
+        char
+            b_reach_top;
 
         struct feed_line *
             p_final_line;
@@ -1947,6 +1713,9 @@ feed_main_scroll_pageup(
         b_more =
             1;
 
+        b_reach_top =
+            0;
+
         if (0u == o_iterator.i_glyph_index)
         {
             feed_main_iterator_prev(
@@ -1956,7 +1725,8 @@ feed_main_scroll_pageup(
         }
 
         while (
-            b_more)
+            b_more
+            && (!b_reach_top))
         {
             if (
                 feed_main_iterator_test(
@@ -1992,6 +1762,9 @@ feed_main_scroll_pageup(
                 }
                 else
                 {
+                    b_reach_top =
+                        1;
+
                     b_more =
                         0;
                 }
@@ -2005,13 +1778,6 @@ feed_main_scroll_pageup(
 
         if (b_found)
         {
-#if defined(FEED_CFG_DEBUG)
-            printf("scrollup: %lu %lu %d\r\n",
-                i_final_line_index,
-                i_final_glyph_index,
-                e_final_state);
-#endif /* #if defined(FEED_CFG_DEBUG) */
-
             p_this->p_page_line =
                 p_final_line;
 
@@ -2034,6 +1800,12 @@ feed_main_scroll_pageup(
 
                 p_this->e_page_state =
                     e_final_state;
+            }
+
+            if (b_reach_top)
+            {
+                b_found =
+                    0;
             }
         }
     }
@@ -2072,26 +1844,26 @@ feed_main_look_up(
                     (p_this->i_cursor_visible_y - 1u) * p_this->o_screen_info.i_screen_width
                     + p_this->i_cursor_visible_x);
         }
-        else if (p_this->o_cursor.i_line_index)
-        {
-            if (
-                feed_main_scroll_pageup(
-                    p_this))
-            {
-                /* up with aligned page */
-                feed_main_look_xy(
-                    p_this,
-                    (p_this->o_screen_info.i_screen_height - 1u) * p_this->o_screen_info.i_screen_width
-                    + p_this->i_cursor_visible_x);
-            }
-
-            b_found =
-                0;
-        }
         else
         {
-            b_found =
-                1;
+            if (p_this->i_page_line_index
+                || p_this->i_page_glyph_index)
+            {
+                if (
+                    feed_main_scroll_pageup(
+                        p_this))
+                {
+                    /* up with aligned page */
+                    feed_main_look_xy(
+                        p_this,
+                        (p_this->o_screen_info.i_screen_height - 1u) * p_this->o_screen_info.i_screen_width
+                        + p_this->i_cursor_visible_x);
+
+                }
+
+                b_found =
+                    0;
+            }
         }
     }
     else
@@ -2148,7 +1920,7 @@ feed_main_look_pageup(
     {
         if (
             feed_main_scroll_pageup(
-                p_this))
+               p_this))
         {
             /* Find cursor at same position */
             b_found =
@@ -2237,6 +2009,18 @@ feed_main_update_screen_info(
     {
         /* Todo: detect screen size change and invalidate current
         page information */
+
+#if 0
+        if (i_screen_height > 13u)
+        {
+            i_screen_height = 13u;
+        }
+
+        if (i_screen_width > 50u)
+        {
+            i_screen_width = 50u;
+        }
+#endif
 
         feed_screen_info_update(
             &(
