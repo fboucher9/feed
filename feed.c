@@ -2758,12 +2758,20 @@ feed_main_event_callback(
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_PAGEUP) == p_event->i_code)
             {
-                if (feed_main_look_pageup(p_this))
+                if (p_this->i_page_line_index
+                    || p_this->i_page_glyph_index)
                 {
+                    if (feed_main_look_pageup(p_this))
+                    {
+                    }
+                    else
+                    {
+                        /* reset to top of document? */
+                    }
                 }
                 else
                 {
-                    /* reset to top of document? */
+                    b_refresh_text = 0;
                 }
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_PAGEDOWN) == p_event->i_code)
@@ -2797,119 +2805,16 @@ feed_main_event_callback(
                             &(
                                 p_this->o_cursor)))
                     {
-                        feed_text_iterator_validate(
-                            p_this->p_text,
-                            &(
-                                p_this->o_cursor));
-
-                        if (p_this->o_cursor.p_glyph)
-                        {
-                            if (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
-                            {
-                            }
-                            else
-                            {
-                                b_found = 1;
-                            }
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                if (b_found)
-                {
-                    b_found =
-                        0;
-
-                    while (
-                        !b_found)
-                    {
-                        if (
-                            feed_text_iterator_prev_glyph(
-                                p_this->p_text,
-                                &(
-                                    p_this->o_cursor)))
-                        {
-                            feed_text_iterator_validate(
-                                p_this->p_text,
-                                &(
-                                    p_this->o_cursor));
-
-                            if (p_this->o_cursor.p_glyph)
-                            {
-                                if (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
-                                {
-                                    feed_text_iterator_next_glyph(
-                                        p_this->p_text,
-                                        &(
-                                            p_this->o_cursor));
-
-                                    b_found =
-                                        1;
-                                }
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                feed_main_detect_visible_cursor(
-                    p_this);
-
-                if (p_this->b_cursor_visible)
-                {
-                    b_refresh_cursor = 1;
-
-                    b_refresh_text = 0;
-                }
-                else
-                {
-                    feed_main_scroll_pageup(
-                        p_this);
-                }
-            }
-            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_RIGHT) == p_event->i_code)
-            {
-                /* Go right until reach begin of end */
-                char
-                    b_found;
-
-                b_found =
-                    0;
-
-                while (
-                    !b_found)
-                {
-                    if (
-                        feed_text_iterator_next_glyph(
-                            p_this->p_text,
-                            &(
-                                p_this->o_cursor)))
-                    {
                     }
                     else
                     {
                         if (
-                            feed_text_iterator_next_line(
+                            feed_text_iterator_prev_line(
                                 p_this->p_text,
                                 &(
                                     p_this->o_cursor)))
                         {
-                            feed_text_iterator_home_glyph(
+                            feed_text_iterator_end_glyph(
                                 p_this->p_text,
                                 &(
                                     p_this->o_cursor));
@@ -2929,12 +2834,169 @@ feed_main_event_callback(
                     {
                         if (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
                         {
+                        }
+                        else
+                        {
+                            b_found = 1;
+                        }
+                    }
+                    else
+                    {
+                    }
+                }
+
+                if (b_found)
+                {
+                    b_found =
+                        0;
+
+                    while (
+                        !b_found)
+                    {
+                        if (
+                            feed_text_iterator_prev_glyph(
+                                p_this->p_text,
+                                &(
+                                    p_this->o_cursor)))
+                        {
+                        }
+                        else
+                        {
+                            if (
+                                feed_text_iterator_prev_line(
+                                    p_this->p_text,
+                                    &(
+                                        p_this->o_cursor)))
+                            {
+                                feed_text_iterator_end_glyph(
+                                    p_this->p_text,
+                                    &(
+                                        p_this->o_cursor));
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+
+                        feed_text_iterator_validate(
+                            p_this->p_text,
+                            &(
+                                p_this->o_cursor));
+
+                        if (p_this->o_cursor.p_glyph)
+                        {
+                            if (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                            {
+                                b_found =
+                                    1;
+                            }
+                        }
+                        else
+                        {
+                            b_found =
+                                1;
+                        }
+                    }
+
+                    if (b_found)
+                    {
+                        if (
+                            feed_text_iterator_next_glyph(
+                                p_this->p_text,
+                                &(
+                                    p_this->o_cursor)))
+                        {
+                        }
+                        else
+                        {
+                            if (
+                                feed_text_iterator_next_line(
+                                    p_this->p_text,
+                                    &(
+                                        p_this->o_cursor)))
+                            {
+                                feed_text_iterator_home_glyph(
+                                    p_this->p_text,
+                                    &(
+                                        p_this->o_cursor));
+                            }
+                        }
+                    }
+
+                }
+
+                feed_main_detect_visible_cursor(
+                    p_this);
+
+                if (p_this->b_cursor_visible)
+                {
+                    b_refresh_cursor = 1;
+
+                    b_refresh_text = 0;
+                }
+                else
+                {
+                    feed_main_scroll_pageup(
+                        p_this);
+                }
+            }
+            else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_RIGHT) == p_event->i_code)
+            {
+                /* Go right until reach begin of next word */
+                char
+                    b_found;
+
+                b_found =
+                    0;
+
+                while (
+                    !b_found)
+                {
+                    feed_text_iterator_validate(
+                        p_this->p_text,
+                        &(
+                            p_this->o_cursor));
+
+                    if (p_this->o_cursor.p_glyph)
+                    {
+                        if (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                        {
                             b_found = 1;
                         }
                     }
                     else
                     {
                         b_found = 1;
+                    }
+
+                    if (!b_found)
+                    {
+                        if (
+                            feed_text_iterator_next_glyph(
+                                p_this->p_text,
+                                &(
+                                    p_this->o_cursor)))
+                        {
+                        }
+                        else
+                        {
+                            if (
+                                feed_text_iterator_next_line(
+                                    p_this->p_text,
+                                    &(
+                                        p_this->o_cursor)))
+                            {
+                                feed_text_iterator_home_glyph(
+                                    p_this->p_text,
+                                    &(
+                                        p_this->o_cursor));
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -3005,7 +3067,7 @@ feed_main_event_callback(
                 }
                 else
                 {
-                    feed_main_scroll_pageup(
+                    feed_main_latch_next_page(
                         p_this);
                 }
             }
