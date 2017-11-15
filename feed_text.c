@@ -12,6 +12,8 @@ Description:
 
 #include "feed_list.h"
 
+#include "feed_utf8.h"
+
 #include "feed_input.h"
 
 #include "feed_text.h"
@@ -21,8 +23,6 @@ Description:
 #include "feed_object.h"
 
 #include "feed_buf.h"
-
-#include "feed_utf8.h"
 
 static
 char
@@ -43,6 +43,10 @@ feed_text_init(
 
     p_text->p_client =
         p_client;
+
+    feed_utf8_parser_init(
+        &(
+            p_text->o_utf8_parser));
 
     feed_list_init(
         &(
@@ -157,6 +161,9 @@ feed_text_cleanup(
 
     }
 
+    feed_utf8_parser_cleanup(
+        &(
+            p_text->o_utf8_parser));
 } /* feed_text_cleanup() */
 
 static
@@ -539,74 +546,56 @@ feed_text_load(
         if (
             i_data_length)
         {
-            struct feed_utf8_parser
-                o_utf8_parser;
+            unsigned long int
+                i_data_iterator;
 
-            if (
-                feed_utf8_parser_init(
-                    &(
-                        o_utf8_parser)))
+            i_data_iterator =
+                0u;
+
+            b_result =
+                1;
+
+            while (
+                b_result
+                && (
+                    i_data_iterator
+                    < i_data_length))
             {
-                unsigned long int
-                    i_data_iterator;
+                int
+                    i_result;
 
-                i_data_iterator =
-                    0u;
+                struct feed_utf8_code
+                    o_utf8_code;
 
-                b_result =
-                    1;
+                i_result =
+                    feed_utf8_parser_write(
+                        &(
+                            p_text->o_utf8_parser),
+                        p_data[i_data_iterator],
+                        &(
+                            o_utf8_code));
 
-                while (
-                    b_result
-                    && (
-                        i_data_iterator
-                        < i_data_length))
+                if (
+                    0
+                    <= i_result)
                 {
-                    int
-                        i_result;
-
-                    struct feed_utf8_code
-                        o_utf8_code;
-
-                    i_result =
-                        feed_utf8_parser_write(
-                            &(
-                                o_utf8_parser),
-                            p_data[i_data_iterator],
-                            &(
-                                o_utf8_code));
-
                     if (
                         0
-                        <= i_result)
+                        < i_result)
                     {
-                        if (
-                            0
-                            < i_result)
-                        {
-                            feed_text_load_callback(
-                                p_text,
-                                &(
-                                    o_utf8_code));
-                        }
+                        feed_text_load_callback(
+                            p_text,
+                            &(
+                                o_utf8_code));
+                    }
 
-                        i_data_iterator ++;
-                    }
-                    else
-                    {
-                        b_result =
-                            0;
-                    }
+                    i_data_iterator ++;
                 }
-
-                feed_utf8_parser_cleanup(
-                    &(
-                        o_utf8_parser));
-            }
-            else
-            {
-                b_result =
-                    0;
+                else
+                {
+                    b_result =
+                        0;
+                }
             }
         }
         else

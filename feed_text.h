@@ -23,6 +23,11 @@ Description:
 #error include feed_input.h before
 #endif /* #if !defined(INC_FEED_INPUT_H) */
 
+/* Header file dependencies */
+#if !defined(INC_FEED_UTF8_H)
+#error include feed_utf8.h before
+#endif /* #if !defined(INC_FEED_UTF8_H) */
+
 /* Reverse include guard */
 #if defined(INC_FEED_TEXT_H)
 #error include feed_text.h once
@@ -46,6 +51,9 @@ struct feed_text
 
     struct feed_event
         o_last_event;
+
+    struct feed_utf8_parser
+        o_utf8_parser;
 
     /* Number of lines */
     unsigned long int
