@@ -152,6 +152,15 @@ feed_text_iterator_append_glyph(
     struct feed_glyph * const
         p_glyph);
 
+void
+feed_text_iterator_write_glyph(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    struct feed_glyph * const
+        p_glyph);
+
 char
 feed_text_iterator_join_lines(
     struct feed_text * const

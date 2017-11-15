@@ -2261,19 +2261,24 @@ feed_main_insert_event(
                     &(
                         o_utf8_code)))
             {
-                feed_text_write_utf8_code(
-                    p_this->p_text,
-                    &(
-                        o_utf8_code),
-                    p_this->o_cursor.i_line_index,
-                    p_this->o_cursor.i_glyph_index);
+                struct feed_glyph *
+                    p_glyph;
 
-                feed_text_iterator_next_glyph(
-                    p_this->p_text,
-                    &(
-                        p_this->o_cursor));
+                p_glyph =
+                    feed_glyph_create(
+                        p_this->p_client,
+                        &(
+                            o_utf8_code));
 
-                /* Advance the cursor position */
+                if (
+                    p_glyph)
+                {
+                    feed_text_iterator_write_glyph(
+                        p_this->p_text,
+                        &(
+                            p_this->o_cursor),
+                        p_glyph);
+                }
             }
         }
 
@@ -2363,35 +2368,17 @@ feed_main_event_callback(
 
             if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'H') == p_event->i_code)
             {
-                /* Find last char */
-                if (feed_text_iterator_prev_glyph(
-                        p_this->p_text,
-                        &(
-                            p_this->o_cursor)))
+                if (p_this->o_cursor.i_line_index
+                    || p_this->o_cursor.i_glyph_index)
                 {
-                    /* Delete the selected char */
-                    struct feed_glyph *
-                        p_glyph;
-
-                    p_glyph =
-                        feed_text_iterator_remove_glyph(
+                    if (
+                        feed_text_iterator_prev_glyph(
                             p_this->p_text,
                             &(
-                                p_this->o_cursor));
-
-                    if (
-                        p_glyph)
+                                p_this->o_cursor)))
                     {
-                        feed_glyph_destroy(
-                            p_this->p_client,
-                            p_glyph);
                     }
-                }
-                else
-                {
-                    /* Take all glyphs of current line and append at
-                    end of previous line */
-                    if (p_this->o_cursor.i_line_index)
+                    else
                     {
                         if (
                             feed_text_iterator_prev_line(
@@ -2399,28 +2386,55 @@ feed_main_event_callback(
                                 &(
                                     p_this->o_cursor)))
                         {
-                            feed_text_iterator_join_lines(
+                            feed_text_iterator_end_glyph(
+                                p_this->p_text,
+                                &(
+                                    p_this->o_cursor));
+                        }
+                    }
+
+                    /* TODO: detect that cursor is still visible */
+
+                    feed_main_refresh_info(
+                        p_this);
+
+                    /* Adjust visible cursor position */
+                    if (p_this->b_cursor_visible)
+                    {
+                    }
+                    else
+                    {
+                        feed_main_scroll_pageup(
+                            p_this);
+                    }
+
+                    {
+                        struct feed_glyph *
+                            p_glyph;
+
+                        p_glyph =
+                            feed_text_iterator_remove_glyph(
                                 p_this->p_text,
                                 &(
                                     p_this->o_cursor));
 
+                        if (
+                            p_glyph)
+                        {
+                            feed_glyph_destroy(
+                                p_this->p_client,
+                                p_glyph);
+                        }
+                        else
+                        {
+                            /* Bring next line into this line */
+                            /* Delete next line */
+                            feed_text_iterator_join_lines(
+                                p_this->p_text,
+                                &(
+                                    p_this->o_cursor));
                         }
                     }
-                }
-
-                p_this->p_page_line = NULL;
-
-                feed_main_refresh_info(
-                    p_this);
-
-                /* Adjust visible cursor position */
-                if (p_this->b_cursor_visible)
-                {
-                }
-                else
-                {
-                    feed_main_scroll_pageup(
-                        p_this);
                 }
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'L') == p_event->i_code)
