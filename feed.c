@@ -1994,11 +1994,7 @@ static
 void
 feed_main_refresh_job(
     struct feed_handle * const
-        p_this,
-    char const
-        b_refresh_text,
-    char const
-        b_refresh_cursor)
+        p_this)
 {
     struct feed_main_iterator
         o_iterator;
@@ -2006,7 +2002,7 @@ feed_main_refresh_job(
     p_this->o_cursor_visible.i_cursor_address =
         p_this->o_screen_info.i_screen_size;
 
-    if (b_refresh_text)
+    if (p_this->b_refresh_text)
     {
         feed_main_update_screen_info(
             p_this,
@@ -2064,7 +2060,7 @@ feed_main_refresh_job(
                 if (
                     o_iterator.p_prompt_glyph || o_iterator.p_document_glyph)
                 {
-                    if (b_refresh_text)
+                    if (p_this->b_refresh_text)
                     {
                         unsigned char
                             a_visible[15u];
@@ -2088,7 +2084,7 @@ feed_main_refresh_job(
                 else if (
                     o_iterator.p_document_line)
                 {
-                    if (b_refresh_text)
+                    if (p_this->b_refresh_text)
                     {
                         feed_screen_newline(
                             p_this->p_screen);
@@ -2097,7 +2093,7 @@ feed_main_refresh_job(
                 else
                 {
                     /* todo: call clear region */
-                    if (b_refresh_text)
+                    if (p_this->b_refresh_text)
                     {
                         feed_screen_clear_region(
                             p_this->p_screen);
@@ -2140,14 +2136,14 @@ feed_main_refresh_job(
         p_this->e_final_state =
             o_iterator.e_state;
 
-        if (b_refresh_text)
+        if (p_this->b_refresh_text)
         {
             p_this->i_final_cursor_address =
                 feed_screen_get_cursor_pos(
                     p_this->p_screen);
         }
 
-        if (b_refresh_text || b_refresh_cursor)
+        if (p_this->b_refresh_text || p_this->b_refresh_cursor)
         {
             if (p_this->o_cursor_visible.i_cursor_address < p_this->o_screen_info.i_screen_size)
             {
@@ -2160,33 +2156,14 @@ feed_main_refresh_job(
                 p_this->p_tty);
         }
     }
-}
 
-static
-void
-feed_main_refresh_text(
-    struct feed_handle * const
-        p_this)
-{
-    feed_main_refresh_job(
-        p_this,
-        1,
-        1);
-}
+    p_this->b_refresh_text =
+        0;
 
-#if 0
-static
-void
-feed_main_refresh_info(
-    struct feed_handle * const
-        p_this)
-{
-    feed_main_refresh_job(
-        p_this,
-        0,
-        0);
+    p_this->b_refresh_cursor =
+        0;
+
 }
-#endif
 
 static
 void
@@ -2836,12 +2813,6 @@ feed_main_event_callback(
         *(
             p_event);
 
-    p_this->b_refresh_cursor =
-        0;
-
-    p_this->b_refresh_text =
-        0;
-
     if (p_this->b_verbose)
     {
         p_this->b_verbose =
@@ -3023,9 +2994,7 @@ feed_main_event_callback(
     }
 
     feed_main_refresh_job(
-        p_this,
-        p_this->b_refresh_text,
-        p_this->b_refresh_cursor);
+        p_this);
 
 }
 
@@ -3151,7 +3120,14 @@ feed_start(
                         feed_main_state_prompt;
                 }
 
-                feed_main_refresh_text(
+                /* force initial refresh */
+                p_this->b_refresh_cursor =
+                    1;
+
+                p_this->b_refresh_text =
+                    1;
+
+                feed_main_refresh_job(
                     p_this);
 
                 feed_main_loop(
