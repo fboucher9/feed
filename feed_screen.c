@@ -358,28 +358,6 @@ feed_screen_destroy(
 }
 
 void
-feed_screen_get_physical_size(
-    struct feed_screen * const
-        p_screen,
-    unsigned int * const
-        p_physical_width,
-    unsigned int * const
-        p_physical_height)
-{
-    if (
-        p_screen)
-    {
-        *(
-            p_physical_width) =
-            p_screen->i_screen_width;
-
-        *(
-            p_physical_height) =
-            p_screen->i_screen_height;
-    }
-}
-
-void
 feed_screen_set_physical_size(
     struct feed_screen * const
         p_screen,
@@ -403,27 +381,17 @@ void
 feed_screen_set_cursor_pos(
     struct feed_screen * const
         p_screen,
-    unsigned int const
-        i_cursor_x,
-    unsigned int const
-        i_cursor_y)
+    unsigned long int const
+        i_cursor_address)
 {
     if (
         p_screen)
     {
-        if (i_cursor_x >= p_screen->i_screen_width)
+        if (i_cursor_address >= (p_screen->i_screen_width * p_screen->i_region_height))
         {
             feed_screen_set_cursor_pos(
                 p_screen,
-                p_screen->i_screen_width - 1u,
-                i_cursor_y);
-        }
-        else if (i_cursor_y >= p_screen->i_region_height)
-        {
-            feed_screen_set_cursor_pos(
-                p_screen,
-                i_cursor_x,
-                p_screen->i_region_height - 1u);
+                p_screen->i_screen_width * p_screen->i_region_height - 1u);
         }
         else
         {
@@ -442,9 +410,17 @@ feed_screen_set_cursor_pos(
                 if (
                     p_tty)
                 {
+                    unsigned short int i_cursor_x;
+
+                    unsigned short int i_cursor_y;
+
                     unsigned int i_screen_cx;
 
                     unsigned int i_screen_cy;
+
+                    i_cursor_x = (unsigned short int)(i_cursor_address % p_screen->i_screen_width);
+
+                    i_cursor_y = (unsigned short int)(i_cursor_address / p_screen->i_screen_width);
 
                     /* Calculate new screen cursor position */
                     if (i_cursor_y < (p_screen->i_screen_height))
@@ -653,26 +629,24 @@ feed_screen_write(
     }
 }
 
-void
+unsigned long int
 feed_screen_get_cursor_pos(
     struct feed_screen * const
-        p_screen,
-    unsigned short int * const
-        p_cursor_x,
-    unsigned short int * const
-        p_cursor_y)
+        p_screen)
 {
+    unsigned long int
+        i_cursor_address;
+
     if (
         p_screen)
     {
-        *(p_cursor_x) =
-            (unsigned short int)(
-                p_screen->i_region_cx);
-
-        *(p_cursor_y) =
-            (unsigned short int)(
-                p_screen->i_region_cy);
+        i_cursor_address =
+            p_screen->i_region_cy * p_screen->i_screen_width + p_screen->i_region_cx;
     }
+
+    return
+        i_cursor_address;
+
 }
 
 void

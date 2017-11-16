@@ -55,15 +55,6 @@ feed_screen_destroy(
         p_screen);
 
 void
-feed_screen_get_physical_size(
-    struct feed_screen * const
-        p_screen,
-    unsigned int * const
-        p_physical_width,
-    unsigned int * const
-        p_physical_height);
-
-void
 feed_screen_set_physical_size(
     struct feed_screen * const
         p_screen,
@@ -72,23 +63,17 @@ feed_screen_set_physical_size(
     unsigned int const
         i_physical_height);
 
-void
+unsigned long int
 feed_screen_get_cursor_pos(
     struct feed_screen * const
-        p_screen,
-    unsigned short int * const
-        p_cursor_x,
-    unsigned short int * const
-        p_cursor_y);
+        p_screen);
 
 void
 feed_screen_set_cursor_pos(
     struct feed_screen * const
         p_screen,
-    unsigned int const
-        i_cursor_x,
-    unsigned int const
-        i_cursor_y);
+    unsigned long int const
+        i_cursor_address);
 
 void
 feed_screen_newline_raw(
