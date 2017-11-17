@@ -1,0 +1,15 @@
+{
+    global:
+        feed_create;
+        feed_destroy;
+        feed_prompt1;
+        feed_prompt2;
+        feed_load;
+        feed_start;
+        feed_stop;
+        feed_suggest;
+        feed_length;
+        feed_save;
+    local:
+        *;
+};

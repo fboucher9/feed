@@ -31,15 +31,21 @@ ifndef FEED_CXX
 FEED_CXX = $(CXX)
 endif
 
+ifndef FEED_AR
+FEED_AR = $(AR)
+endif
+
 ifeq ($(DBG),1)
 FEED_CFG_DBG = chk
 else
 FEED_CFG_DBG = fre
 endif
 
-FEED_CFLAGS_chk = -g -O0
+FEED_CFLAGS_base = -fPIC
 
-FEED_CFLAGS_fre = -O2 -Os
+FEED_CFLAGS_chk = -g -O0 $(FEED_CFLAGS_base)
+
+FEED_CFLAGS_fre = -O2 -Os $(FEED_CFLAGS_base)
 
 FEED_CFLAGS_WARNINGS = \
     -pedantic -Wall -Wextra -Wabi -Waggregate-return -Warray-bounds \
@@ -79,7 +85,6 @@ FEED_CXXFLAGS_WARNINGS = \
     -Wctor-dtor-privacy -Weffc++ -Wenum-compare -Wnon-virtual-dtor \
     -Woverloaded-virtual -Wstrict-null-sentinel -Wsign-promo
 
-
 FEED_INCLUDES = -I$(FEED_DST_PATH)
 
 FEED_CFLAGS = $(CFLAGS) $(FEED_CFLAGS_$(FEED_CFG_DBG)) $(FEED_CFLAGS_WARNINGS) $(FEED_INCLUDES)
@@ -94,10 +99,8 @@ FEED_LDFLAGS = $(LDFLAGS) $(FEED_LDFLAGS_$(FEED_CFG_DBG))
 
 FEED_LIBS =
 
-FEED_SRCS = \
-    $(FEED_DST_PATH)/_obj_feed_os.o \
+FEED_LIBRARY_SRCS = \
     $(FEED_DST_PATH)/_obj_feed_client.o \
-    $(FEED_DST_PATH)/_obj_feed_main.o \
     $(FEED_DST_PATH)/_obj_feed_heap.o \
     $(FEED_DST_PATH)/_obj_feed_tty.o \
     $(FEED_DST_PATH)/_obj_feed_buf.o \
@@ -117,19 +120,37 @@ FEED_SRCS = \
     $(FEED_DST_PATH)/_obj_feed_text_iterator.o \
     $(FEED_DST_PATH)/_obj_feed.o
 
+FEED_TEST_SRCS = \
+    $(FEED_DST_PATH)/_obj_feed_os.o \
+    $(FEED_DST_PATH)/_obj_feed_main.o \
+    $(FEED_DST_PATH)/libfeed.a
+
 # Default target
 .PHONY: all
-all : testfeed
+all : testfeed libfeed
 
 # Test application
 .PHONY: testfeed
 testfeed: $(FEED_DST_PATH)/testfeed.exe
 
+# Library
+.PHONY: libfeed
+libfeed: $(FEED_DST_PATH)/libfeed.a $(FEED_DST_PATH)/libfeed.so
+
 # Link the target
-$(FEED_DST_PATH)/testfeed.exe : $(FEED_SRCS)
+$(FEED_DST_PATH)/testfeed.exe : $(FEED_TEST_SRCS)
 	@echo linking $@
-	@echo -o $@ $(FEED_CFLAGS) $(FEED_SRCS) $(FEED_LDFLAGS) $(FEED_LIBS) > $(FEED_DST_PATH)/_obj_testfeed.cmd
+	@echo -o $@ $(FEED_CFLAGS) $(FEED_TEST_SRCS) $(FEED_LDFLAGS) $(FEED_LIBS) > $(FEED_DST_PATH)/_obj_testfeed.cmd
 	@$(FEED_CC) @$(FEED_DST_PATH)/_obj_testfeed.cmd
+
+$(FEED_DST_PATH)/libfeed.a : $(FEED_LIBRARY_SRCS)
+	@echo creating $@
+	@$(FEED_AR) rc $(FEED_DST_PATH)/libfeed.a $(FEED_LIBRARY_SRCS)
+
+$(FEED_DST_PATH)/libfeed.so : $(FEED_LIBRARY_SRCS)
+	@echo linking $@
+	@echo -shared -Wl,--version-script,feed.exports -o $@ $(FEED_CFLAGS) $(FEED_LIBRARY_SRCS) $(FEED_LDFLAGS) $(FEED_LIBS) > $(FEED_DST_PATH)/_obj_libfeed_so.cmd
+	@$(FEED_CC) @$(FEED_DST_PATH)/_obj_libfeed_so.cmd
 
 # Build each object file
 $(FEED_DST_PATH)/_obj_%.o : $(FEED_SRC_PATH)/%.c
@@ -145,13 +166,17 @@ $(FEED_DST_PATH)/feed_os.h.gch : $(FEED_SRC_PATH)/feed_os.h
 	@$(FEED_CC) -c -o $@ $(FEED_CFLAGS) $(FEED_SRC_PATH)/feed_os.h
 
 # Indicate that all object files have dependency on precompiled header
-$(FEED_SRCS) : $(FEED_DST_PATH)/feed_os.h.gch
+$(FEED_TEST_SRCS) : $(FEED_DST_PATH)/feed_os.h.gch
 
 # Indicate dependency on makefile
 $(FEED_DST_PATH)/testfeed.exe : $(FEED_SRC_PATH)/feed_project.mak
 
+$(FEED_DST_PATH)/libfeed.a : $(FEED_SRC_PATH)/feed_project.mak
+
 # Indicate dependency on makefile
-$(FEED_SRCS): $(FEED_SRC_PATH)/feed_project.mak
+$(FEED_TEST_SRCS): $(FEED_SRC_PATH)/feed_project.mak
+
+$(FEED_LIBRARY_SRCS) : $(FEED_SRC_PATH)/feed_project.mak
 
 # Clean temporary files
 .PHONY: clean
@@ -160,6 +185,8 @@ clean :
 	-rm -f $(FEED_DST_PATH)/feed_os.h.gch
 	-rm -f $(FEED_DST_PATH)/feed_os.h.gch.oxx
 	-rm -f $(FEED_DST_PATH)/testfeed.exe
+	-rm -f $(FEED_DST_PATH)/libfeed.a
+	-rm -f $(FEED_DST_PATH)/libfeed.so
 
 # Include header dependency files
 -include $(FEED_DST_PATH)/_obj_*.o.d
