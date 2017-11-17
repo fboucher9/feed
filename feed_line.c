@@ -52,6 +52,9 @@ feed_line_init(
     p_line->i_width =
         0ul;
 
+    p_line->i_raw_len =
+        0ul;
+
     b_result =
         1;
 
@@ -133,6 +136,9 @@ feed_line_reset(
         0u;
 
     p_line->i_width =
+        0ul;
+
+    p_line->i_raw_len =
         0ul;
 
 }
@@ -237,7 +243,11 @@ feed_line_append_glyph(
         feed_glyph_get_visible_width(
             p_glyph);
 
+    p_line->i_raw_len +=
+        p_glyph->o_utf8_code.i_raw_len;
+
     p_line->i_glyph_count ++;
+
 }
 
 void
@@ -337,7 +347,11 @@ feed_line_write_utf8_code(
             feed_glyph_get_visible_width(
                 p_glyph);
 
+        p_line->i_raw_len +=
+            p_glyph->o_utf8_code.i_raw_len;
+
         p_line->i_glyph_count ++;
+
     }
 }
 
@@ -418,43 +432,13 @@ feed_line_get_glyph(
 
 }
 
-unsigned int
+unsigned long int
 feed_line_get_raw_length(
     struct feed_line * const
         p_line)
 {
-    unsigned int
-        i_buf_len;
-
-    struct feed_list *
-        p_iterator;
-
-    i_buf_len =
-        0u;
-
-    p_iterator =
-        p_line->o_glyphs.p_next;
-
-    while (
-        p_iterator
-        != &(p_line->o_glyphs))
-    {
-        struct feed_glyph *
-            p_glyph;
-
-        p_glyph =
-            (struct feed_glyph *)(
-                p_iterator);
-
-        i_buf_len +=
-            p_glyph->o_utf8_code.i_raw_len;
-
-        p_iterator =
-            p_iterator->p_next;
-    }
-
     return
-        i_buf_len;
+        p_line->i_raw_len;
 
 } /* feed_line_get_raw_length() */
 
@@ -635,6 +619,23 @@ feed_line_remove_glyph(
         else
         {
             p_line->i_width = 0ul;
+        }
+    }
+
+    {
+        unsigned char
+            i_glyph_len;
+
+        i_glyph_len =
+            p_glyph->o_utf8_code.i_raw_len;
+
+        if (p_line->i_raw_len > i_glyph_len)
+        {
+            p_line->i_raw_len -= i_glyph_len;
+        }
+        else
+        {
+            p_line->i_raw_len = 0ul;
         }
     }
 

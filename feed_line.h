@@ -54,6 +54,10 @@ struct feed_line
     unsigned long int
         i_width;
 
+    /* Number of raw bytes */
+    unsigned long int
+        i_raw_len;
+
     unsigned long int
         a_padding[1u];
 
@@ -99,7 +103,7 @@ feed_line_get_glyph(
     unsigned long int const
         i_glyph_index);
 
-unsigned int
+unsigned long int
 feed_line_get_raw_length(
     struct feed_line * const
         p_line);

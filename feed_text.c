@@ -364,18 +364,18 @@ feed_text_write_utf8_code(
 
 }
 
-unsigned int
+unsigned long int
 feed_text_get_raw_length(
     struct feed_text * const
         p_text)
 {
-    unsigned int
+    unsigned long int
         i_buf_len;
 
     struct feed_list *
         p_iterator;
 
-    unsigned int
+    unsigned long int
         i_line_iterator;
 
     i_buf_len =

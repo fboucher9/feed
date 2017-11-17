@@ -92,7 +92,7 @@ feed_text_write_utf8_code(
     unsigned long int const
         i_glyph_index);
 
-unsigned int
+unsigned long int
 feed_text_get_raw_length(
     struct feed_text * const
         p_text);

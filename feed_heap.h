@@ -29,7 +29,7 @@ void *
 feed_heap_alloc(
     struct feed_heap * const
         p_heap,
-    unsigned int const
+    unsigned long int const
         i_buffer_length);
 
 void

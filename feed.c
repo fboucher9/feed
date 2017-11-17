@@ -3383,9 +3383,82 @@ feed_main_event_callback(
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
             {
+#if 0 /* debug */
+                /* do notify */
+                /* Provide one line at a time */
+                int i_notify_result;
+
+                i_notify_result = 0;
+
+                if (p_this->o_descriptor.p_notify)
+                {
+                    unsigned char *
+                        p_save_buffer;
+
+                    unsigned long int
+                        i_save_length;
+
+                    /* save whole buffer */
+                    i_save_length =
+                        feed_length(
+                            p_this);
+
+                    if (i_save_length)
+                    {
+                        p_save_buffer =
+                            (unsigned char *)(
+                                feed_heap_alloc(
+                                    p_this->p_heap,
+                                    i_save_length));
+                    }
+                    else
+                    {
+                        p_save_buffer =
+                            (unsigned char *)(
+                                0);
+                    }
+
+                    if (p_save_buffer)
+                    {
+                        feed_save(
+                            p_this,
+                            p_save_buffer,
+                            i_save_length);
+                    }
+
+                    i_notify_result =
+                        (*(p_this->o_descriptor.p_notify))(
+                            p_this->o_descriptor.p_context,
+                            p_save_buffer,
+                            i_save_length);
+
+                    /* free whole buffer */
+                    if (p_save_buffer)
+                    {
+                        feed_heap_free(
+                            p_this->p_heap,
+                            (void *)(
+                                p_save_buffer));
+                    }
+                }
+
+                if (0 == i_notify_result)
+                {
+                    feed_main_insert_newline(
+                        p_this);
+                }
+                else
+                {
+                    p_this->b_started =
+                        0;
+                }
+
+#else /* debug */
+
                 feed_main_insert_newline(
                     p_this);
 
+#endif /* debug */
             }
             else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'V') == p_event->i_code)
             {

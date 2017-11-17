@@ -172,6 +172,24 @@ feed_main_print_status(
 }
 #endif
 
+static
+int
+feed_main_notify_callback(
+    void * const
+        p_context,
+    unsigned char const * const p_data,
+    unsigned long int const i_data_length)
+{
+    (void)(
+        p_context);
+    (void)(
+        p_data);
+    (void)(
+        i_data_length);
+
+    return 1;
+}
+
 int
 feed_main(
     unsigned int const
@@ -195,7 +213,8 @@ feed_main(
                 NULL;
 
             o_feed_descriptor.p_notify =
-                NULL;
+                &(
+                    feed_main_notify_callback);
         }
 
         p_feed_handle =

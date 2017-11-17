@@ -12,7 +12,7 @@ void *
 feed_object_create(
     struct feed_client * const
         p_client,
-    unsigned int const
+    unsigned long int const
         i_buf_len,
     char (*p_init_cb)(
         void * const

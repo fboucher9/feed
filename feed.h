@@ -42,7 +42,7 @@ struct feed_descriptor
     int (* p_notify)(
         void * const p_context,
         unsigned char const * const p_data,
-        unsigned int const i_data_length);
+        unsigned long int const i_data_length);
 
     /* application must provide suggestions */
     int (* p_complete)(
