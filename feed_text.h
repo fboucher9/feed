@@ -113,4 +113,27 @@ feed_text_load(
     unsigned long int const
         i_data_length);
 
+void
+feed_text_remove_line(
+    struct feed_text * const
+        p_text,
+    struct feed_line * const
+        p_line);
+
+void
+feed_text_insert_line_after(
+    struct feed_text * const
+        p_text,
+    struct feed_line * const
+        p_line_existing,
+    struct feed_line * const
+        p_line_new);
+
+void
+feed_text_insert_line_tail(
+    struct feed_text * const
+        p_text,
+    struct feed_line * const
+        p_line_new);
+
 /* end-of-file: feed_text.h */

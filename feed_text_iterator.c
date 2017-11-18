@@ -686,10 +686,12 @@ feed_text_iterator_join_lines(
             }
         }
 
-        feed_line_destroy(
+        feed_text_remove_line(
+            p_text,
             o_next_line.p_line);
 
-        p_text->i_line_count --;
+        feed_line_destroy(
+            o_next_line.p_line);
 
         feed_text_iterator_invalidate_glyph(
             p_text,

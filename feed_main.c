@@ -187,7 +187,7 @@ feed_main_notify_callback(
     (void)(
         i_data_length);
 
-    return 1;
+    return 0;
 }
 
 int

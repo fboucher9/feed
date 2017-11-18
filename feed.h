@@ -38,11 +38,11 @@ enum feed_complete_type
 /* Descriptor for initialization of library handle */
 struct feed_descriptor
 {
-    /* application may preview and consume a line */
+    /* application may filter events */
     int (* p_notify)(
         void * const p_context,
-        unsigned char const * const p_data,
-        unsigned long int const i_data_length);
+        unsigned char const * const p_event,
+        unsigned long int const i_event_length);
 
     /* application must provide suggestions */
     int (* p_complete)(
@@ -109,6 +109,21 @@ int feed_save(
     struct feed_handle * const p_feed_handle,
     unsigned char * const p_data,
     unsigned long int const i_data_length);
+
+/* consume bytes from buffer */
+unsigned long int feed_consume(
+    struct feed_handle * const p_feed_handle,
+    unsigned char * const p_data,
+    unsigned long int const i_data_length);
+
+/* iterate contents of buffer */
+int feed_iterate(
+    struct feed_handle * const p_feed_handle,
+    int (*p_callback)(
+        void * const p_context,
+        unsigned char const * const a_raw,
+        unsigned char const i_raw_len),
+    void * const p_context);
 
 #if defined(__cplusplus)
 } /* extern "C" */

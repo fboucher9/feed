@@ -67,13 +67,9 @@ feed_text_init(
         /* Store the line into the list */
         if (p_line)
         {
-            feed_list_join(
-                &(
-                    p_line->o_list),
-                &(
-                    p_text->o_lines));
-
-            p_text->i_line_count ++;
+            feed_text_insert_line_tail(
+                p_text,
+                p_line);
 
             b_result =
                 1;
@@ -160,6 +156,8 @@ feed_text_cleanup(
             p_next;
 
     }
+
+    p_text->i_line_count = 0ul;
 
     feed_utf8_parser_cleanup(
         &(
@@ -484,13 +482,9 @@ feed_text_append_line(
     if (
         p_line)
     {
-        feed_list_join(
-            &(
-                p_line->o_list),
-            &(
-                p_text->o_lines));
-
-        p_text->i_line_count ++;
+        feed_text_insert_line_tail(
+            p_text,
+            p_line);
     }
 
     return
@@ -613,6 +607,56 @@ feed_text_load(
     return
         b_result;
 
+}
+
+void
+feed_text_remove_line(
+    struct feed_text * const
+        p_text,
+    struct feed_line * const
+        p_line)
+{
+    feed_list_join(
+        &(
+            p_line->o_list),
+        &(
+            p_line->o_list));
+
+    p_text->i_line_count --;
+}
+
+void
+feed_text_insert_line_after(
+    struct feed_text * const
+        p_text,
+    struct feed_line * const
+        p_line_existing,
+    struct feed_line * const
+        p_line_new)
+{
+    feed_list_join(
+        &(
+            p_line_existing->o_list),
+        &(
+            p_line_new->o_list));
+
+    p_text->i_line_count ++;
+}
+
+void
+feed_text_insert_line_tail(
+    struct feed_text * const
+        p_text,
+    struct feed_line * const
+        p_line_new)
+{
+    feed_list_join(
+        &(
+            p_line_new->o_list),
+        &(
+            p_text->o_lines));
+
+    p_text->i_line_count ++;
 }
 
 /* end-of-file: feed_text.c */

@@ -3180,13 +3180,10 @@ feed_main_insert_newline(
         if (
             p_line_down)
         {
-            feed_list_join(
-                &(
-                    p_this->o_cursor.p_line->o_list),
-                &(
-                    p_line_down->o_list));
-
-            p_this->p_text->i_line_count ++;
+            feed_text_insert_line_after(
+                p_this->p_text,
+                p_this->o_cursor.p_line,
+                p_line_down);
 
             if (p_glyph)
             {
@@ -3462,65 +3459,17 @@ feed_main_event_callback(
 
                 if (p_this->o_descriptor.p_notify)
                 {
-                    unsigned char *
-                        p_save_buffer;
-
-                    unsigned long int
-                        i_save_length;
-
-                    /* save whole buffer */
-                    i_save_length =
-                        feed_length(
-                            p_this);
-
-                    if (i_save_length)
-                    {
-                        p_save_buffer =
-                            (unsigned char *)(
-                                feed_heap_alloc(
-                                    p_this->p_heap,
-                                    i_save_length));
-                    }
-                    else
-                    {
-                        p_save_buffer =
-                            (unsigned char *)(
-                                0);
-                    }
-
-                    if (p_save_buffer)
-                    {
-                        feed_save(
-                            p_this,
-                            p_save_buffer,
-                            i_save_length);
-                    }
-
                     i_notify_result =
                         (*(p_this->o_descriptor.p_notify))(
                             p_this->o_descriptor.p_context,
-                            p_save_buffer,
-                            i_save_length);
-
-                    /* free whole buffer */
-                    if (p_save_buffer)
-                    {
-                        feed_heap_free(
-                            p_this->p_heap,
-                            (void *)(
-                                p_save_buffer));
-                    }
+                            p_event->a_raw,
+                            p_event->i_raw_len);
                 }
 
                 if (0 == i_notify_result)
                 {
                     feed_main_insert_newline(
                         p_this);
-                }
-                else
-                {
-                    p_this->b_started =
-                        0;
                 }
 
 #else /* debug */
@@ -3814,5 +3763,265 @@ feed_save(
         i_result;
 
 } /* feed_save() */
+
+unsigned long int
+feed_consume(
+    struct feed_handle * const
+        p_this,
+    unsigned char * const
+        p_data,
+    unsigned long int const
+        i_data_length)
+{
+    unsigned long int
+        i_data_iterator;
+
+    i_data_iterator =
+        0ul;
+
+    if (p_this->p_text)
+    {
+        char
+            b_more;
+
+        b_more =
+            1;
+
+        while (b_more && (i_data_iterator < i_data_length))
+        {
+            struct feed_line *
+                p_line;
+
+            p_line =
+                feed_text_get_line(
+                    p_this->p_text,
+                    0ul);
+
+            if (
+                p_line)
+            {
+                struct feed_glyph *
+                    p_glyph;
+
+                p_glyph =
+                    feed_line_get_glyph(
+                        p_line,
+                        0ul);
+
+                if (
+                    p_glyph)
+                {
+                    if ((i_data_iterator + p_glyph->o_utf8_code.i_raw_len) <= i_data_length)
+                    {
+                        memcpy(
+                            p_data + i_data_iterator,
+                            p_glyph->o_utf8_code.a_raw,
+                            p_glyph->o_utf8_code.i_raw_len);
+
+                        i_data_iterator +=
+                            p_glyph->o_utf8_code.i_raw_len;
+
+                        feed_line_remove_glyph(
+                            p_line,
+                            p_glyph);
+
+                        feed_glyph_destroy(
+                            p_this->p_client,
+                            p_glyph);
+                    }
+                    else
+                    {
+                        b_more =
+                            0;
+                    }
+                }
+                else
+                {
+                    /* Do <cr> and delete this line */
+                    if ((i_data_iterator + 1u) <= i_data_length)
+                    {
+                        p_data[i_data_iterator] =
+                            '\n';
+
+                        i_data_iterator ++;
+
+                        if (p_this->p_text->i_line_count > 1ul)
+                        {
+                            feed_text_remove_line(
+                                p_this->p_text,
+                                p_line);
+
+                            feed_line_destroy(
+                                p_line);
+                        }
+                        else
+                        {
+                            b_more =
+                                0;
+                        }
+                    }
+                    else
+                    {
+                        b_more =
+                            0;
+                    }
+                }
+            }
+            else
+            {
+                b_more =
+                    0;
+            }
+        }
+    }
+
+    if (
+        i_data_iterator)
+    {
+        /* Invalidate engine state */
+        p_this->p_page_line = NULL;
+
+        p_this->i_page_line_index = 0u;
+
+        p_this->i_page_glyph_index = 0u;
+
+        p_this->e_page_state = feed_main_state_prompt;
+
+        p_this->o_cursor.p_line = NULL;
+
+        p_this->o_cursor.p_glyph = NULL;
+
+        p_this->o_cursor.i_line_index = 0u;
+
+        p_this->o_cursor.i_glyph_index = 0u;
+    }
+
+    return
+        i_data_iterator;
+
+} /* feed_consume() */
+
+int
+feed_iterate(
+    struct feed_handle * const
+        p_this,
+    int (*p_callback)(
+        void * const
+            p_context,
+        unsigned char const * const
+            a_raw,
+        unsigned char const
+            i_raw_len),
+    void * const
+        p_context)
+{
+    int
+        i_result;
+
+    if (p_this->p_text)
+    {
+        char
+            b_more;
+
+        struct feed_text_iterator
+            o_text_iterator;
+
+        feed_text_iterator_init(
+            p_this->p_text,
+            &(
+                o_text_iterator));
+
+        while (b_more)
+        {
+            feed_text_iterator_validate(
+                p_this->p_text,
+                &(
+                    o_text_iterator));
+
+            if (
+                o_text_iterator.p_line)
+            {
+                if (
+                    o_text_iterator.p_glyph)
+                {
+                    int
+                        i_status;
+
+                    i_status =
+                        (*p_callback)(
+                            p_context,
+                            o_text_iterator.p_glyph->o_utf8_code.a_raw,
+                            o_text_iterator.p_glyph->o_utf8_code.i_raw_len);
+
+                    if (
+                        i_status >= 0)
+                    {
+                        feed_text_iterator_next_glyph(
+                            p_this->p_text,
+                            &(
+                                o_text_iterator));
+                    }
+                    else
+                    {
+                        b_more =
+                            0;
+                    }
+                }
+                else
+                {
+                    int
+                        i_status;
+
+                    static unsigned char const s_newline[1u] =
+                    {
+                        '\n'
+                    };
+
+                    i_status =
+                        (*p_callback)(
+                            p_context,
+                            s_newline,
+                            (unsigned char)(sizeof(s_newline)));
+
+                    if (
+                        i_status >= 0)
+                    {
+                        feed_text_iterator_next_line(
+                            p_this->p_text,
+                            &(
+                                o_text_iterator));
+                    }
+                    else
+                    {
+                        b_more =
+                            0;
+                    }
+                }
+            }
+            else
+            {
+                b_more =
+                    0;
+            }
+        }
+
+        feed_text_iterator_cleanup(
+            p_this->p_text,
+            &(
+                o_text_iterator));
+
+        i_result =
+            0;
+    }
+    else
+    {
+        i_result =
+            -1;
+    }
+
+    return
+        i_result;
+
+} /* feed_iterate() */
 
 /* end-of-file: feed.c */
