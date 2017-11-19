@@ -306,7 +306,6 @@ feed_text_iterator_prev_line(
 
 }
 
-#if 0
 char
 feed_text_iterator_home_line(
     struct feed_text const * const
@@ -314,6 +313,11 @@ feed_text_iterator_home_line(
     struct feed_text_iterator * const
         p_text_iterator)
 {
+    return
+        feed_text_iterator_set_line(
+            p_text,
+            p_text_iterator,
+            0ul);
 }
 
 char
@@ -323,8 +327,12 @@ feed_text_iterator_end_line(
     struct feed_text_iterator * const
         p_text_iterator)
 {
+    return
+        feed_text_iterator_set_line(
+            p_text,
+            p_text_iterator,
+            p_text->i_line_count - 1ul);
 }
-#endif
 
 char
 feed_text_iterator_set_glyph(

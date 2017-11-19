@@ -177,15 +177,36 @@ int
 feed_main_notify_callback(
     void * const
         p_context,
-    unsigned char const * const p_data,
-    unsigned long int const i_data_length)
+    struct feed_handle * const
+        p_feed_handle,
+    unsigned char const * const
+        p_data,
+    unsigned long int const
+        i_data_length)
 {
     (void)(
         p_context);
     (void)(
+        p_feed_handle);
+    (void)(
         p_data);
     (void)(
         i_data_length);
+
+#if 0 /* test of stop */
+    if (i_data_length)
+    {
+        /* Detect that Ctrl-M was pressed */
+        if (('\r' == p_data[0u])
+            || ('\n' == p_data[0u]))
+        {
+            feed_stop(
+                p_feed_handle);
+        }
+        /* Detect that Ctrl-I was pressed */
+        /* ... */
+    }
+#endif /* test of stop */
 
     return 0;
 }
@@ -207,9 +228,6 @@ feed_main(
 
         {
             o_feed_descriptor.p_context =
-                NULL;
-
-            o_feed_descriptor.p_complete =
                 NULL;
 
             o_feed_descriptor.p_notify =
@@ -367,7 +385,7 @@ feed_main(
             {
                 if (
                     0
-                    <= feed_save(
+                    != feed_save(
                         p_feed_handle,
                         p_save_buffer,
                         i_save_length))

@@ -11,7 +11,6 @@
         feed_length;
         feed_save;
         feed_consume;
-        feed_iterate;
     local:
         *;
 };

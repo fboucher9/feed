@@ -21,36 +21,15 @@ Description:
 /* Predefine library handle */
 struct feed_handle;
 
-/* Types of completions */
-enum feed_complete_type
-{
-    /* Complete entire line from history */
-    feed_complete_type_line = 1,
-
-    /* Complete word */
-    feed_complete_type_word,
-
-    /* Paste last argument from history */
-    feed_complete_type_last_arg
-
-}; /* enum feed_complete_type */
-
 /* Descriptor for initialization of library handle */
 struct feed_descriptor
 {
-    /* application may filter events */
+    /* notify application of input events */
     int (* p_notify)(
         void * const p_context,
+        struct feed_handle * const p_feed_handle,
         unsigned char const * const p_event,
         unsigned long int const i_event_length);
-
-    /* application must provide suggestions */
-    int (* p_complete)(
-        void * const p_context,
-        unsigned char const * const p_data,
-        unsigned long int const i_data_length,
-        unsigned long int const i_cursor,
-        enum feed_complete_type const e_type);
 
     void * p_context;
 
@@ -105,7 +84,7 @@ unsigned long int feed_length(
     struct feed_handle * const p_feed_handle);
 
 /* query contents of save buffer */
-int feed_save(
+unsigned long int feed_save(
     struct feed_handle * const p_feed_handle,
     unsigned char * const p_data,
     unsigned long int const i_data_length);
@@ -115,15 +94,6 @@ unsigned long int feed_consume(
     struct feed_handle * const p_feed_handle,
     unsigned char * const p_data,
     unsigned long int const i_data_length);
-
-/* iterate contents of buffer */
-int feed_iterate(
-    struct feed_handle * const p_feed_handle,
-    int (*p_callback)(
-        void * const p_context,
-        unsigned char const * const a_raw,
-        unsigned char const i_raw_len),
-    void * const p_context);
 
 #if defined(__cplusplus)
 } /* extern "C" */
