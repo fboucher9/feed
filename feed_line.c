@@ -233,21 +233,11 @@ feed_line_append_glyph(
     struct feed_glyph * const
         p_glyph)
 {
-    feed_list_join(
-        &(
-            p_glyph->o_list),
-        &(
-            p_line->o_glyphs));
-
-    p_line->i_width +=
-        feed_glyph_get_visible_width(
-            p_glyph);
-
-    p_line->i_raw_len +=
-        p_glyph->o_utf8_code.i_raw_len;
-
-    p_line->i_glyph_count ++;
-
+    feed_line_insert_glyph_before(
+        p_line,
+        p_glyph,
+        (struct feed_glyph *)(
+            0));
 }
 
 void
@@ -324,34 +314,10 @@ feed_line_write_utf8_code(
                 p_line,
                 i_glyph_index);
 
-        if (
-            p_current_glyph)
-        {
-            feed_list_join(
-                &(
-                    p_glyph->o_list),
-                &(
-                    p_current_glyph->o_list));
-        }
-        else
-        {
-            /* Store the char into the list */
-            feed_list_join(
-                &(
-                    p_glyph->o_list),
-                &(
-                    p_line->o_glyphs));
-        }
-
-        p_line->i_width +=
-            feed_glyph_get_visible_width(
-                p_glyph);
-
-        p_line->i_raw_len +=
-            p_glyph->o_utf8_code.i_raw_len;
-
-        p_line->i_glyph_count ++;
-
+        feed_line_insert_glyph_before(
+            p_line,
+            p_glyph,
+            p_current_glyph);
     }
 }
 
@@ -643,6 +609,42 @@ feed_line_remove_glyph(
     {
         p_line->i_glyph_count --;
     }
+}
+
+void
+feed_line_insert_glyph_before(
+    struct feed_line * const
+        p_line,
+    struct feed_glyph * const
+        p_glyph_new,
+    struct feed_glyph * const
+        p_glyph_existing)
+{
+    if (p_glyph_existing)
+    {
+        feed_list_join(
+            &(
+                p_glyph_new->o_list),
+            &(
+                p_glyph_existing->o_list));
+    }
+    else
+    {
+        feed_list_join(
+            &(
+                p_glyph_new->o_list),
+            &(
+                p_line->o_glyphs));
+    }
+
+    p_line->i_width +=
+        feed_glyph_get_visible_width(
+            p_glyph_new);
+
+    p_line->i_raw_len +=
+        p_glyph_new->o_utf8_code.i_raw_len;
+
+    p_line->i_glyph_count ++;
 }
 
 /* end-of-file: feed_line.c */

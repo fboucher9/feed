@@ -615,23 +615,10 @@ feed_text_iterator_write_glyph(
         p_text,
         p_text_iterator);
 
-    if (p_text_iterator->p_glyph)
-    {
-        feed_list_join(
-            &(
-                p_glyph->o_list),
-            &(
-                p_text_iterator->p_glyph->o_list));
-
-        p_text_iterator->p_line->i_glyph_count ++;
-    }
-    else
-    {
-        feed_text_iterator_append_glyph(
-            p_text,
-            p_text_iterator,
-            p_glyph);
-    }
+    feed_line_insert_glyph_before(
+        p_text_iterator->p_line,
+        p_glyph,
+        p_text_iterator->p_glyph);
 
     p_text_iterator->i_glyph_index ++;
 }
