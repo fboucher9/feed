@@ -77,7 +77,10 @@ int feed_stop(
 int feed_suggest(
     struct feed_handle * const p_feed_handle,
     unsigned char const * const p_data,
-    unsigned long int const i_data_length);
+    unsigned long int const i_data_length,
+    unsigned long int const i_cursor_offset,
+    unsigned long int const i_word_offset,
+    unsigned long int const i_word_length);
 
 /* query length in bytes of save buffer */
 unsigned long int feed_length(

@@ -204,6 +204,36 @@ feed_main_notify_callback(
                 p_feed_handle);
         }
         /* Detect that Ctrl-I was pressed */
+        else if (9 == p_data[0u])
+        {
+            {
+                /* test of suggestions */
+                static unsigned char const s_suggest1[] =
+                { 'a', 'b', 'c' };
+
+                feed_suggest(
+                    p_feed_handle,
+                    s_suggest1,
+                    sizeof(s_suggest1),
+                    1,
+                    2,
+                    3);
+            }
+
+            {
+                /* test of suggestions */
+                static unsigned char const s_suggest2[] =
+                { 'x', 'y', 'z' };
+
+                feed_suggest(
+                    p_feed_handle,
+                    s_suggest2,
+                    sizeof(s_suggest2),
+                    4,
+                    5,
+                    6);
+            }
+        }
         /* ... */
     }
 #endif /* test of stop */

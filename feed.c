@@ -50,6 +50,8 @@ Description:
 
 #include "feed_object.h"
 
+#include "feed_suggest.h"
+
 /*
 
 Enumeration: feed_main_state
@@ -144,6 +146,9 @@ struct feed_handle
 
     struct feed_screen_info
         o_screen_info;
+
+    struct feed_suggest_list
+        o_suggest_list;
 
     /* Page */
     unsigned long int
@@ -257,6 +262,11 @@ feed_init(
         &(
             p_this->o_screen_info));
 
+    feed_suggest_list_init(
+        p_this->p_client,
+        &(
+            p_this->o_suggest_list));
+
     b_result =
         1;
 
@@ -271,6 +281,10 @@ feed_cleanup(
     struct feed_handle * const
         p_this)
 {
+    feed_suggest_list_cleanup(
+        &(
+            p_this->o_suggest_list));
+
     feed_screen_info_cleanup(
         &(
             p_this->o_screen_info));
@@ -3854,17 +3868,77 @@ feed_suggest(
     unsigned char const * const
         p_data,
     unsigned long int const
-        i_data_length)
+        i_data_length,
+    unsigned long int const
+        i_cursor_offset,
+    unsigned long int const
+        i_word_offset,
+    unsigned long int const
+        i_word_length)
 {
-    (void)(
-        p_this);
-    (void)(
-        p_data);
-    (void)(
-        i_data_length);
+    int
+        i_result;
+
+    struct feed_suggest_node *
+        p_suggest_node;
+
+    struct feed_suggest_descriptor
+        o_suggest_descriptor;
+
+    memset(
+        &(
+            o_suggest_descriptor),
+        0x00u,
+        sizeof(
+            o_suggest_descriptor));
+
+    o_suggest_descriptor.p_buffer =
+        p_data;
+
+    o_suggest_descriptor.i_length =
+        i_data_length;
+
+    o_suggest_descriptor.i_cursor_offset =
+        i_cursor_offset;
+
+    o_suggest_descriptor.i_word_offset =
+        i_word_offset;
+
+    o_suggest_descriptor.i_word_length =
+        i_word_length;
+
+    p_suggest_node =
+        feed_suggest_node_create(
+            p_this->p_client,
+            &(
+                o_suggest_descriptor));
+
+    if (
+        p_suggest_node)
+    {
+        if (
+            feed_suggest_list_append(
+                &(
+                    p_this->o_suggest_list),
+                p_suggest_node))
+        {
+            i_result =
+                0;
+        }
+        else
+        {
+            i_result =
+                -1;
+        }
+    }
+    else
+    {
+        i_result =
+            -1;
+    }
 
     return
-        -1;
+        i_result;
 
 } /* feed_suggest() */
 

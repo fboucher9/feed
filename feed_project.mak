@@ -115,6 +115,7 @@ FEED_LIBRARY_SRCS = \
     $(FEED_DST_PATH)/_obj_feed_screen_info.o \
     $(FEED_DST_PATH)/_obj_feed_screen_iterator.o \
     $(FEED_DST_PATH)/_obj_feed_prompt.o \
+    $(FEED_DST_PATH)/_obj_feed_suggest.o \
     $(FEED_DST_PATH)/_obj_feed_object.o \
     $(FEED_DST_PATH)/_obj_feed_utf8.o \
     $(FEED_DST_PATH)/_obj_feed_text_iterator.o \
