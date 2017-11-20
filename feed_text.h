@@ -93,12 +93,12 @@ feed_text_write_utf8_code(
         i_glyph_index);
 
 unsigned long int
-feed_text_get_raw_length(
+feed_text_length(
     struct feed_text * const
         p_text);
 
 void
-feed_text_get_raw_buffer(
+feed_text_save(
     struct feed_text * const
         p_text,
     struct feed_buf * const
@@ -135,5 +135,10 @@ feed_text_insert_line_tail(
         p_text,
     struct feed_line * const
         p_line_new);
+
+void
+feed_text_clear(
+    struct feed_text * const
+        p_text);
 
 /* end-of-file: feed_text.h */

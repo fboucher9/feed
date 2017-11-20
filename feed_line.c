@@ -433,17 +433,17 @@ feed_line_get_glyph(
 }
 
 unsigned long int
-feed_line_get_raw_length(
+feed_line_length(
     struct feed_line * const
         p_line)
 {
     return
         p_line->i_raw_len;
 
-} /* feed_line_get_raw_length() */
+} /* feed_line_length() */
 
 void
-feed_line_get_raw_buffer(
+feed_line_save(
     struct feed_line * const
         p_line,
     struct feed_buf * const
@@ -475,7 +475,7 @@ feed_line_get_raw_buffer(
             p_iterator->p_next;
     }
 
-} /* feed_line_get_raw_buffer() */
+} /* feed_line_save() */
 
 /* Create a char and add to prompt line */
 static

@@ -3948,7 +3948,7 @@ feed_length(
         p_this)
 {
     return
-        feed_text_get_raw_length(
+        feed_text_length(
             p_this->p_text);
 
 } /* feed_length() */
@@ -3975,7 +3975,7 @@ feed_save(
             p_data,
             i_data_length))
     {
-        feed_text_get_raw_buffer(
+        feed_text_save(
             p_this->p_text,
             &(
                 o_raw_content));

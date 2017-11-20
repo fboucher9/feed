@@ -124,40 +124,8 @@ feed_text_cleanup(
     struct feed_text * const
         p_text)
 {
-    /* Delete all the lines */
-    struct feed_list *
-        p_iterator;
-
-    p_iterator =
-        p_text->o_lines.p_next;
-
-    while (
-        p_iterator
-        != &(
-            p_text->o_lines))
-    {
-        struct feed_list *
-            p_next;
-
-        struct feed_line *
-            p_line;
-
-        p_next =
-            p_iterator->p_next;
-
-        p_line =
-            (struct feed_line *)(
-                p_iterator);
-
-        feed_line_destroy(
-            p_line);
-
-        p_iterator =
-            p_next;
-
-    }
-
-    p_text->i_line_count = 0ul;
+    feed_text_clear(
+        p_text);
 
     feed_utf8_parser_cleanup(
         &(
@@ -363,7 +331,7 @@ feed_text_write_utf8_code(
 }
 
 unsigned long int
-feed_text_get_raw_length(
+feed_text_length(
     struct feed_text * const
         p_text)
 {
@@ -403,7 +371,7 @@ feed_text_get_raw_length(
         }
 
         i_buf_len +=
-            feed_line_get_raw_length(
+            feed_line_length(
                 p_line);
 
         i_line_iterator ++;
@@ -418,7 +386,7 @@ feed_text_get_raw_length(
 }
 
 void
-feed_text_get_raw_buffer(
+feed_text_save(
     struct feed_text * const
         p_text,
     struct feed_buf * const
@@ -454,7 +422,7 @@ feed_text_get_raw_buffer(
                 '\n');
         }
 
-        feed_line_get_raw_buffer(
+        feed_line_save(
             p_line,
             p_buf);
 
@@ -657,6 +625,29 @@ feed_text_insert_line_tail(
             p_text->o_lines));
 
     p_text->i_line_count ++;
+}
+
+void
+feed_text_clear(
+    struct feed_text * const
+        p_text)
+{
+    /* Delete all the lines */
+    while (
+        p_text->i_line_count)
+    {
+        struct feed_line *
+            p_line;
+
+        p_line =
+            (struct feed_line *)(
+                p_text->o_lines.p_next);
+
+        feed_line_destroy(
+            p_line);
+
+        p_text->i_line_count --;
+    }
 }
 
 /* end-of-file: feed_text.c */

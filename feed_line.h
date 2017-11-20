@@ -104,12 +104,12 @@ feed_line_get_glyph(
         i_glyph_index);
 
 unsigned long int
-feed_line_get_raw_length(
+feed_line_length(
     struct feed_line * const
         p_line);
 
 void
-feed_line_get_raw_buffer(
+feed_line_save(
     struct feed_line * const
         p_line,
     struct feed_buf * const
