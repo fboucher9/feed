@@ -136,4 +136,13 @@ feed_line_clear(
     struct feed_line * const
         p_line);
 
+void
+feed_line_insert_glyph_before(
+    struct feed_line * const
+        p_line,
+    struct feed_glyph * const
+        p_glyph_new,
+    struct feed_glyph * const
+        p_glyph_existing);
+
 /* end-of-file: feed_line.h */
