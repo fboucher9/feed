@@ -645,4 +645,28 @@ feed_line_remove_glyph(
     }
 }
 
+void
+feed_line_clear(
+    struct feed_line * const
+        p_line)
+{
+    while (p_line->i_glyph_count)
+    {
+        struct feed_glyph *
+            p_glyph;
+
+        p_glyph =
+            (struct feed_glyph *)(
+                p_line->o_glyphs.p_next);
+
+        feed_line_remove_glyph(
+            p_line,
+            p_glyph);
+
+        feed_glyph_destroy(
+            p_line->p_client,
+            p_glyph);
+    }
+}
+
 /* end-of-file: feed_line.c */

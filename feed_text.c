@@ -124,8 +124,22 @@ feed_text_cleanup(
     struct feed_text * const
         p_text)
 {
-    feed_text_clear(
-        p_text);
+    /* Delete all the lines */
+    while (
+        p_text->i_line_count)
+    {
+        struct feed_line *
+            p_line;
+
+        p_line =
+            (struct feed_line *)(
+                p_text->o_lines.p_next);
+
+        feed_line_destroy(
+            p_line);
+
+        p_text->i_line_count --;
+    }
 
     feed_utf8_parser_cleanup(
         &(
@@ -634,7 +648,7 @@ feed_text_clear(
 {
     /* Delete all the lines */
     while (
-        p_text->i_line_count)
+        p_text->i_line_count > 1u)
     {
         struct feed_line *
             p_line;
@@ -647,6 +661,19 @@ feed_text_clear(
             p_line);
 
         p_text->i_line_count --;
+    }
+
+    /* Clear the first line */
+    {
+        struct feed_line *
+            p_line;
+
+        p_line =
+            (struct feed_line *)(
+                p_text->o_lines.p_next);
+
+        feed_line_clear(
+            p_line);
     }
 }
 

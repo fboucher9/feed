@@ -3285,27 +3285,32 @@ feed_main_move_page_home(
     struct feed_handle * const
         p_this)
 {
-    p_this->p_page_line = NULL;
+    if (
+        p_this->o_cursor.i_line_index
+        || p_this->o_cursor.i_glyph_index)
+    {
+        p_this->p_page_line = NULL;
 
-    p_this->i_page_line_index = 0ul;
+        p_this->i_page_line_index = 0ul;
 
-    p_this->i_page_glyph_index = 0ul;
+        p_this->i_page_glyph_index = 0ul;
 
-    p_this->e_page_state = feed_main_state_prompt;
+        p_this->e_page_state = feed_main_state_prompt;
 
-    feed_text_iterator_set_line(
-        p_this->p_text,
-        &(
-            p_this->o_cursor),
-        p_this->i_page_line_index);
+        feed_text_iterator_set_line(
+            p_this->p_text,
+            &(
+                p_this->o_cursor),
+            p_this->i_page_line_index);
 
-    feed_text_iterator_set_glyph(
-        p_this->p_text,
-        &(
-            p_this->o_cursor),
-        p_this->i_page_glyph_index);
+        feed_text_iterator_set_glyph(
+            p_this->p_text,
+            &(
+                p_this->o_cursor),
+            p_this->i_page_glyph_index);
 
-    p_this->b_refresh_text = 1;
+        p_this->b_refresh_text = 1;
+    }
 }
 
 static
@@ -3531,6 +3536,58 @@ feed_main_event_callback(
 
             /* After notification, check for stop */
             /* check for suggestions */
+            if (p_this->o_suggest_list.i_count)
+            {
+                struct feed_suggest_node *
+                    p_suggest_node;
+
+                /* p_this->b_suggest = 1; */
+
+                /* Save original buffer */
+
+                /* Load first suggestion */
+                feed_text_clear(
+                    p_this->p_text);
+
+                /* Invalidate caches */
+                p_this->p_page_line = NULL;
+
+                p_this->i_page_line_index = 0ul;
+
+                p_this->i_page_glyph_index = 0ul;
+
+                p_this->e_page_state = feed_main_state_prompt;
+
+                p_this->o_cursor.p_line = NULL;
+
+                p_this->o_cursor.p_glyph = NULL;
+
+                p_this->o_cursor.i_line_index = 0ul;
+
+                p_this->o_cursor.i_glyph_index = 0ul;
+
+                p_suggest_node =
+                    feed_suggest_list_first(
+                        &(
+                            p_this->o_suggest_list));
+
+                if (p_suggest_node)
+                {
+                    feed_text_load(
+                        p_this->p_text,
+                        p_suggest_node->o_descriptor.p_buffer,
+                        p_suggest_node->o_descriptor.i_length);
+
+                    /* Reposition cursor ... */
+
+                }
+
+                feed_suggest_list_clear(
+                    &(
+                        p_this->o_suggest_list));
+
+                p_this->b_refresh_text = 1;
+            }
         }
 
         if (!p_this->b_started)

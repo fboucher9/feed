@@ -131,4 +131,9 @@ feed_line_remove_glyph(
     struct feed_glyph * const
         p_glyph);
 
+void
+feed_line_clear(
+    struct feed_line * const
+        p_line);
+
 /* end-of-file: feed_line.h */
