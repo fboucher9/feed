@@ -2854,7 +2854,7 @@ feed_main_move_cursor_left(
 
 static
 void
-feed_main_delete_glyph(
+feed_main_delete_glyph_next(
     struct feed_handle * const
         p_this)
 {
@@ -3325,6 +3325,143 @@ feed_main_move_page_end(
 
 static
 void
+feed_main_delete_word_prev(
+    struct feed_handle * const
+        p_this)
+{
+    if (p_this->o_cursor.i_line_index
+        || p_this->o_cursor.i_glyph_index)
+    {
+        char
+            b_found;
+
+        b_found =
+            0;
+
+        while (
+            !b_found)
+        {
+            if (feed_main_move_cursor_left(p_this))
+            {
+                feed_text_iterator_validate(
+                    p_this->p_text,
+                    &(
+                        p_this->o_cursor));
+
+                if (p_this->o_cursor.p_glyph)
+                {
+                    if (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                    {
+                        feed_main_delete_glyph_next(p_this);
+                    }
+                    else
+                    {
+                        b_found = 1;
+                    }
+                }
+                else
+                {
+                    feed_main_delete_glyph_next(p_this);
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        if (b_found)
+        {
+            b_found =
+                0;
+
+            while (
+                !b_found)
+            {
+                feed_text_iterator_validate(
+                    p_this->p_text,
+                    &(
+                        p_this->o_cursor));
+
+                if (p_this->o_cursor.p_glyph)
+                {
+                    if (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                    {
+                        b_found =
+                            1;
+                    }
+                    else
+                    {
+                        feed_main_delete_glyph_next(p_this);
+
+                        if (feed_main_move_cursor_left(p_this))
+                        {
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    b_found =
+                        1;
+                }
+            }
+
+            if (b_found)
+            {
+                feed_main_move_cursor_right(
+                    p_this);
+            }
+        }
+    }
+}
+
+static
+void
+feed_main_delete_glyph_prev(
+    struct feed_handle * const
+        p_this)
+{
+    if (p_this->o_cursor.i_line_index
+        || p_this->o_cursor.i_glyph_index)
+    {
+        if (feed_main_move_cursor_left(p_this))
+        {
+            feed_main_delete_glyph_next(p_this);
+        }
+    }
+}
+
+static
+void
+feed_main_move_cursor_top(
+    struct feed_handle * const
+        p_this)
+{
+    feed_main_move_cursor_xy(
+        p_this,
+        (unsigned long int)(
+            p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width));
+}
+
+static
+void
+feed_main_move_cursor_bottom(
+    struct feed_handle * const
+        p_this)
+{
+    feed_main_move_cursor_xy(
+        p_this,
+        p_this->o_screen_info.i_screen_size
+        - p_this->o_screen_info.i_screen_width
+        + (p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width));
+}
+
+static
+void
 feed_main_event_callback(
     void * const
         p_context,
@@ -3385,21 +3522,18 @@ feed_main_event_callback(
         if (!p_this->b_started)
         {
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'D') == p_event->i_code)
+        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'D') == p_event->i_code)
         {
             p_this->b_started =
                 0;
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_EVENT_KEY_CTRL | 'H') == p_event->i_code)
+        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'H') == p_event->i_code)
         {
-            if (p_this->o_cursor.i_line_index
-                || p_this->o_cursor.i_glyph_index)
-            {
-                if (feed_main_move_cursor_left(p_this))
-                {
-                    feed_main_delete_glyph(p_this);
-                }
-            }
+            feed_main_delete_glyph_prev(p_this);
+        }
+        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'W') == p_event->i_code)
+        {
+            feed_main_delete_word_prev(p_this);
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'L') == p_event->i_code)
         {
@@ -3407,42 +3541,42 @@ feed_main_event_callback(
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_DELETE) == p_event->i_code)
         {
-            feed_main_delete_glyph(p_this);
+            feed_main_delete_glyph_next(
+                p_this);
         }
         else if (
             ((FEED_EVENT_KEY_FLAG | FEED_KEY_HOME) == p_event->i_code)
             || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'A') == p_event->i_code))
         {
-            feed_main_move_cursor_home(p_this);
+            feed_main_move_cursor_home(
+                p_this);
         }
         else if (
             ((FEED_EVENT_KEY_FLAG | FEED_KEY_END) == p_event->i_code)
             || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'E') == p_event->i_code))
         {
-            feed_main_move_cursor_end(p_this);
+            feed_main_move_cursor_end(
+                p_this);
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_PAGEUP) == p_event->i_code)
         {
-            feed_main_move_page_home(p_this);
+            feed_main_move_page_home(
+                p_this);
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_PAGEDOWN) == p_event->i_code)
         {
-            feed_main_move_page_end(p_this);
+            feed_main_move_page_end(
+                p_this);
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_HOME) == p_event->i_code)
         {
-            feed_main_move_cursor_xy(
-                p_this,
-                (unsigned long int)(
-                    p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width));
+            feed_main_move_cursor_top(
+                p_this);
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_END) == p_event->i_code)
         {
-            feed_main_move_cursor_xy(
-                p_this,
-                p_this->o_screen_info.i_screen_size
-                - p_this->o_screen_info.i_screen_width
-                + (p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width));
+            feed_main_move_cursor_bottom(
+                p_this);
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_LEFT) == p_event->i_code)
         {
