@@ -671,4 +671,66 @@ feed_line_insert_glyph_before(
     p_line->i_glyph_count ++;
 }
 
+char
+feed_line_index_to_offset(
+    struct feed_line * const
+        p_line,
+    unsigned long int const
+        i_glyph_index,
+    unsigned long int * const
+        p_offset)
+{
+    char
+        b_result;
+
+    unsigned long int
+        i_offset;
+
+    unsigned long int
+        i_glyph_iterator;
+
+    struct feed_list *
+        p_glyph_iterator;
+
+    i_offset =
+        0ul;
+
+    i_glyph_iterator =
+        0ul;
+
+    p_glyph_iterator =
+        p_line->o_glyphs.p_next;
+
+    while (
+        (i_glyph_iterator < i_glyph_index)
+        && (p_glyph_iterator != &(p_line->o_glyphs)))
+    {
+        struct feed_glyph *
+            p_glyph;
+
+        p_glyph =
+            (struct feed_glyph *)(
+                p_glyph_iterator);
+
+        i_offset +=
+            p_glyph->o_utf8_code.i_raw_len;
+
+        i_glyph_iterator ++;
+
+        p_glyph_iterator =
+            p_glyph_iterator->p_next;
+    }
+
+    *(
+        p_offset) =
+        i_offset;
+
+    b_result =
+        1;
+
+    return
+        b_result;
+
+}
+
 /* end-of-file: feed_line.c */

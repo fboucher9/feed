@@ -193,7 +193,7 @@ feed_main_notify_callback(
     (void)(
         i_data_length);
 
-#if 0 /* test of stop */
+#if 1 /* test of stop */
     if (i_data_length)
     {
         /* Detect that Ctrl-M was pressed */

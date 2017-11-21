@@ -141,4 +141,26 @@ feed_text_clear(
     struct feed_text * const
         p_text);
 
+char
+feed_text_index_to_offset(
+    struct feed_text * const
+        p_text,
+    unsigned long int const
+        i_line_index,
+    unsigned long int const
+        i_glyph_index,
+    unsigned long int * const
+        p_offset);
+
+char
+feed_text_offset_to_index(
+    struct feed_text * const
+        p_text,
+    unsigned long int const
+        i_offset,
+    unsigned long int * const
+        p_line_index,
+    unsigned long int * const
+        p_glyph_index);
+
 /* end-of-file: feed_text.h */

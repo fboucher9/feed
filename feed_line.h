@@ -145,4 +145,13 @@ feed_line_insert_glyph_before(
     struct feed_glyph * const
         p_glyph_existing);
 
+char
+feed_line_index_to_offset(
+    struct feed_line * const
+        p_line,
+    unsigned long int const
+        i_glyph_index,
+    unsigned long int * const
+        p_offset);
+
 /* end-of-file: feed_line.h */

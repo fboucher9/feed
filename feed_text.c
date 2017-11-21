@@ -677,4 +677,190 @@ feed_text_clear(
     }
 }
 
+char
+feed_text_index_to_offset(
+    struct feed_text * const
+        p_text,
+    unsigned long int const
+        i_line_index,
+    unsigned long int const
+        i_glyph_index,
+    unsigned long int * const
+        p_offset)
+{
+    char
+        b_result;
+
+    unsigned long int
+        i_offset;
+
+    unsigned long int
+        i_line_iterator;
+
+    struct feed_list *
+        p_line_iterator;
+
+    b_result =
+        0;
+
+    i_line_iterator =
+        0ul;
+
+    p_line_iterator =
+        p_text->o_lines.p_next;
+
+    i_offset =
+        0ul;
+
+    while (
+        (!b_result)
+        && (
+            p_line_iterator != &(p_text->o_lines))
+        && (
+            i_line_iterator <= i_line_index))
+    {
+        struct feed_line *
+            p_line;
+
+        p_line =
+            (struct feed_line *)(
+                p_line_iterator);
+
+        if (
+            i_line_iterator)
+        {
+            i_offset ++;
+        }
+
+        if (
+            i_line_iterator < i_line_index)
+        {
+            i_offset += feed_line_length(p_line);
+
+            i_line_iterator ++;
+
+            p_line_iterator =
+                p_line_iterator->p_next;
+        }
+        else
+        {
+            unsigned long int
+                i_glyph_offset;
+
+            if (
+                feed_line_index_to_offset(
+                    p_line,
+                    i_glyph_index,
+                    &(
+                        i_glyph_offset)))
+            {
+                i_offset += i_glyph_offset;
+
+                *(p_offset) =
+                    i_offset;
+
+                b_result =
+                    1;
+            }
+        }
+
+    }
+
+    return
+        b_result;
+
+}
+
+char
+feed_text_offset_to_index(
+    struct feed_text * const
+        p_text,
+    unsigned long int const
+        i_offset,
+    unsigned long int * const
+        p_line_index,
+    unsigned long int * const
+        p_glyph_index)
+{
+    char
+        b_result;
+
+    unsigned long int
+        i_raw_iterator;
+
+    unsigned long int
+        i_line_index;
+
+    unsigned long int
+        i_glyph_index;
+
+    struct feed_line *
+        p_line_iterator;
+
+    b_result =
+        0;
+
+    i_raw_iterator =
+        0ul;
+
+    i_line_index =
+        0ul;
+
+    i_glyph_index =
+        0ul;
+
+    p_line_iterator =
+        p_text->o_lines.p_next;
+
+    while (
+        !b_result
+        && (i_line_index < p_text->i_line_count))
+    {
+        struct feed_line *
+            p_line;
+
+        p_line =
+            (struct feed_line *)(
+                p_line_iterator);
+
+        if (
+            (
+                i_raw_iterator <= i_offset)
+            && (
+                (i_raw_iterator + p_line->i_raw_len + 1ul) < i_offset))
+        {
+            if (
+                feed_line_offset_to_index(
+                    p_line,
+                    (i_offset - i_raw_iterator),
+                    &(i_glyph_index)))
+            {
+                *(
+                    p_line_index) =
+                    i_line_index;
+
+                *(
+                    p_glyph_index) =
+                    i_glyph_index;
+
+                b_result =
+                    1;
+            }
+        }
+        else
+        {
+            i_raw_iterator ++;
+
+            i_line_index ++;
+
+            p_line_iterator =
+                p_line_iterator->p_next;
+        }
+    }
+
+    return
+        b_result;
+
+}
+
 /* end-of-file: feed_text.c */
