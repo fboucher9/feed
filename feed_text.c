@@ -794,7 +794,7 @@ feed_text_offset_to_index(
     unsigned long int
         i_glyph_index;
 
-    struct feed_line *
+    struct feed_list *
         p_line_iterator;
 
     b_result =

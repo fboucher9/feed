@@ -733,4 +733,67 @@ feed_line_index_to_offset(
 
 }
 
+char
+feed_line_offset_to_index(
+    struct feed_line * const
+        p_line,
+    unsigned long int const
+        i_offset,
+    unsigned long int * const
+        p_glyph_index)
+{
+    char
+        b_result;
+
+    unsigned long int
+        i_offset_iterator;
+
+    unsigned long int
+        i_glyph_index;
+
+    struct feed_list *
+        p_glyph_iterator;
+
+    i_offset_iterator =
+        0ul;
+
+    i_glyph_index =
+        0ul;
+
+    p_glyph_iterator =
+        p_line->o_glyphs.p_next;
+
+    while (
+        (
+            i_offset_iterator < i_offset)
+        && (
+           p_glyph_iterator != &(p_line->o_glyphs)))
+    {
+        struct feed_glyph *
+            p_glyph;
+
+        p_glyph =
+            (struct feed_glyph *)(
+                p_glyph_iterator);
+
+        i_offset_iterator += p_glyph->o_utf8_code.i_raw_len;
+
+        i_glyph_index ++;
+
+        p_glyph_iterator =
+            p_glyph_iterator->p_next;
+    }
+
+    *(
+        p_glyph_index) =
+        i_glyph_index;
+
+    b_result =
+        1;
+
+    return
+        b_result;
+
+}
+
 /* end-of-file: feed_line.c */

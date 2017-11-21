@@ -154,4 +154,13 @@ feed_line_index_to_offset(
     unsigned long int * const
         p_offset);
 
+char
+feed_line_offset_to_index(
+    struct feed_line * const
+        p_line,
+    unsigned long int const
+        i_offset,
+    unsigned long int * const
+        p_glyph_index);
+
 /* end-of-file: feed_line.h */
