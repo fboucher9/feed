@@ -193,7 +193,7 @@ feed_main_notify_callback(
     (void)(
         i_data_length);
 
-#if 1 /* test of stop */
+#if 0 /* test of stop */
     if (i_data_length)
     {
         /* Detect that Ctrl-M was pressed */
@@ -206,6 +206,11 @@ feed_main_notify_callback(
         /* Detect that Ctrl-I was pressed */
         else if (9 == p_data[0u])
         {
+            feed_complete(
+                p_feed_handle,
+                0,
+                0);
+
             {
                 /* test of suggestions */
                 static unsigned char const s_suggest1[] =
@@ -215,9 +220,7 @@ feed_main_notify_callback(
                     p_feed_handle,
                     s_suggest1,
                     sizeof(s_suggest1),
-                    1,
-                    2,
-                    3);
+                    1);
             }
 
             {
@@ -229,9 +232,7 @@ feed_main_notify_callback(
                     p_feed_handle,
                     s_suggest2,
                     sizeof(s_suggest2),
-                    4,
-                    5,
-                    6);
+                    4);
             }
         }
         /* ... */

@@ -150,6 +150,8 @@ struct feed_handle
     struct feed_suggest_list
         o_suggest_list;
 
+    /* -- */
+
     /* Page */
     unsigned long int
         i_page_line_index;
@@ -168,7 +170,18 @@ struct feed_handle
     /* -- */
 
     unsigned long int
+        i_suggest_offset;
+
+    unsigned long int
+        i_suggest_length;
+
+    /* -- */
+
+    unsigned long int
         i_final_cursor_address;
+
+    unsigned long int
+        ul_padding[1u];
 
     /* -- */
 
@@ -195,8 +208,11 @@ struct feed_handle
     char
         b_refresh_text;
 
+    char
+        b_suggest;
+
     unsigned char
-        uc_padding[4u];
+        uc_padding[3u];
 
 }; /* struct feed_handle */
 
@@ -3927,11 +3943,7 @@ feed_suggest(
     unsigned long int const
         i_data_length,
     unsigned long int const
-        i_cursor_offset,
-    unsigned long int const
-        i_word_offset,
-    unsigned long int const
-        i_word_length)
+        i_cursor_offset)
 {
     int
         i_result;
@@ -3939,36 +3951,34 @@ feed_suggest(
     struct feed_suggest_node *
         p_suggest_node;
 
-    struct feed_suggest_descriptor
-        o_suggest_descriptor;
+    {
+        struct feed_suggest_descriptor
+            o_suggest_descriptor;
 
-    memset(
-        &(
-            o_suggest_descriptor),
-        0x00u,
-        sizeof(
-            o_suggest_descriptor));
+        {
+            memset(
+                &(
+                    o_suggest_descriptor),
+                0x00u,
+                sizeof(
+                    o_suggest_descriptor));
 
-    o_suggest_descriptor.p_buffer =
-        p_data;
+            o_suggest_descriptor.p_buffer =
+                p_data;
 
-    o_suggest_descriptor.i_length =
-        i_data_length;
+            o_suggest_descriptor.i_length =
+                i_data_length;
 
-    o_suggest_descriptor.i_cursor_offset =
-        i_cursor_offset;
+            o_suggest_descriptor.i_cursor_offset =
+                i_cursor_offset;
+        }
 
-    o_suggest_descriptor.i_word_offset =
-        i_word_offset;
-
-    o_suggest_descriptor.i_word_length =
-        i_word_length;
-
-    p_suggest_node =
-        feed_suggest_node_create(
-            p_this->p_client,
-            &(
-                o_suggest_descriptor));
+        p_suggest_node =
+            feed_suggest_node_create(
+                p_this->p_client,
+                &(
+                    o_suggest_descriptor));
+    }
 
     if (
         p_suggest_node)
@@ -4067,117 +4077,30 @@ feed_consume(
     unsigned long int
         i_data_iterator;
 
+    struct feed_buf
+        o_buf;
+
     i_data_iterator =
         0ul;
 
-    if (p_this->p_text)
+    if (
+        feed_buf_init(
+            &(
+                o_buf),
+            p_data,
+            i_data_length))
     {
-        struct feed_buf
-            o_buf;
+        feed_text_consume(
+            p_this->p_text,
+            &(
+                o_buf));
 
-        if (
-            feed_buf_init(
-                &(
-                    o_buf),
-                p_data,
-                i_data_length))
-        {
-            char
-                b_more;
+        i_data_iterator =
+            o_buf.i_len;
 
-            b_more =
-                1;
-
-            while (b_more && (i_data_iterator < i_data_length))
-            {
-                struct feed_line *
-                    p_line;
-
-                p_line =
-                    feed_text_get_line(
-                        p_this->p_text,
-                        0ul);
-
-                if (
-                    p_line)
-                {
-                    struct feed_glyph *
-                        p_glyph;
-
-                    p_glyph =
-                        feed_line_get_glyph(
-                            p_line,
-                            0ul);
-
-                    if (
-                        p_glyph)
-                    {
-                        if (
-                            feed_buf_write_character_array(
-                                &(
-                                    o_buf),
-                                p_glyph->o_utf8_code.a_raw,
-                                p_glyph->o_utf8_code.i_raw_len))
-                        {
-                            feed_line_remove_glyph(
-                                p_line,
-                                p_glyph);
-
-                            feed_glyph_destroy(
-                                p_this->p_client,
-                                p_glyph);
-                        }
-                        else
-                        {
-                            b_more =
-                                0;
-                        }
-                    }
-                    else
-                    {
-                        /* Do <cr> and delete this line */
-                        if (
-                            feed_buf_write_character(
-                                &(
-                                    o_buf),
-                                '\n'))
-                        {
-                            if (p_this->p_text->i_line_count > 1ul)
-                            {
-                                feed_text_remove_line(
-                                    p_this->p_text,
-                                    p_line);
-
-                                feed_line_destroy(
-                                    p_line);
-                            }
-                            else
-                            {
-                                b_more =
-                                    0;
-                            }
-                        }
-                        else
-                        {
-                            b_more =
-                                0;
-                        }
-                    }
-                }
-                else
-                {
-                    b_more =
-                        0;
-                }
-            }
-
-            i_data_iterator =
-                o_buf.i_len;
-
-            feed_buf_cleanup(
-                &(
-                    o_buf));
-        }
+        feed_buf_cleanup(
+            &(
+                o_buf));
     }
 
     if (
@@ -4191,5 +4114,38 @@ feed_consume(
         i_data_iterator;
 
 } /* feed_consume() */
+
+int
+feed_complete(
+    struct feed_handle * const
+        p_this,
+    unsigned long int const
+        i_word_offset,
+    unsigned long int const
+        i_word_length)
+{
+    int
+        i_result;
+
+    (void)(
+        p_this);
+    (void)(
+        i_word_offset);
+    (void)(
+        i_word_length);
+
+    /* Save of original word */
+
+    /* Remember position of original word */
+
+    /* Initialize state machine for completion engine */
+
+    i_result =
+        -1;
+
+    return
+        i_result;
+
+} /* feed_complete() */
 
 /* end-of-file: feed.c */

@@ -163,4 +163,11 @@ feed_text_offset_to_index(
     unsigned long int * const
         p_glyph_index);
 
+void
+feed_text_consume(
+    struct feed_text * const
+        p_text,
+    struct feed_buf * const
+        p_buf);
+
 /* end-of-file: feed_text.h */

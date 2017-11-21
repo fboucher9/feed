@@ -24,6 +24,8 @@ Description:
 
 #include "feed_buf.h"
 
+#include "feed_glyph.h"
+
 static
 char
 feed_text_init(
@@ -861,6 +863,101 @@ feed_text_offset_to_index(
     return
         b_result;
 
+}
+
+void
+feed_text_consume(
+    struct feed_text * const
+        p_text,
+    struct feed_buf * const
+        p_buf)
+{
+    char
+        b_more;
+
+    b_more =
+        1;
+
+    while (b_more)
+    {
+        struct feed_line *
+            p_line;
+
+        p_line =
+            feed_text_get_line(
+                p_text,
+                0ul);
+
+        if (
+            p_line)
+        {
+            struct feed_glyph *
+                p_glyph;
+
+            p_glyph =
+                feed_line_get_glyph(
+                    p_line,
+                    0ul);
+
+            if (
+                p_glyph)
+            {
+                if (
+                    feed_buf_write_character_array(
+                        p_buf,
+                        p_glyph->o_utf8_code.a_raw,
+                        p_glyph->o_utf8_code.i_raw_len))
+                {
+                    feed_line_remove_glyph(
+                        p_line,
+                        p_glyph);
+
+                    feed_glyph_destroy(
+                        p_text->p_client,
+                        p_glyph);
+                }
+                else
+                {
+                    b_more =
+                        0;
+                }
+            }
+            else
+            {
+                /* Do <cr> and delete this line */
+                if (
+                    feed_buf_write_character(
+                        p_buf,
+                        '\n'))
+                {
+                    if (p_text->i_line_count > 1ul)
+                    {
+                        feed_text_remove_line(
+                            p_text,
+                            p_line);
+
+                        feed_line_destroy(
+                            p_line);
+                    }
+                    else
+                    {
+                        b_more =
+                            0;
+                    }
+                }
+                else
+                {
+                    b_more =
+                        0;
+                }
+            }
+        }
+        else
+        {
+            b_more =
+                0;
+        }
+    }
 }
 
 /* end-of-file: feed_text.c */

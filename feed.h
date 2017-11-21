@@ -73,14 +73,18 @@ int feed_start(
 int feed_stop(
     struct feed_handle * const p_feed_handle);
 
+/* enter completion mode */
+int feed_complete(
+    struct feed_handle * const p_feed_handle,
+    unsigned long int const i_word_offset,
+    unsigned long int const i_word_length);
+
 /* provide suggestions for completion mode */
 int feed_suggest(
     struct feed_handle * const p_feed_handle,
     unsigned char const * const p_data,
     unsigned long int const i_data_length,
-    unsigned long int const i_cursor_offset,
-    unsigned long int const i_word_offset,
-    unsigned long int const i_word_length);
+    unsigned long int const i_cursor_offset);
 
 /* query length in bytes of save buffer */
 unsigned long int feed_length(

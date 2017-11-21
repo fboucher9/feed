@@ -36,12 +36,6 @@ struct feed_suggest_descriptor
     unsigned long int
         i_cursor_offset;
 
-    unsigned long int
-        i_word_offset;
-
-    unsigned long int
-        i_word_length;
-
 };
 
 struct feed_suggest_node

@@ -7,6 +7,7 @@
         feed_load;
         feed_start;
         feed_stop;
+        feed_complete;
         feed_suggest;
         feed_length;
         feed_save;
