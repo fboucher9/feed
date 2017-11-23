@@ -18,6 +18,10 @@ Description:
 
 #include "feed_object.h"
 
+#include "feed_client.h"
+
+#include "feed_heap.h"
+
 static
 char
 feed_suggest_node_init(
@@ -52,9 +56,43 @@ feed_suggest_node_init(
     p_suggest_node->p_client =
         p_client;
 
-    p_suggest_node->o_descriptor =
-        *(
-            p_suggest_descriptor);
+    if (p_suggest_descriptor->i_length)
+    {
+        p_suggest_node->p_buffer =
+            (unsigned char *)(
+                feed_heap_alloc(
+                    p_client->p_heap,
+                    p_suggest_descriptor->i_length));
+
+        if (p_suggest_node->p_buffer)
+        {
+            memcpy(
+                p_suggest_node->p_buffer,
+                p_suggest_descriptor->p_buffer,
+                p_suggest_descriptor->i_length);
+
+            p_suggest_node->i_length =
+                p_suggest_descriptor->i_length;
+
+        }
+        else
+        {
+            p_suggest_node->i_length =
+                0ul;
+        }
+    }
+    else
+    {
+        p_suggest_node->p_buffer =
+            (unsigned char *)(
+                0);
+
+        p_suggest_node->i_length =
+            0ul;
+    }
+
+    p_suggest_node->i_cursor_offset =
+        p_suggest_descriptor->i_cursor_offset;
 
     b_result =
         1;
@@ -107,6 +145,19 @@ feed_suggest_node_cleanup(
             p_suggest_node->o_list),
         &(
             p_suggest_node->o_list));
+
+    if (
+        p_suggest_node->p_buffer)
+    {
+        feed_heap_free(
+            p_suggest_node->p_client->p_heap,
+            (void *)(
+                p_suggest_node->p_buffer));
+
+        p_suggest_node->p_buffer =
+            (unsigned char *)(
+                0);
+    }
 
 } /* feed_suggest_node_cleanup() */
 

@@ -203,13 +203,26 @@ feed_main_notify_callback(
             feed_stop(
                 p_feed_handle);
         }
+    }
+#endif /* test of stop */
+
+#if 0 /* test of complete */
+    if (i_data_length)
+    {
         /* Detect that Ctrl-I was pressed */
-        else if (9 == p_data[0u])
+        if (9 == p_data[0u])
         {
+            unsigned long int
+                i_total_length;
+
+            i_total_length =
+                feed_length(
+                    p_feed_handle);
+
             feed_complete(
                 p_feed_handle,
                 0,
-                0);
+                i_total_length);
 
             {
                 /* test of suggestions */
@@ -235,9 +248,10 @@ feed_main_notify_callback(
                     4);
             }
         }
-        /* ... */
     }
-#endif /* test of stop */
+#endif /* test of complete */
+
+    /* ... */
 
     return 0;
 }

@@ -133,6 +133,9 @@ struct feed_handle
     struct feed_text_iterator
         o_cursor;
 
+    struct feed_text_iterator
+        o_suggest_iterator;
+
     struct feed_screen_iterator
         o_cursor_visible;
 
@@ -278,6 +281,11 @@ feed_init(
         &(
             p_this->o_screen_info));
 
+    feed_text_iterator_init(
+        p_this->p_text,
+        &(
+            p_this->o_cursor));
+
     feed_suggest_list_init(
         p_this->p_client,
         &(
@@ -300,6 +308,11 @@ feed_cleanup(
     feed_suggest_list_cleanup(
         &(
             p_this->o_suggest_list));
+
+    feed_text_iterator_cleanup(
+        p_this->p_text,
+        &(
+            p_this->o_cursor));
 
     feed_screen_info_cleanup(
         &(
@@ -3557,7 +3570,32 @@ feed_main_event_callback(
                 struct feed_suggest_node *
                     p_suggest_node;
 
-                /* p_this->b_suggest = 1; */
+#if defined(FEED_CFG_DEBUG)
+                printf("suggest list\n");
+
+                p_suggest_node =
+                    feed_suggest_list_first(
+                        &(
+                            p_this->o_suggest_list));
+
+                while (
+                    p_suggest_node)
+                {
+                    printf("suggest node len=%lu buf=[%.*s] cur=%lu\n",
+                        p_suggest_node->i_length,
+                        (int)(
+                            p_suggest_node->i_length),
+                        (char const *)(
+                            p_suggest_node->p_buffer),
+                        p_suggest_node->i_cursor_offset);
+
+                    p_suggest_node =
+                        feed_suggest_list_next(
+                            &(
+                                p_this->o_suggest_list),
+                            p_suggest_node);
+                }
+#endif /* #if defined(FEED_CFG_DEBUG) */
 
                 /* Save original buffer */
 
@@ -3589,10 +3627,13 @@ feed_main_event_callback(
 
                 if (p_suggest_node)
                 {
-                    feed_text_load(
-                        p_this->p_text,
-                        p_suggest_node->o_descriptor.p_buffer,
-                        p_suggest_node->o_descriptor.i_length);
+                    if (p_suggest_node->i_length)
+                    {
+                        feed_text_load(
+                            p_this->p_text,
+                            p_suggest_node->p_buffer,
+                            p_suggest_node->i_length);
+                    }
 
                     /* Reposition cursor ... */
 
@@ -4127,21 +4168,117 @@ feed_complete(
     int
         i_result;
 
-    (void)(
-        p_this);
-    (void)(
-        i_word_offset);
-    (void)(
-        i_word_length);
+    struct feed_text_iterator
+        o_word_iterator;
 
-    /* Save of original word */
+    unsigned long int
+        i_cursor_offset;
+
+    i_cursor_offset =
+        feed_text_iterator_get_offset(
+            p_this->p_text,
+            &(
+                p_this->o_cursor));
+
+    /* Clear the suggestion list */
+    feed_suggest_list_clear(
+        &(
+            p_this->o_suggest_list));
+
+    /* Create an iterator */
+    feed_text_iterator_init(
+        p_this->p_text,
+        &(
+            o_word_iterator));
+
+    /* Goto word offset */
+    feed_text_iterator_set_offset(
+        p_this->p_text,
+        &(
+            o_word_iterator),
+        i_word_offset);
 
     /* Remember position of original word */
+    p_this->i_suggest_offset =
+        i_word_offset;
+
+    p_this->i_suggest_length =
+        i_word_length;
+
+    /* Keep a copy of iterator */
+    p_this->o_suggest_iterator =
+        o_word_iterator;
+
+    /* Allocate a buffer for word */
+    if (i_word_length)
+    {
+        unsigned char *
+            p_word_buf;
+
+        p_word_buf =
+            (unsigned char *)(
+                feed_heap_alloc(
+                    p_this->p_heap,
+                    i_word_length));
+
+        if (
+            p_word_buf)
+        {
+            struct feed_buf
+                o_buf;
+
+            /* Save the word */
+            if (
+                feed_buf_init(
+                    &(
+                        o_buf),
+                    p_word_buf,
+                    i_word_length))
+            {
+                feed_text_iterator_save(
+                    p_this->p_text,
+                    &(
+                        o_word_iterator),
+                    &(
+                        o_buf));
+
+                feed_suggest(
+                    p_this,
+                    p_word_buf,
+                    i_word_length,
+                    i_cursor_offset);
+
+                feed_buf_cleanup(
+                    &(
+                        o_buf));
+            }
+
+            feed_heap_free(
+                p_this->p_heap,
+                (void *)(
+                    p_word_buf));
+        }
+    }
+    else
+    {
+        feed_suggest(
+            p_this,
+            (unsigned char *)(
+                0),
+            0ul,
+            i_cursor_offset);
+    }
+
+    /* Destroy the iterator */
+    feed_text_iterator_cleanup(
+        p_this->p_text,
+        &(
+            o_word_iterator));
 
     /* Initialize state machine for completion engine */
 
     i_result =
-        -1;
+        0;
 
     return
         i_result;

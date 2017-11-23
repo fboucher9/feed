@@ -46,8 +46,14 @@ struct feed_suggest_node
     struct feed_client *
         p_client;
 
-    struct feed_suggest_descriptor
-        o_descriptor;
+    unsigned char *
+        p_buffer;
+
+    unsigned long int
+        i_length;
+
+    unsigned long int
+        i_cursor_offset;
 
 }; /* struct feed_suggest_node */
 

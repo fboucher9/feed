@@ -18,6 +18,8 @@
 
 #include "feed_glyph.h"
 
+#include "feed_buf.h"
+
 void
 feed_text_iterator_init(
     struct feed_text const * const
@@ -703,6 +705,202 @@ feed_text_iterator_join_lines(
 
     return
         b_result;
+
+}
+
+char
+feed_text_iterator_set_index(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    unsigned long int const
+        i_line_index,
+    unsigned long int const
+        i_glyph_index)
+{
+    char
+        b_result;
+
+    p_text_iterator->i_line_index =
+        i_line_index;
+
+    p_text_iterator->i_glyph_index =
+        i_glyph_index;
+
+    feed_text_iterator_invalidate(
+        p_text,
+        p_text_iterator);
+
+    b_result =
+        1;
+
+    return
+        b_result;
+
+}
+
+char
+feed_text_iterator_set_offset(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    unsigned long int const
+        i_offset)
+{
+    char
+        b_result;
+
+    unsigned long int
+        i_line_index;
+
+    unsigned long int
+        i_glyph_index;
+
+    if (
+        feed_text_offset_to_index(
+            p_text,
+            i_offset,
+            &(
+                i_line_index),
+            &(
+                i_glyph_index)))
+    {
+        if (
+            feed_text_iterator_set_index(
+                p_text,
+                p_text_iterator,
+                i_line_index,
+                i_glyph_index))
+        {
+            b_result =
+                1;
+        }
+        else
+        {
+            b_result =
+                0;
+        }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+} /* feed_text_iterator_set_offset() */
+
+void
+feed_text_iterator_save(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    struct feed_buf * const
+        p_buf)
+{
+    char
+        b_more;
+
+    b_more =
+        1;
+
+    while (
+        b_more)
+    {
+        feed_text_iterator_validate(
+            p_text,
+            p_text_iterator);
+
+        if (
+            p_text_iterator->p_glyph)
+        {
+            if (
+                feed_buf_write_character_array(
+                    p_buf,
+                    p_text_iterator->p_glyph->o_utf8_code.a_raw,
+                    p_text_iterator->p_glyph->o_utf8_code.i_raw_len))
+            {
+            }
+            else
+            {
+                b_more =
+                    0;
+            }
+        }
+        else
+        {
+            if (
+                feed_buf_write_character(
+                    p_buf,
+                    '\n'))
+            {
+            }
+            else
+            {
+                b_more =
+                    0;
+            }
+        }
+
+        if (
+            feed_text_iterator_next_glyph(
+                p_text,
+                p_text_iterator))
+        {
+        }
+        else
+        {
+            if (
+                feed_text_iterator_next_line(
+                    p_text,
+                    p_text_iterator))
+            {
+                feed_text_iterator_home_glyph(
+                    p_text,
+                    p_text_iterator);
+            }
+            else
+            {
+                b_more =
+                    0;
+            }
+        }
+    }
+
+} /* feed_text_iterator_save() */
+
+unsigned long int
+feed_text_iterator_get_offset(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator)
+{
+    unsigned long int
+        i_offset;
+
+    if (
+        feed_text_index_to_offset(
+            p_text,
+            p_text_iterator->i_line_index,
+            p_text_iterator->i_glyph_index,
+            &(
+                i_offset)))
+    {
+    }
+    else
+    {
+        i_offset =
+            0ul;
+    }
+
+    return
+        i_offset;
 
 }
 

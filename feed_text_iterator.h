@@ -16,6 +16,8 @@ struct feed_line;
 
 struct feed_glyph;
 
+struct feed_buf;
+
 struct feed_text_iterator
 {
     struct feed_line *
@@ -167,5 +169,41 @@ feed_text_iterator_join_lines(
         p_text,
     struct feed_text_iterator * const
         p_text_iterator);
+
+char
+feed_text_iterator_set_index(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    unsigned long int const
+        i_line_index,
+    unsigned long int const
+        i_glyph_index);
+
+char
+feed_text_iterator_set_offset(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    unsigned long int const
+        i_offset);
+
+unsigned long int
+feed_text_iterator_get_offset(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator);
+
+void
+feed_text_iterator_save(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    struct feed_buf * const
+        p_buf);
 
 /* end-of-file: feed_text_iterator.h */
