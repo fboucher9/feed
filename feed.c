@@ -153,6 +153,9 @@ struct feed_handle
     struct feed_suggest_list
         o_suggest_list;
 
+    struct feed_suggest_node *
+        p_suggest_node;
+
     /* -- */
 
     /* Page */
@@ -290,6 +293,13 @@ feed_init(
         p_this->p_client,
         &(
             p_this->o_suggest_list));
+
+    p_this->p_suggest_node =
+        (struct feed_suggest_node *)(
+            0);
+
+    p_this->b_suggest =
+        0;
 
     b_result =
         1;
@@ -3510,12 +3520,144 @@ feed_main_move_cursor_bottom(
 
 static
 void
+feed_main_suggest_node(
+    struct feed_handle * const
+        p_this,
+    struct feed_suggest_node * const
+        p_suggest_node)
+{
+    p_this->p_page_line = NULL;
+
+    p_this->i_page_line_index = 0ul;
+
+    p_this->i_page_glyph_index = 0ul;
+
+    p_this->e_page_state = feed_main_state_prompt;
+
+    p_this->o_cursor.p_line = NULL;
+
+    p_this->o_cursor.p_glyph = NULL;
+
+    p_this->o_cursor.i_line_index = 0ul;
+
+    p_this->o_cursor.i_glyph_index = 0ul;
+
+    p_this->p_suggest_node =
+        p_suggest_node;
+
+    feed_text_clear(
+        p_this->p_text);
+
+    feed_text_load(
+        p_this->p_text,
+        p_this->p_suggest_node->p_buffer,
+        p_this->p_suggest_node->i_length);
+
+    p_this->b_refresh_text =
+        1;
+
+}
+
+static
+void
+feed_main_suggest_next(
+    struct feed_handle * const
+        p_this)
+{
+    struct feed_suggest_node *
+        p_suggest_node;
+
+    p_suggest_node =
+        feed_suggest_list_next(
+            &(
+                p_this->o_suggest_list),
+            p_this->p_suggest_node);
+
+    if (p_suggest_node)
+    {
+        feed_main_suggest_node(
+            p_this,
+            p_suggest_node);
+
+    }
+}
+
+static
+void
+feed_main_suggest_prev(
+    struct feed_handle * const
+        p_this)
+{
+    struct feed_suggest_node *
+        p_suggest_node;
+
+    p_suggest_node =
+        feed_suggest_list_prev(
+            &(
+                p_this->o_suggest_list),
+            p_this->p_suggest_node);
+
+    if (p_suggest_node)
+    {
+        feed_main_suggest_node(
+            p_this,
+            p_suggest_node);
+    }
+}
+
+static
+void
+feed_main_suggest_exit(
+    struct feed_handle * const
+        p_this)
+{
+    feed_suggest_list_clear(
+        &(
+            p_this->o_suggest_list));
+
+    p_this->b_suggest =
+        0;
+
+}
+
+static
+void
+feed_main_suggest_reset(
+    struct feed_handle * const
+        p_this)
+{
+    /* Restore original */
+    struct feed_suggest_node *
+        p_suggest_node;
+
+    p_suggest_node =
+        feed_suggest_list_first(
+            &(
+                p_this->o_suggest_list));
+
+    if (p_suggest_node)
+    {
+        feed_main_suggest_node(
+            p_this,
+            p_suggest_node);
+    }
+
+    feed_main_suggest_exit(
+        p_this);
+
+}
+
+static
+void
 feed_main_event_callback(
     void * const
         p_context,
     struct feed_event const * const
         p_event)
 {
+    char
+        b_done;
+
     struct feed_handle *
         p_this;
 
@@ -3533,25 +3675,77 @@ feed_main_event_callback(
         *(
             p_event);
 
-    if (p_this->b_verbose)
-    {
-        p_this->b_verbose =
-            0;
+    b_done =
+        0;
 
-        /* Split event into unicode characters */
-        if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
+    if (!b_done)
+    {
+        if (p_this->b_verbose)
         {
-            feed_main_insert_newline(
-                p_this);
-        }
-        else
-        {
-            feed_main_insert_event(
-                p_this,
-                p_event);
+            p_this->b_verbose =
+                0;
+
+            /* Split event into unicode characters */
+            if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
+            {
+                feed_main_insert_newline(
+                    p_this);
+            }
+            else
+            {
+                feed_main_insert_event(
+                    p_this,
+                    p_event);
+            }
+
+            b_done =
+                1;
         }
     }
-    else
+
+    if (!b_done)
+    {
+        if (
+            p_this->b_suggest)
+        {
+            if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'G') == p_event->i_code)
+            {
+                feed_main_suggest_reset(
+                    p_this);
+
+                b_done =
+                    1;
+            }
+            else if (((FEED_EVENT_KEY_FLAG | FEED_KEY_UP) == p_event->i_code)
+                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'I') == p_event->i_code))
+            {
+                feed_main_suggest_next(
+                    p_this);
+
+                b_done =
+                    1;
+            }
+            else if (((FEED_EVENT_KEY_FLAG | FEED_KEY_DOWN) == p_event->i_code)
+                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_SHIFT | 'I') == p_event->i_code))
+            {
+                feed_main_suggest_prev(
+                    p_this);
+
+                b_done =
+                    1;
+            }
+            else
+            {
+                feed_main_suggest_exit(
+                    p_this);
+
+                b_done =
+                    0;
+            }
+        }
+    }
+
+    if (!b_done)
     {
         /* do notify */
         /* Provide one line at a time */
@@ -3567,88 +3761,28 @@ feed_main_event_callback(
             /* check for suggestions */
             if (p_this->o_suggest_list.i_count)
             {
-                struct feed_suggest_node *
-                    p_suggest_node;
-
-#if defined(FEED_CFG_DEBUG)
-                printf("suggest list\n");
-
-                p_suggest_node =
-                    feed_suggest_list_first(
-                        &(
-                            p_this->o_suggest_list));
-
-                while (
-                    p_suggest_node)
-                {
-                    printf("suggest node len=%lu buf=[%.*s] cur=%lu\n",
-                        p_suggest_node->i_length,
-                        (int)(
-                            p_suggest_node->i_length),
-                        (char const *)(
-                            p_suggest_node->p_buffer),
-                        p_suggest_node->i_cursor_offset);
-
-                    p_suggest_node =
-                        feed_suggest_list_next(
-                            &(
-                                p_this->o_suggest_list),
-                            p_suggest_node);
-                }
-#endif /* #if defined(FEED_CFG_DEBUG) */
-
-                /* Save original buffer */
+                p_this->b_suggest = 1;
 
                 /* Load first suggestion */
-                feed_text_clear(
-                    p_this->p_text);
-
-                /* Invalidate caches */
-                p_this->p_page_line = NULL;
-
-                p_this->i_page_line_index = 0ul;
-
-                p_this->i_page_glyph_index = 0ul;
-
-                p_this->e_page_state = feed_main_state_prompt;
-
-                p_this->o_cursor.p_line = NULL;
-
-                p_this->o_cursor.p_glyph = NULL;
-
-                p_this->o_cursor.i_line_index = 0ul;
-
-                p_this->o_cursor.i_glyph_index = 0ul;
-
-                p_suggest_node =
+                p_this->p_suggest_node =
                     feed_suggest_list_first(
                         &(
                             p_this->o_suggest_list));
 
-                if (p_suggest_node)
+                if (p_this->p_suggest_node)
                 {
-                    if (p_suggest_node->i_length)
-                    {
-                        feed_text_load(
-                            p_this->p_text,
-                            p_suggest_node->p_buffer,
-                            p_suggest_node->i_length);
-                    }
-
-                    /* Reposition cursor ... */
-
+                    feed_main_suggest_next(
+                        p_this);
                 }
-
-                feed_suggest_list_clear(
-                    &(
-                        p_this->o_suggest_list));
-
-                p_this->b_refresh_text = 1;
             }
         }
 
         if (!p_this->b_started)
         {
+        }
+        else if (p_this->b_suggest)
+        {
+            /* entering suggestion mode */
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'D') == p_event->i_code)
         {
