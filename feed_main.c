@@ -251,6 +251,15 @@ feed_main_notify_callback(
     }
 #endif /* test of complete */
 
+    if (i_data_length)
+    {
+        if (4 == p_data[0u])
+        {
+            feed_stop(
+                p_feed_handle);
+        }
+    }
+
     /* ... */
 
     return 0;

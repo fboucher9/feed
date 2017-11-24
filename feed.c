@@ -3784,11 +3784,6 @@ feed_main_event_callback(
         {
             /* entering suggestion mode */
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'D') == p_event->i_code)
-        {
-            p_this->b_started =
-                0;
-        }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'H') == p_event->i_code)
         {
             feed_main_delete_glyph_prev(p_this);
