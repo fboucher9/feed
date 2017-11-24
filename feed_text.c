@@ -137,10 +137,12 @@ feed_text_cleanup(
             (struct feed_line *)(
                 p_text->o_lines.p_next);
 
-        feed_line_destroy(
+        feed_text_remove_line(
+            p_text,
             p_line);
 
-        p_text->i_line_count --;
+        feed_line_destroy(
+            p_line);
     }
 
     feed_utf8_parser_cleanup(
@@ -659,10 +661,12 @@ feed_text_clear(
             (struct feed_line *)(
                 p_text->o_lines.p_next);
 
-        feed_line_destroy(
+        feed_text_remove_line(
+            p_text,
             p_line);
 
-        p_text->i_line_count --;
+        feed_line_destroy(
+            p_line);
     }
 
     /* Clear the first line */

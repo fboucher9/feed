@@ -121,4 +121,11 @@ feed_suggest_list_next(
     struct feed_suggest_node * const
         p_suggest_node);
 
+struct feed_suggest_node *
+feed_suggest_list_prev(
+    struct feed_suggest_list * const
+        p_suggest_list,
+    struct feed_suggest_node * const
+        p_suggest_node);
+
 /* end-of-file: feed_suggest.h */

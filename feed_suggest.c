@@ -336,4 +336,41 @@ feed_suggest_list_next(
 
 } /* feed_suggest_list_next() */
 
+struct feed_suggest_node *
+feed_suggest_list_prev(
+    struct feed_suggest_list * const
+        p_suggest_list,
+    struct feed_suggest_node * const
+        p_suggest_node)
+{
+    struct feed_suggest_node *
+        p_prev;
+
+    if (p_suggest_node)
+    {
+        if (p_suggest_node->o_list.p_prev != &(p_suggest_list->o_nodes))
+        {
+            p_prev =
+                (struct feed_suggest_node *)(
+                    p_suggest_node->o_list.p_prev);
+        }
+        else
+        {
+            p_prev =
+                (struct feed_suggest_node *)(
+                    0);
+        }
+    }
+    else
+    {
+        p_prev =
+            (struct feed_suggest_node *)(
+                0);
+    }
+
+    return
+        p_prev;
+
+} /* feed_suggest_list_prev() */
+
 /* end-of-file: feed_suggest.c */
