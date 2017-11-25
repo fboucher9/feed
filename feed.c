@@ -3200,98 +3200,26 @@ feed_main_insert_newline(
     /* Split current line */
 
     /* Create a new line */
-
-    feed_text_iterator_validate(
-        p_this->p_text,
-        &(
-            p_this->o_cursor));
-
     if (
-        p_this->o_cursor.p_line)
+        feed_text_iterator_insert_newline(
+            p_this->p_text,
+            &(
+                p_this->o_cursor)))
     {
-        struct feed_glyph *
-            p_glyph;
-
-        struct feed_line *
-            p_line_down;
-
-        if (p_this->o_cursor.p_glyph)
+        /* Detect that cursor is visible? */
+        if ((p_this->o_cursor_visible.i_cursor_address + p_this->o_screen_info.i_screen_width) >= p_this->o_screen_info.i_screen_size)
         {
-            p_glyph =
-                p_this->o_cursor.p_glyph;
-        }
-        else
-        {
-            p_glyph =
-                feed_line_get_glyph(
-                    p_this->o_cursor.p_line,
-                    p_this->o_cursor.i_glyph_index);
+            p_this->p_page_line = p_this->o_cursor.p_line;
+
+            p_this->i_page_line_index = p_this->o_cursor.i_line_index;
+
+            p_this->i_page_glyph_index = p_this->o_cursor.i_glyph_index;
+
+            p_this->e_page_state = feed_main_state_prompt;
         }
 
-        p_line_down =
-            feed_line_create(
-                p_this->p_client);
-
-        if (
-            p_line_down)
-        {
-            feed_text_insert_line_after(
-                p_this->p_text,
-                p_this->o_cursor.p_line,
-                p_line_down);
-
-            if (p_glyph)
-            {
-                /* Transfer characters from this line to next */
-                while (
-                    &(
-                        p_glyph->o_list)
-                    != &(
-                        p_this->o_cursor.p_line->o_glyphs))
-                {
-                    struct feed_glyph *
-                        p_glyph_next;
-
-                    p_glyph_next =
-                        (struct feed_glyph *)(
-                            p_glyph->o_list.p_next);
-
-                    feed_line_remove_glyph(
-                        p_this->o_cursor.p_line,
-                        p_glyph);
-
-                    feed_line_append_glyph(
-                        p_line_down,
-                        p_glyph);
-
-                    p_glyph =
-                        p_glyph_next;
-                }
-            }
-
-            p_this->o_cursor.i_line_index ++;
-
-            p_this->o_cursor.i_glyph_index = 0u;
-
-            p_this->o_cursor.p_line = p_line_down;
-
-            p_this->o_cursor.p_glyph = NULL;
-
-            /* Detect that cursor is visible? */
-            if ((p_this->o_cursor_visible.i_cursor_address + p_this->o_screen_info.i_screen_width) >= p_this->o_screen_info.i_screen_size)
-            {
-                p_this->p_page_line = p_this->o_cursor.p_line;
-
-                p_this->i_page_line_index = p_this->o_cursor.i_line_index;
-
-                p_this->i_page_glyph_index = p_this->o_cursor.i_glyph_index;
-
-                p_this->e_page_state = feed_main_state_prompt;
-            }
-
-            p_this->b_refresh_text =
-                1;
-        }
+        p_this->b_refresh_text =
+            1;
     }
 }
 
@@ -3569,10 +3497,20 @@ feed_main_suggest_node(
         p_this->i_suggest_length =
             p_suggest_node->i_length;
 
-        feed_text_load(
-            p_this->p_text,
-            p_this->p_suggest_node->p_buffer,
-            p_this->p_suggest_node->i_length);
+        {
+            struct feed_text_iterator
+                o_text_iterator;
+
+            o_text_iterator =
+                p_this->o_suggest_iterator;
+
+            feed_text_iterator_load(
+                p_this->p_text,
+                &(
+                    o_text_iterator),
+                p_this->p_suggest_node->p_buffer,
+                p_this->p_suggest_node->i_length);
+        }
     }
     else
     {

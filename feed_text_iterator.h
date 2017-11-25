@@ -215,4 +215,22 @@ feed_text_iterator_delete_region(
     unsigned long int const
         i_region_length);
 
+void
+feed_text_iterator_load(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    unsigned char const * const
+        p_data,
+    unsigned long int const
+        i_data_length);
+
+char
+feed_text_iterator_insert_newline(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator);
+
 /* end-of-file: feed_text_iterator.h */
