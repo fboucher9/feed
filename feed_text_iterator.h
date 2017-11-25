@@ -18,6 +18,8 @@ struct feed_glyph;
 
 struct feed_buf;
 
+struct feed_utf8_code;
+
 struct feed_text_iterator
 {
     struct feed_line *
@@ -232,5 +234,14 @@ feed_text_iterator_insert_newline(
         p_text,
     struct feed_text_iterator * const
         p_text_iterator);
+
+char
+feed_text_iterator_insert_code(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    struct feed_utf8_code const * const
+        p_utf8_code);
 
 /* end-of-file: feed_text_iterator.h */

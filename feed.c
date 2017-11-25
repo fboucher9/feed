@@ -79,15 +79,6 @@ enum feed_main_state
     machine will automatically switch to the eol state */
     feed_main_state_text,
 
-    /* Display an end-of-line.  If this is the last line of the text then
-    the state machine will automatically switch to the eof state */
-    feed_main_state_eol,
-
-    /* Display an end-of-file.  The state machine should remain in this state
-    until forced to go to next state, in that case it will switch to null
-    state. */
-    feed_main_state_eof,
-
     /* After the end-of-file.  This is used to detect that the end of the file
     is within the current page. */
     feed_main_state_null
@@ -890,6 +881,61 @@ feed_main_iterator_next_prompt_glyph(
 
 static
 char
+feed_main_iterator_prev_prompt_glyph(
+    struct feed_handle * const
+        p_this,
+    struct feed_main_iterator * const
+        p_iterator)
+{
+    char
+        b_result;
+
+    (void)(
+        p_this);
+
+    p_iterator->p_document_glyph = NULL;
+
+    if (p_iterator->i_glyph_index)
+    {
+        p_iterator->i_glyph_index --;
+
+        if (p_iterator->p_document_line
+            && p_iterator->p_prompt_line
+            && (p_iterator->p_prompt_glyph)
+            && (p_iterator->p_prompt_glyph->o_list.p_prev != &(p_iterator->p_prompt_line->o_glyphs)))
+        {
+            p_iterator->p_prompt_glyph =
+                (struct feed_glyph *)(
+                    p_iterator->p_prompt_glyph->o_list.p_prev);
+
+            b_result =
+                1;
+        }
+        else
+        {
+            b_result =
+                0;
+        }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    if (!b_result)
+    {
+        p_iterator->p_prompt_glyph = NULL;
+    }
+
+    return
+        b_result;
+
+}
+
+
+static
+char
 feed_main_iterator_first_text_glyph(
     struct feed_handle * const
         p_this,
@@ -945,7 +991,7 @@ feed_main_iterator_first_text_glyph(
 
 static
 char
-feed_main_iterator_test_next_line(
+feed_main_iterator_last_text_glyph(
     struct feed_handle * const
         p_this,
     struct feed_main_iterator * const
@@ -954,29 +1000,39 @@ feed_main_iterator_test_next_line(
     char
         b_result;
 
-    p_iterator->p_document_glyph = NULL;
+    (void)(
+        p_this);
 
-    if (p_iterator->p_document_line)
+    p_iterator->i_glyph_index =
+        0u;
+
+    p_iterator->p_prompt_line = NULL;
+
+    p_iterator->p_prompt_glyph = NULL;
+
+    if (p_iterator->p_document_line
+        && (p_iterator->p_document_line->o_glyphs.p_prev != &(p_iterator->p_document_line->o_glyphs)))
     {
-        p_iterator->i_glyph_index = p_iterator->p_document_line->i_glyph_count;
+        p_iterator->i_glyph_index =
+            (p_iterator->p_document_line->i_glyph_count - 1u);
 
-        if (p_iterator->p_document_line->o_list.p_next != &(p_this->p_text->o_lines))
-        {
-            b_result =
-                1;
-        }
-        else
-        {
-            b_result =
-                0;
-        }
+        p_iterator->p_document_glyph =
+            (struct feed_glyph *)(
+                p_iterator->p_document_line->o_glyphs.p_prev);
+
+        b_result =
+            1;
     }
     else
     {
-        p_iterator->i_glyph_index = 0u;
-
         b_result =
             0;
+    }
+
+    if (!b_result)
+    {
+        p_iterator->p_document_glyph =
+            NULL;
     }
 
     return
@@ -1020,6 +1076,65 @@ feed_main_iterator_next_line(
         {
             p_iterator->p_document_line = NULL;
 
+            b_result =
+                0;
+        }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+}
+
+static
+char
+feed_main_iterator_prev_line(
+    struct feed_handle * const
+        p_this,
+    struct feed_main_iterator * const
+        p_iterator)
+{
+    char
+        b_result;
+
+    if (p_iterator->i_line_index)
+    {
+        p_iterator->i_line_index --;
+
+        p_iterator->i_glyph_index = 0u;
+
+        p_iterator->p_document_glyph = NULL;
+
+        p_iterator->p_prompt_line = NULL;
+
+        p_iterator->p_prompt_glyph = NULL;
+
+        if (p_iterator->p_document_line)
+        {
+            if (p_iterator->p_document_line->o_list.p_prev != &(p_this->p_text->o_lines))
+            {
+                p_iterator->p_document_line =
+                    (struct feed_line *)(
+                        p_iterator->p_document_line->o_list.p_prev);
+
+                b_result =
+                    1;
+            }
+            else
+            {
+                p_iterator->p_document_line = NULL;
+
+                b_result =
+                    0;
+            }
+        }
+        else
+        {
             b_result =
                 0;
         }
@@ -1098,6 +1213,61 @@ feed_main_iterator_next_text_glyph(
 
 static
 char
+feed_main_iterator_prev_text_glyph(
+    struct feed_handle * const
+        p_this,
+    struct feed_main_iterator * const
+        p_iterator)
+{
+    char
+        b_result;
+
+    (void)(
+        p_this);
+
+    p_iterator->p_prompt_line = NULL;
+
+    p_iterator->p_prompt_glyph = NULL;
+
+    if (p_iterator->i_glyph_index)
+    {
+        p_iterator->i_glyph_index --;
+
+        if (p_iterator->p_document_line
+            && p_iterator->p_document_glyph
+            && (p_iterator->p_document_glyph->o_list.p_prev != &(p_iterator->p_document_line->o_glyphs)))
+        {
+            p_iterator->p_document_glyph =
+                (struct feed_glyph *)(
+                    p_iterator->p_document_glyph->o_list.p_prev);
+
+            b_result =
+                1;
+        }
+        else
+        {
+            b_result =
+                0;
+        }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    if (!b_result)
+    {
+        p_iterator->p_document_glyph = NULL;
+    }
+
+    return
+        b_result;
+
+}
+
+static
+char
 feed_main_iterator_first_prompt_glyph(
     struct feed_handle * const
         p_this,
@@ -1127,6 +1297,71 @@ feed_main_iterator_first_prompt_glyph(
                 p_iterator->p_prompt_glyph =
                     (struct feed_glyph *)(
                         p_iterator->p_prompt_line->o_glyphs.p_next);
+
+                b_result =
+                    1;
+            }
+            else
+            {
+                b_result =
+                    0;
+            }
+        }
+        else
+        {
+            b_result =
+                0;
+        }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    if (!b_result)
+    {
+        p_iterator->p_prompt_line = NULL;
+
+        p_iterator->p_prompt_glyph = NULL;
+    }
+
+    return
+        b_result;
+
+}
+
+static
+char
+feed_main_iterator_last_prompt_glyph(
+    struct feed_handle * const
+        p_this,
+    struct feed_main_iterator * const
+        p_iterator)
+{
+    char
+        b_result;
+
+    p_iterator->i_glyph_index = 0u;
+
+    p_iterator->p_document_glyph = NULL;
+
+    if (p_iterator->p_document_line)
+    {
+        feed_main_iterator_get_prompt_line(
+            p_this,
+            p_iterator);
+
+        if (p_iterator->p_prompt_line)
+        {
+            if (p_iterator->p_prompt_line->o_glyphs.p_prev != &(p_iterator->p_prompt_line->o_glyphs))
+            {
+                p_iterator->i_glyph_index =
+                    (p_iterator->p_prompt_line->i_glyph_count - 1u);
+
+                p_iterator->p_prompt_glyph =
+                    (struct feed_glyph *)(
+                        p_iterator->p_prompt_line->o_glyphs.p_prev);
 
                 b_result =
                     1;
@@ -1231,16 +1466,9 @@ feed_main_iterator_begin(
             {
                 p_iterator->e_state = feed_main_state_text;
             }
-            else if (
-                feed_main_iterator_test_next_line(
-                    p_this,
-                    p_iterator))
-            {
-                p_iterator->e_state = feed_main_state_eol;
-            }
             else
             {
-                p_iterator->e_state = feed_main_state_eof;
+                p_iterator->e_state = feed_main_state_null;
             }
         }
         else if (
@@ -1253,35 +1481,14 @@ feed_main_iterator_begin(
             {
                 p_iterator->e_state = feed_main_state_text;
             }
-            else if (
-                feed_main_iterator_test_next_line(
-                    p_this,
-                    p_iterator))
-            {
-                p_iterator->e_state = feed_main_state_eol;
-            }
             else
             {
-                p_iterator->e_state = feed_main_state_eof;
+                p_iterator->e_state = feed_main_state_null;
             }
         }
-        else if (
-            feed_main_state_eol == p_iterator->e_state)
+        else
         {
-            if (feed_main_iterator_test_next_line(
-                    p_this,
-                    p_iterator))
-            {
-                p_iterator->e_state = feed_main_state_eol;
-            }
-            else
-            {
-                p_iterator->e_state = feed_main_state_eof;
-            }
-        }
-        else if (
-            feed_main_state_eof == p_iterator->e_state)
-        {
+            p_iterator->e_state = feed_main_state_null;
         }
     }
     else
@@ -1406,19 +1613,19 @@ feed_main_iterator_begin_reverse(
                 else
                 {
                     p_iterator->e_state =
-                        feed_main_state_eol;
+                        feed_main_state_null;
                 }
             }
             else
             {
                 p_iterator->e_state =
-                    feed_main_state_eol;
+                    feed_main_state_null;
             }
         }
         else
         {
             p_iterator->e_state =
-                feed_main_state_eof;
+                feed_main_state_null;
         }
     }
 
@@ -1426,53 +1633,85 @@ feed_main_iterator_begin_reverse(
     {
         if (feed_main_state_text == p_iterator->e_state)
         {
-            p_iterator->p_document_glyph =
-                feed_line_get_glyph(
-                    p_iterator->p_document_line,
-                    p_iterator->i_glyph_index);
-
-            if (p_iterator->p_document_glyph)
+            if (
+                feed_main_iterator_get_text_glyph(
+                    p_this,
+                    p_iterator))
             {
+                p_iterator->e_state =
+                    feed_main_state_text;
             }
-            else
+            else if (
+                feed_main_iterator_last_prompt_glyph(
+                    p_this,
+                    p_iterator))
             {
                 p_iterator->e_state =
                     feed_main_state_prompt;
             }
-        }
-
-        if (feed_main_state_prompt == p_iterator->e_state)
-        {
-            feed_main_iterator_get_prompt_glyph(
-                p_this,
-                p_iterator);
-
-            if (p_iterator->p_prompt_glyph)
+            else
             {
+                if (feed_main_iterator_prev_line(
+                        p_this,
+                        p_iterator))
+                {
+                    if (
+                        feed_main_iterator_last_text_glyph(
+                            p_this,
+                            p_iterator))
+                    {
+                        p_iterator->e_state =
+                            feed_main_state_text;
+                    }
+                    else
+                    {
+                        p_iterator->e_state =
+                            feed_main_state_null;
+                    }
+                }
+                else
+                {
+                    p_iterator->e_state =
+                        feed_main_state_null;
+                }
+            }
+        }
+        else if (feed_main_state_prompt == p_iterator->e_state)
+        {
+            if (
+                feed_main_iterator_get_prompt_glyph(
+                    p_this,
+                    p_iterator))
+            {
+                p_iterator->e_state =
+                    feed_main_state_prompt;
             }
             else
             {
-                p_iterator->e_state =
-                    feed_main_state_eol;
+                if (feed_main_iterator_prev_line(
+                        p_this,
+                        p_iterator))
+                {
+                    if (
+                        feed_main_iterator_last_text_glyph(
+                            p_this,
+                            p_iterator))
+                    {
+                        p_iterator->e_state =
+                            feed_main_state_text;
+                    }
+                    else
+                    {
+                        p_iterator->e_state =
+                            feed_main_state_null;
+                    }
+                }
+                else
+                {
+                    p_iterator->e_state =
+                        feed_main_state_null;
+                }
             }
-        }
-
-        if (feed_main_state_eol == p_iterator->e_state)
-        {
-            if (p_iterator->p_document_line->o_list.p_prev != &(p_this->p_text->o_lines))
-            {
-            }
-            else
-            {
-                p_iterator->e_state =
-                    feed_main_state_eof;
-            }
-        }
-
-        if (feed_main_state_eof == p_iterator->e_state)
-        {
-            p_iterator->p_document_line =
-                NULL;
         }
     }
     else
@@ -1518,42 +1757,61 @@ feed_main_iterator_test(
     char
         b_result;
 
-    if ((p_iterator->e_state == feed_main_state_prompt)
-        || (p_iterator->e_state == feed_main_state_text))
-    {
-        unsigned short int i_glyph_width;
+    struct feed_glyph *
+        p_glyph;
 
-        i_glyph_width =
-            feed_glyph_get_visible_width(
-                p_iterator->p_prompt_glyph
-                ? p_iterator->p_prompt_glyph
-                : p_iterator->p_document_glyph);
+    p_glyph =
+        p_iterator->p_prompt_glyph
+        ? p_iterator->p_prompt_glyph
+        : p_iterator->p_document_glyph;
 
-        b_result =
-            feed_screen_iterator_test_write(
-                &(
-                    p_this->o_screen_info),
-                &(
-                    p_iterator->o_screen_iterator),
-                i_glyph_width);
-    }
-    else if (p_iterator->e_state == feed_main_state_eol)
+    if (p_glyph)
     {
-        b_result =
-            feed_screen_iterator_test_newline(
-                &(
-                    p_this->o_screen_info),
-                &(
-                    p_iterator->o_screen_iterator));
+        if (p_glyph->o_utf8_code.i_raw_len)
+        {
+            if (
+                '\n' != p_glyph->o_utf8_code.a_raw[0u])
+            {
+                unsigned short int i_glyph_width;
+
+                i_glyph_width =
+                    feed_glyph_get_visible_width(
+                        p_iterator->p_prompt_glyph
+                        ? p_iterator->p_prompt_glyph
+                        : p_iterator->p_document_glyph);
+
+                b_result =
+                    feed_screen_iterator_test_write(
+                        &(
+                            p_this->o_screen_info),
+                        &(
+                            p_iterator->o_screen_iterator),
+                        i_glyph_width);
+            }
+            else
+            {
+                b_result =
+                    feed_screen_iterator_test_newline(
+                        &(
+                            p_this->o_screen_info),
+                        &(
+                            p_iterator->o_screen_iterator));
+            }
+        }
+        else
+        {
+            b_result =
+                feed_screen_iterator_test_clear(
+                    &(
+                        p_this->o_screen_info),
+                    &(
+                        p_iterator->o_screen_iterator));
+        }
     }
     else
     {
         b_result =
-            feed_screen_iterator_test_clear(
-                &(
-                    p_this->o_screen_info),
-                &(
-                    p_iterator->o_screen_iterator));
+            0;
     }
 
     return
@@ -1572,41 +1830,55 @@ feed_main_iterator_write(
     unsigned long int
         i_width;
 
-    /* Advance screen position */
-    if ((p_iterator->e_state == feed_main_state_prompt)
-        || (p_iterator->e_state == feed_main_state_text))
-    {
-        i_width =
-            feed_glyph_get_visible_width(
-                p_iterator->p_prompt_glyph
-                ? p_iterator->p_prompt_glyph
-                : p_iterator->p_document_glyph);
+    struct feed_glyph *
+        p_glyph;
 
-        feed_screen_iterator_write(
-            &(
-                p_this->o_screen_info),
-            &(
-                p_iterator->o_screen_iterator),
-            i_width);
-    }
-    else if (p_iterator->e_state == feed_main_state_eol)
+    p_glyph =
+        p_iterator->p_prompt_glyph
+        ? p_iterator->p_prompt_glyph
+        : p_iterator->p_document_glyph;
+
+    if (p_glyph)
     {
-        /* Empty line, so do a newline */
-        i_width =
-            feed_screen_iterator_newline(
-                &(
-                    p_this->o_screen_info),
-                &(
-                    p_iterator->o_screen_iterator));
-    }
-    else
-    {
-        i_width =
-            feed_screen_iterator_clear(
-                &(
-                    p_this->o_screen_info),
-                &(
-                    p_iterator->o_screen_iterator));
+        /* Advance screen position */
+        if (p_glyph->o_utf8_code.i_raw_len)
+        {
+            if (
+                '\n' != p_glyph->o_utf8_code.a_raw[0u])
+            {
+                i_width =
+                    feed_glyph_get_visible_width(
+                        p_iterator->p_prompt_glyph
+                        ? p_iterator->p_prompt_glyph
+                        : p_iterator->p_document_glyph);
+
+                feed_screen_iterator_write(
+                    &(
+                        p_this->o_screen_info),
+                    &(
+                        p_iterator->o_screen_iterator),
+                    i_width);
+            }
+            else
+            {
+                /* Empty line, so do a newline */
+                i_width =
+                    feed_screen_iterator_newline(
+                        &(
+                            p_this->o_screen_info),
+                        &(
+                            p_iterator->o_screen_iterator));
+            }
+        }
+        else
+        {
+            i_width =
+                feed_screen_iterator_clear(
+                    &(
+                        p_this->o_screen_info),
+                    &(
+                        p_iterator->o_screen_iterator));
+        }
     }
 
     return
@@ -1703,13 +1975,9 @@ feed_main_iterator_next(
         {
             p_iterator->e_state = feed_main_state_text;
         }
-        else if (feed_main_iterator_test_next_line(p_this, p_iterator))
-        {
-            p_iterator->e_state = feed_main_state_eol;
-        }
         else
         {
-            p_iterator->e_state = feed_main_state_eof;
+            p_iterator->e_state = feed_main_state_null;
         }
 
         b_result = 1;
@@ -1720,62 +1988,30 @@ feed_main_iterator_next(
         {
             p_iterator->e_state = feed_main_state_text;
         }
-        else if (feed_main_iterator_test_next_line(p_this, p_iterator))
-        {
-            p_iterator->e_state = feed_main_state_eol;
-        }
         else
         {
-            p_iterator->e_state = feed_main_state_eof;
-        }
-
-        b_result = 1;
-    }
-    else if (feed_main_state_eol == p_iterator->e_state)
-    {
-        if (feed_main_iterator_next_line(p_this, p_iterator))
-        {
-            if (feed_main_iterator_first_prompt_glyph(p_this, p_iterator))
+            if (feed_main_iterator_next_line(p_this, p_iterator))
             {
-                p_iterator->e_state = feed_main_state_prompt;
-            }
-            else if (feed_main_iterator_first_text_glyph(p_this, p_iterator))
-            {
-                p_iterator->e_state = feed_main_state_text;
-            }
-            else if (feed_main_iterator_test_next_line(p_this, p_iterator))
-            {
-                p_iterator->e_state = feed_main_state_eol;
+                if (feed_main_iterator_first_prompt_glyph(p_this, p_iterator))
+                {
+                    p_iterator->e_state = feed_main_state_prompt;
+                }
+                else if (feed_main_iterator_first_text_glyph(p_this, p_iterator))
+                {
+                    p_iterator->e_state = feed_main_state_text;
+                }
+                else
+                {
+                    p_iterator->e_state = feed_main_state_null;
+                }
             }
             else
             {
-                p_iterator->e_state = feed_main_state_eof;
+                p_iterator->e_state = feed_main_state_null;
             }
-        }
-        else
-        {
-            p_iterator->e_state = feed_main_state_eof;
         }
 
         b_result = 1;
-    }
-    else if (feed_main_state_eof == p_iterator->e_state)
-    {
-        p_iterator->p_document_line = NULL;
-
-        p_iterator->p_document_glyph = NULL;
-
-        p_iterator->p_prompt_line = NULL;
-
-        p_iterator->p_prompt_glyph = NULL;
-
-        p_iterator->i_line_index = p_this->p_text->i_line_count;
-
-        p_iterator->i_glyph_index = 0u;
-
-        p_iterator->e_state = feed_main_state_null;
-
-        b_result = 0;
     }
     else
     {
@@ -1812,179 +2048,83 @@ feed_main_iterator_prev(
     char
         b_result;
 
-    if (p_iterator->p_document_line)
+    if (feed_main_state_text == p_iterator->e_state)
     {
-        /* Look for next glyph */
-        if (p_iterator->p_prompt_glyph)
+        if (
+            feed_main_iterator_prev_text_glyph(
+                p_this,
+                p_iterator))
         {
-            if (p_iterator->p_prompt_glyph->o_list.p_prev != &(p_iterator->p_prompt_line->o_glyphs))
-            {
-                p_iterator->i_glyph_index --;
-
-                p_iterator->p_prompt_glyph =
-                    (struct feed_glyph *)(
-                        p_iterator->p_prompt_glyph->o_list.p_prev);
-
-                p_iterator->e_state = feed_main_state_prompt;
-            }
-            else
-            {
-                /* Next line in prompt? */
-                p_iterator->p_prompt_glyph = NULL;
-
-                /* Go to previous line in document */
-                if (p_iterator->p_document_line->o_list.p_prev != &(p_this->p_text->o_lines))
-                {
-                    p_iterator->p_document_line =
-                        (struct feed_line *)(
-                            p_iterator->p_document_line->o_list.p_prev);
-
-                    p_iterator->i_line_index --;
-
-                    p_iterator->p_document_glyph = NULL;
-
-                    p_iterator->e_state = feed_main_state_eol;
-                }
-                else
-                {
-                    p_iterator->p_document_line = NULL;
-
-                    p_iterator->p_document_glyph = NULL;
-
-                    p_iterator->e_state = feed_main_state_eof;
-                }
-            }
+            p_iterator->e_state = feed_main_state_text;
         }
-        else if (p_iterator->p_document_glyph)
+        else if (
+            feed_main_iterator_last_prompt_glyph(
+                p_this,
+                p_iterator))
         {
-            if (p_iterator->p_document_glyph->o_list.p_prev != &(p_iterator->p_document_line->o_glyphs))
-            {
-                p_iterator->i_glyph_index --;
-
-                p_iterator->p_document_glyph =
-                    (struct feed_glyph *)(
-                        p_iterator->p_document_glyph->o_list.p_prev);
-
-                p_iterator->e_state = feed_main_state_text;
-            }
-            else
-            {
-                p_iterator->p_document_glyph = NULL;
-
-                feed_main_iterator_get_prompt_line(
-                    p_this,
-                    p_iterator);
-
-                if (p_iterator->p_prompt_line
-                    && p_iterator->p_prompt_line->i_glyph_count)
-                {
-                    p_iterator->i_glyph_index =
-                        p_iterator->p_prompt_line->i_glyph_count - 1u;
-
-                    p_iterator->p_prompt_glyph =
-                        feed_line_get_glyph(
-                            p_iterator->p_prompt_line,
-                            p_iterator->i_glyph_index);
-
-                    p_iterator->e_state = feed_main_state_prompt;
-                }
-                else
-                {
-                    p_iterator->p_prompt_glyph =
-                        NULL;
-
-                    /* Go to previous line in document */
-                    if (p_iterator->p_document_line->o_list.p_prev != &(p_this->p_text->o_lines))
-                    {
-                        p_iterator->p_document_line =
-                            (struct feed_line *)(
-                                p_iterator->p_document_line->o_list.p_prev);
-
-                        p_iterator->i_line_index --;
-
-                        p_iterator->p_document_glyph = NULL;
-
-                        p_iterator->e_state = feed_main_state_eol;
-                    }
-                    else
-                    {
-                        p_iterator->p_document_line = NULL;
-
-                        p_iterator->p_document_glyph = NULL;
-
-                        p_iterator->e_state = feed_main_state_eof;
-                    }
-                }
-            }
-        }
-        else if (p_iterator->p_document_line)
-        {
-            if (p_iterator->p_document_line->i_glyph_count)
-            {
-                p_iterator->i_glyph_index =
-                    p_iterator->p_document_line->i_glyph_count - 1u;
-
-                p_iterator->p_document_glyph =
-                    feed_line_get_glyph(
-                        p_iterator->p_document_line,
-                        p_iterator->i_glyph_index);
-
-                p_iterator->e_state =
-                    feed_main_state_text;
-            }
-            else
-            {
-                p_iterator->p_document_glyph = NULL;
-
-                feed_main_iterator_get_prompt_line(
-                    p_this,
-                    p_iterator);
-
-                if (p_iterator->p_prompt_line
-                    && p_iterator->p_prompt_line->i_glyph_count)
-                {
-                    p_iterator->i_glyph_index =
-                        p_iterator->p_prompt_line->i_glyph_count - 1u;
-
-                    p_iterator->p_prompt_glyph =
-                        feed_line_get_glyph(
-                            p_iterator->p_prompt_line,
-                            p_iterator->i_glyph_index);
-
-                    p_iterator->e_state = feed_main_state_prompt;
-                }
-                else
-                {
-                    p_iterator->p_prompt_glyph =
-                        NULL;
-
-                    /* Go to previous line in document */
-                    if (p_iterator->p_document_line->o_list.p_prev != &(p_this->p_text->o_lines))
-                    {
-                        p_iterator->p_document_line =
-                            (struct feed_line *)(
-                                p_iterator->p_document_line->o_list.p_prev);
-
-                        p_iterator->i_line_index --;
-
-                        p_iterator->p_document_glyph = NULL;
-
-                        p_iterator->e_state = feed_main_state_eol;
-                    }
-                    else
-                    {
-                        p_iterator->p_document_line = NULL;
-
-                        p_iterator->p_document_glyph = NULL;
-
-                        p_iterator->e_state = feed_main_state_eof;
-                    }
-                }
-            }
+            p_iterator->e_state = feed_main_state_prompt;
         }
         else
         {
-            /* no more lines... */
+            if (
+                feed_main_iterator_prev_line(
+                    p_this,
+                    p_iterator))
+            {
+                if (
+                    feed_main_iterator_last_text_glyph(
+                        p_this,
+                        p_iterator))
+                {
+                    p_iterator->e_state = feed_main_state_text;
+                }
+                else
+                {
+                    p_iterator->e_state = feed_main_state_null;
+                }
+            }
+            else
+            {
+                p_iterator->e_state = feed_main_state_null;
+            }
+        }
+
+        b_result =
+            1;
+    }
+    else if (
+        feed_main_state_prompt == p_iterator->e_state)
+    {
+        if (
+            feed_main_iterator_prev_prompt_glyph(
+                p_this,
+                p_iterator))
+        {
+            p_iterator->e_state = feed_main_state_prompt;
+        }
+        else
+        {
+            if (
+                feed_main_iterator_prev_line(
+                    p_this,
+                    p_iterator))
+            {
+                if (
+                    feed_main_iterator_last_text_glyph(
+                        p_this,
+                        p_iterator))
+                {
+                    p_iterator->e_state = feed_main_state_text;
+                }
+                else
+                {
+                    p_iterator->e_state = feed_main_state_null;
+                }
+            }
+            else
+            {
+                p_iterator->e_state = feed_main_state_null;
+            }
         }
 
         b_result =
@@ -1992,8 +2132,6 @@ feed_main_iterator_prev(
     }
     else
     {
-        p_iterator->e_state = feed_main_state_null;
-
         b_result =
             0;
     }
@@ -2066,14 +2204,48 @@ feed_main_move_cursor_xy(
                 }
                 else
                 {
+                    /* Detect type of character */
+                    char b_eol;
+
+                    struct feed_glyph *
+                        p_glyph;
+
+                    p_glyph =
+                        (o_iterator.e_state == feed_main_state_prompt)
+                        ? o_iterator.p_prompt_glyph
+                        : o_iterator.p_document_glyph;
+
+                    if (p_glyph)
+                    {
+                        if (p_glyph->o_utf8_code.i_raw_len)
+                        {
+                            if (
+                                '\n' != p_glyph->o_utf8_code.a_raw[0u])
+                            {
+                                b_eol = 0;
+                            }
+                            else
+                            {
+                                b_eol = 1;
+                            }
+                        }
+                        else
+                        {
+                            b_eol = 1;
+                        }
+                    }
+                    else
+                    {
+                        b_eol = 1;
+                    }
+
                     feed_main_iterator_write(
                         p_this,
                         &(o_iterator));
 
                     if (
                         (o_iterator.o_screen_iterator.i_cursor_address > i_cursor_address)
-                        && ((o_iterator.e_state == feed_main_state_eol)
-                            || (o_iterator.e_state == feed_main_state_eof)))
+                        && b_eol)
                     {
                         p_this->o_cursor.i_line_index =
                             o_iterator.i_line_index;
@@ -2255,21 +2427,69 @@ feed_main_scroll_pageup(
                     p_this,
                     &(o_iterator)))
             {
+                struct feed_glyph *
+                    p_glyph;
+
+                p_glyph =
+                    (o_iterator.e_state == feed_main_state_prompt)
+                    ? o_iterator.p_prompt_glyph
+                    : o_iterator.p_document_glyph;
+
                 /* Remember this as a valid glyph */
-                p_final_line =
-                    o_iterator.p_document_line;
 
-                i_final_line_index =
-                    o_iterator.i_line_index;
+                if (p_glyph)
+                {
+                    if (p_glyph->o_utf8_code.i_raw_len)
+                    {
+                        if (
+                            '\n' != p_glyph->o_utf8_code.a_raw[0u])
+                        {
+                            p_final_line =
+                                o_iterator.p_document_line;
 
-                i_final_glyph_index =
-                    o_iterator.i_glyph_index;
+                            i_final_line_index =
+                                o_iterator.i_line_index;
 
-                e_final_state =
-                    o_iterator.e_state;
+                            i_final_glyph_index =
+                                o_iterator.i_glyph_index;
 
-                b_found =
-                    1;
+                            e_final_state =
+                                o_iterator.e_state;
+
+                        }
+                        else
+                        {
+                            p_final_line =
+                                o_iterator.p_document_line;
+
+                            i_final_line_index =
+                                o_iterator.i_line_index;
+
+                            i_final_glyph_index =
+                                0u;
+
+                            e_final_state =
+                                feed_main_state_prompt;
+                        }
+                    }
+                    else
+                    {
+                        p_final_line =
+                            o_iterator.p_document_line;
+
+                        i_final_line_index =
+                            o_iterator.i_line_index;
+
+                        i_final_glyph_index =
+                            0u;
+
+                        e_final_state =
+                            feed_main_state_prompt;
+                    }
+
+                    b_found =
+                        1;
+                }
 
                 feed_main_iterator_write(
                     p_this,
@@ -2306,23 +2526,11 @@ feed_main_scroll_pageup(
             p_this->i_page_line_index =
                 i_final_line_index;
 
-            if ((e_final_state == feed_main_state_eol)
-                || (e_final_state == feed_main_state_eof))
-            {
-                p_this->i_page_glyph_index =
-                    0u;
+            p_this->i_page_glyph_index =
+                i_final_glyph_index;
 
-                p_this->e_page_state =
-                    feed_main_state_prompt;
-            }
-            else
-            {
-                p_this->i_page_glyph_index =
-                    i_final_glyph_index;
-
-                p_this->e_page_state =
-                    e_final_state;
-            }
+            p_this->e_page_state =
+                e_final_state;
 
             p_this->b_refresh_text = 1;
 
@@ -2589,47 +2797,52 @@ feed_main_refresh_job(
                         o_iterator.o_screen_iterator.i_cursor_address;
                 }
 
-                if (
-                    (feed_main_state_prompt == o_iterator.e_state)
-                    || (feed_main_state_text == o_iterator.e_state))
+                if (p_this->b_refresh_text)
                 {
-                    if (p_this->b_refresh_text)
-                    {
-                        unsigned char
-                            a_visible[15u];
+                    struct feed_glyph *
+                        p_glyph;
 
-                        unsigned char
-                            i_visible_length;
+                    p_glyph =
+                        (feed_main_state_prompt == o_iterator.e_state)
+                        ? o_iterator.p_prompt_glyph
+                        : o_iterator.p_document_glyph;
 
-                        i_visible_length =
-                            feed_glyph_render_visible(
-                                (feed_main_state_prompt == o_iterator.e_state)
-                                ? o_iterator.p_prompt_glyph
-                                : o_iterator.p_document_glyph,
-                                a_visible);
+                    if (p_glyph)
+                    {
+                        if (p_glyph->o_utf8_code.i_raw_len)
+                        {
+                            if (
+                                '\n' != p_glyph->o_utf8_code.a_raw[0u])
+                            {
+                                unsigned char
+                                    a_visible[15u];
 
-                        feed_screen_write(
-                            p_this->p_screen,
-                            a_visible,
-                            i_visible_length);
-                    }
-                }
-                else if (
-                    feed_main_state_eol == o_iterator.e_state)
-                {
-                    if (p_this->b_refresh_text)
-                    {
-                        feed_screen_newline(
-                            p_this->p_screen);
-                    }
-                }
-                else
-                {
-                    /* todo: call clear region */
-                    if (p_this->b_refresh_text)
-                    {
-                        feed_screen_clear_region(
-                            p_this->p_screen);
+                                unsigned char
+                                    i_visible_length;
+
+                                i_visible_length =
+                                    feed_glyph_render_visible(
+                                        (feed_main_state_prompt == o_iterator.e_state)
+                                        ? o_iterator.p_prompt_glyph
+                                        : o_iterator.p_document_glyph,
+                                        a_visible);
+
+                                feed_screen_write(
+                                    p_this->p_screen,
+                                    a_visible,
+                                    i_visible_length);
+                            }
+                            else
+                            {
+                                feed_screen_newline(
+                                    p_this->p_screen);
+                            }
+                        }
+                        else
+                        {
+                            feed_screen_clear_region(
+                                p_this->p_screen);
+                        }
                     }
                 }
 
@@ -2911,33 +3124,49 @@ feed_main_delete_glyph_next(
     struct feed_handle * const
         p_this)
 {
-    struct feed_glyph *
-        p_glyph;
-
-    p_glyph =
-        feed_text_iterator_remove_glyph(
-            p_this->p_text,
-            &(
-                p_this->o_cursor));
+    /* Detect eof */
+    feed_text_iterator_validate(
+        p_this->p_text,
+        &(
+            p_this->o_cursor));
 
     if (
-        p_glyph)
+        (
+            (p_this->o_cursor.i_line_index + 1u) < p_this->p_text->i_line_count)
+        || (
+            p_this->o_cursor.p_line
+            && (
+                (p_this->o_cursor.i_glyph_index + 1u) < p_this->o_cursor.p_line->i_glyph_count)))
     {
-        feed_glyph_destroy(
-            p_this->p_client,
-            p_glyph);
-    }
-    else
-    {
-        /* Bring next line into this line */
-        /* Delete next line */
-        feed_text_iterator_join_lines(
-            p_this->p_text,
-            &(
-                p_this->o_cursor));
-    }
+        struct feed_glyph *
+            p_glyph;
 
-    p_this->b_refresh_text = 1;
+        p_glyph =
+            feed_text_iterator_remove_glyph(
+                p_this->p_text,
+                &(
+                    p_this->o_cursor));
+
+        if (
+            p_glyph)
+        {
+            if (p_glyph->o_utf8_code.i_raw_len && ('\n' == p_glyph->o_utf8_code.a_raw[0u]))
+            {
+                /* Bring next line into this line */
+                /* Delete next line */
+                feed_text_iterator_join_lines(
+                    p_this->p_text,
+                    &(
+                        p_this->o_cursor));
+            }
+
+            feed_glyph_destroy(
+                p_this->p_client,
+                p_glyph);
+        }
+
+        p_this->b_refresh_text = 1;
+    }
 }
 
 static
@@ -3963,6 +4192,23 @@ feed_start(
                 feed_main_update_screen_info(
                     p_this,
                     1);
+
+                /* insert a dummy glyph at end of document */
+                {
+                    struct feed_utf8_code
+                        o_dummy_eof;
+
+                    o_dummy_eof.i_raw_len =
+                        0u;
+
+                    o_dummy_eof.a_raw[0u] =
+                        '\000';
+
+                    feed_text_append_utf8_code(
+                        p_this->p_text,
+                        &(
+                            o_dummy_eof));
+                }
 
                 /* Move cursor to begin of document? */
                 {

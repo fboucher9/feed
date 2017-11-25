@@ -170,4 +170,11 @@ feed_text_consume(
     struct feed_buf * const
         p_buf);
 
+void
+feed_text_append_utf8_code(
+    struct feed_text * const
+        p_text,
+    struct feed_utf8_code const * const
+        p_utf8_code);
+
 /* end-of-file: feed_text.h */

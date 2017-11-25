@@ -291,7 +291,6 @@ feed_text_get_line(
 
 }
 
-static
 void
 feed_text_append_utf8_code(
     struct feed_text * const
@@ -382,12 +381,6 @@ feed_text_length(
             (struct feed_line *)(
                 p_iterator);
 
-        if (i_line_iterator)
-        {
-            /* Add one for newline */
-            i_buf_len ++;
-        }
-
         i_buf_len +=
             feed_line_length(
                 p_line);
@@ -432,13 +425,6 @@ feed_text_save(
         p_line =
             (struct feed_line *)(
                 p_iterator);
-
-        if (i_line_iterator)
-        {
-            feed_buf_write_character(
-                p_buf,
-                '\n');
-        }
 
         feed_line_save(
             p_line,
@@ -486,6 +472,10 @@ feed_text_load_callback(
     struct feed_utf8_code const * const
         p_utf8_code)
 {
+    feed_text_append_utf8_code(
+        p_text,
+        p_utf8_code);
+
     if ('\n' == p_utf8_code->a_raw[0u])
     {
         /* Notify currently accumulated lines */
@@ -498,12 +488,6 @@ feed_text_load_callback(
                 p_text))
         {
         }
-    }
-    else
-    {
-        feed_text_append_utf8_code(
-            p_text,
-            p_utf8_code);
     }
 
 }

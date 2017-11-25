@@ -379,7 +379,7 @@ feed_text_iterator_next_glyph(
 
     if (p_text_iterator->p_line
         && p_text_iterator->p_glyph
-        && (p_text_iterator->i_glyph_index < p_text_iterator->p_line->i_glyph_count))
+        && ((p_text_iterator->i_glyph_index + 1u) < p_text_iterator->p_line->i_glyph_count))
     {
         if (p_text_iterator->p_glyph->o_list.p_next != &(p_text_iterator->p_line->o_glyphs))
         {
@@ -511,13 +511,15 @@ feed_text_iterator_end_glyph(
         p_text,
         p_text_iterator);
 
-    if (p_text_iterator->p_line)
+    if (
+        p_text_iterator->p_line
+        && p_text_iterator->p_line->i_glyph_count)
     {
         b_result =
             feed_text_iterator_set_glyph(
                 p_text,
                 p_text_iterator,
-                p_text_iterator->p_line->i_glyph_count);
+                p_text_iterator->p_line->i_glyph_count - 1u);
     }
     else
     {
@@ -635,15 +637,30 @@ feed_text_iterator_join_lines(
     char
         b_result;
 
+    char
+        b_more;
+
     struct feed_text_iterator
         o_next_line;
 
-    feed_text_iterator_end_glyph(
+    feed_text_iterator_validate(
         p_text,
         p_text_iterator);
 
     o_next_line =
         *(p_text_iterator);
+
+    if (
+        p_text_iterator->p_line)
+    {
+        p_text_iterator->i_glyph_index =
+            p_text_iterator->p_line->i_glyph_count;
+    }
+    else
+    {
+        p_text_iterator->i_glyph_index =
+            0u;
+    }
 
     if (
         feed_text_iterator_next_line(
@@ -661,8 +678,12 @@ feed_text_iterator_join_lines(
             &(
                 o_next_line));
 
+        b_more =
+            1;
+
         while (
-            o_next_line.p_line->i_glyph_count)
+            b_more
+            && o_next_line.p_line->i_glyph_count)
         {
             struct feed_glyph *
                 p_glyph;
@@ -680,6 +701,11 @@ feed_text_iterator_join_lines(
                     p_text,
                     p_text_iterator,
                     p_glyph);
+            }
+            else
+            {
+                b_more =
+                    0;
             }
         }
 
@@ -824,20 +850,6 @@ feed_text_iterator_save(
                     p_buf,
                     p_text_iterator->p_glyph->o_utf8_code.a_raw,
                     p_text_iterator->p_glyph->o_utf8_code.i_raw_len))
-            {
-            }
-            else
-            {
-                b_more =
-                    0;
-            }
-        }
-        else
-        {
-            if (
-                feed_buf_write_character(
-                    p_buf,
-                    '\n'))
             {
             }
             else
@@ -1051,23 +1063,11 @@ feed_text_iterator_load(
                     }
                     else
                     {
-                        struct feed_glyph *
-                            p_glyph;
-
-                        p_glyph =
-                            feed_glyph_create(
-                                p_text->p_client,
-                                &(
-                                    o_utf8_code));
-
-                        if (
-                            p_glyph)
-                        {
-                            feed_text_iterator_write_glyph(
-                                p_text,
-                                p_text_iterator,
-                                p_glyph);
-                        }
+                        feed_text_iterator_insert_code(
+                            p_text,
+                            p_text_iterator,
+                            &(
+                                o_utf8_code));
                     }
                 }
 
@@ -1096,6 +1096,23 @@ feed_text_iterator_insert_newline(
 {
     char
         b_result;
+
+    {
+        struct feed_utf8_code
+            o_utf8_code;
+
+        o_utf8_code.i_raw_len =
+            1u;
+
+        o_utf8_code.a_raw[0u] =
+            '\n';
+
+        feed_text_iterator_insert_code(
+            p_text,
+            p_text_iterator,
+            &(
+                o_utf8_code));
+    }
 
     feed_text_iterator_validate(
         p_text,
@@ -1180,6 +1197,48 @@ feed_text_iterator_insert_newline(
             b_result =
                 0;
         }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+}
+
+char
+feed_text_iterator_insert_code(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    struct feed_utf8_code const * const
+        p_utf8_code)
+{
+    char
+        b_result;
+
+    struct feed_glyph *
+        p_glyph;
+
+    p_glyph =
+        feed_glyph_create(
+            p_text->p_client,
+            p_utf8_code);
+
+    if (
+        p_glyph)
+    {
+        feed_text_iterator_write_glyph(
+            p_text,
+            p_text_iterator,
+            p_glyph);
+
+        b_result =
+            1;
     }
     else
     {
