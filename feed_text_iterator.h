@@ -206,4 +206,13 @@ feed_text_iterator_save(
     struct feed_buf * const
         p_buf);
 
+void
+feed_text_iterator_delete_region(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    unsigned long int const
+        i_region_length);
+
 /* end-of-file: feed_text_iterator.h */

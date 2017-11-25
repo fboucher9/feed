@@ -3526,6 +3526,9 @@ feed_main_suggest_node(
     struct feed_suggest_node * const
         p_suggest_node)
 {
+    /* For suggestion change: recalculate page if page is part
+    of modified range */
+
     p_this->p_page_line = NULL;
 
     p_this->i_page_line_index = 0ul;
@@ -3542,16 +3545,44 @@ feed_main_suggest_node(
 
     p_this->o_cursor.i_glyph_index = 0ul;
 
-    p_this->p_suggest_node =
-        p_suggest_node;
+    if (
+        p_this->p_suggest_node)
+    {
+        struct feed_text_iterator
+            o_text_iterator;
 
-    feed_text_clear(
-        p_this->p_text);
+        o_text_iterator =
+            p_this->o_suggest_iterator;
 
-    feed_text_load(
-        p_this->p_text,
-        p_this->p_suggest_node->p_buffer,
-        p_this->p_suggest_node->i_length);
+        feed_text_iterator_delete_region(
+            p_this->p_text,
+            &(
+                o_text_iterator),
+            p_this->i_suggest_length);
+    }
+
+    if (p_suggest_node)
+    {
+        p_this->p_suggest_node =
+            p_suggest_node;
+
+        p_this->i_suggest_length =
+            p_suggest_node->i_length;
+
+        feed_text_load(
+            p_this->p_text,
+            p_this->p_suggest_node->p_buffer,
+            p_this->p_suggest_node->i_length);
+    }
+    else
+    {
+        p_this->p_suggest_node =
+            (struct feed_suggest_node *)(
+                0);
+
+        p_this->i_suggest_length =
+            0ul;
+    }
 
     p_this->b_refresh_text =
         1;

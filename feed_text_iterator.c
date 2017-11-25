@@ -904,4 +904,79 @@ feed_text_iterator_get_offset(
 
 }
 
+void
+feed_text_iterator_delete_region(
+    struct feed_text * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    unsigned long int const
+        i_region_length)
+{
+    char
+        b_more;
+
+    unsigned long int
+        i_region_iterator;
+
+    /* Delete characters until reach region length */
+    b_more =
+        1;
+
+    i_region_iterator =
+        0ul;
+
+    while (
+        b_more
+        && (
+            i_region_iterator < i_region_length))
+    {
+        feed_text_iterator_validate(
+            p_text,
+            p_text_iterator);
+
+        if (p_text_iterator->p_glyph)
+        {
+            struct feed_glyph *
+                p_glyph;
+
+            p_glyph =
+                feed_text_iterator_remove_glyph(
+                    p_text,
+                    p_text_iterator);
+
+            if (
+                p_glyph)
+            {
+                i_region_iterator +=
+                    p_glyph->o_utf8_code.i_raw_len;
+
+                feed_glyph_destroy(
+                    p_text->p_client,
+                    p_glyph);
+            }
+            else
+            {
+                b_more =
+                    0;
+            }
+        }
+        else
+        {
+            if (
+                feed_text_iterator_join_lines(
+                    p_text,
+                    p_text_iterator))
+            {
+                i_region_iterator ++;
+            }
+            else
+            {
+                b_more =
+                    0;
+            }
+        }
+    }
+}
+
 /* end-of-file: feed_text_iterator.c */
