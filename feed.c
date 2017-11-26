@@ -3251,7 +3251,9 @@ feed_main_move_word_left(
 
             if (p_this->o_cursor.p_glyph)
             {
-                if (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                if ((0u == p_this->o_cursor.p_glyph->o_utf8_code.i_raw_len)
+                    || (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                    || ('\n' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u]))
                 {
                 }
                 else
@@ -3286,7 +3288,9 @@ feed_main_move_word_left(
 
                 if (p_this->o_cursor.p_glyph)
                 {
-                    if (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                    if ((0u == p_this->o_cursor.p_glyph->o_utf8_code.i_raw_len)
+                        || (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                        || ('\n' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u]))
                     {
                         b_found =
                             1;
@@ -3334,7 +3338,9 @@ feed_main_move_word_right(
 
         if (p_this->o_cursor.p_glyph)
         {
-            if (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+            if ((0u == p_this->o_cursor.p_glyph->o_utf8_code.i_raw_len)
+                || (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                || ('\n' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u]))
             {
                 b_found = 1;
             }
@@ -3373,7 +3379,9 @@ feed_main_move_word_right(
 
                 if (p_this->o_cursor.p_glyph)
                 {
-                    if (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                    if ((0u == p_this->o_cursor.p_glyph->o_utf8_code.i_raw_len)
+                        || (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                        || ('\n' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u]))
                     {
                     }
                     else
