@@ -817,7 +817,7 @@ feed_text_offset_to_index(
             (
                 i_raw_iterator <= i_offset)
             && (
-                (i_raw_iterator + p_line->i_raw_len + 1ul) > i_offset))
+                (i_raw_iterator + p_line->i_raw_len) > i_offset))
         {
             if (
                 feed_line_offset_to_index(
@@ -840,7 +840,7 @@ feed_text_offset_to_index(
         else
         {
             i_raw_iterator +=
-                p_line->i_raw_len + 1ul;
+                p_line->i_raw_len;
 
             i_line_index ++;
 
