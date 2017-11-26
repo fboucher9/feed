@@ -3445,6 +3445,7 @@ feed_main_move_word_right(
     }
 }
 
+#if 0 /* need to define a hotkey... */
 static
 void
 feed_main_move_cursor_home(
@@ -3466,6 +3467,27 @@ feed_main_move_cursor_home(
     {
         feed_main_scroll_pageup(
             p_this);
+    }
+}
+#endif
+
+static
+void
+feed_main_move_cursor_x0(
+    struct feed_handle * const
+        p_this)
+{
+    if (p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width)
+    {
+        if (
+            feed_main_move_cursor_xy(
+                p_this,
+                p_this->o_cursor_visible.i_cursor_address
+                - (p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width),
+                0))
+        {
+            /* detect that cursor is still visible? */
+        }
     }
 }
 
@@ -3503,6 +3525,7 @@ feed_main_insert_newline(
     }
 }
 
+#if 0 /* need to define a hotkey ... */
 static
 void
 feed_main_move_cursor_end(
@@ -3523,6 +3546,30 @@ feed_main_move_cursor_end(
     else
     {
         feed_main_latch_next_page(p_this);
+    }
+}
+#endif
+
+static
+void
+feed_main_move_cursor_x1(
+    struct feed_handle * const
+        p_this)
+{
+    if ((p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width) < (p_this->o_screen_info.i_screen_width - 1u))
+    {
+        if (
+            feed_main_move_cursor_xy(
+                p_this,
+                p_this->o_cursor_visible.i_cursor_address
+                - (p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width)
+                + p_this->o_screen_info.i_screen_width - 1u,
+                1))
+        {
+        }
+        else
+        {
+        }
     }
 }
 
@@ -4002,11 +4049,23 @@ feed_main_event_callback(
         /* Provide one line at a time */
         if (p_this->o_descriptor.p_notify)
         {
-            (*(p_this->o_descriptor.p_notify))(
-                p_this->o_descriptor.p_context,
-                p_this,
-                p_event->a_raw,
-                p_event->i_raw_len);
+            int
+                i_notify_status;
+
+            i_notify_status =
+                (*(p_this->o_descriptor.p_notify))(
+                    p_this->o_descriptor.p_context,
+                    p_this,
+                    p_event->a_raw,
+                    p_event->i_raw_len);
+
+            if (
+                0 > i_notify_status)
+            {
+                /* Event has been filtered by application */
+                b_done =
+                    1;
+            }
 
             /* After notification, check for stop */
             /* check for suggestions */
@@ -4025,15 +4084,18 @@ feed_main_event_callback(
                     feed_main_suggest_next(
                         p_this);
                 }
+
+                /* entering suggestion mode */
+                b_done =
+                    1;
             }
         }
+    }
 
+    if (!b_done)
+    {
         if (!p_this->b_started)
         {
-        }
-        else if (p_this->b_suggest)
-        {
-            /* entering suggestion mode */
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'H') == p_event->i_code)
         {
@@ -4056,14 +4118,14 @@ feed_main_event_callback(
             ((FEED_EVENT_KEY_FLAG | FEED_KEY_HOME) == p_event->i_code)
             || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'A') == p_event->i_code))
         {
-            feed_main_move_cursor_home(
+            feed_main_move_cursor_x0(
                 p_this);
         }
         else if (
             ((FEED_EVENT_KEY_FLAG | FEED_KEY_END) == p_event->i_code)
             || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'E') == p_event->i_code))
         {
-            feed_main_move_cursor_end(
+            feed_main_move_cursor_x1(
                 p_this);
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_PAGEUP) == p_event->i_code)
@@ -4096,12 +4158,16 @@ feed_main_event_callback(
             feed_main_move_cursor_right(
                 p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_UP) == p_event->i_code)
+        else if (
+            ((FEED_EVENT_KEY_FLAG | FEED_KEY_UP) == p_event->i_code)
+            || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'P') == p_event->i_code))
         {
             feed_main_move_cursor_up(
                 p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_DOWN) == p_event->i_code)
+        else if (
+            ((FEED_EVENT_KEY_FLAG | FEED_KEY_DOWN) == p_event->i_code)
+            || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'N') == p_event->i_code))
         {
             feed_main_move_cursor_down(
                 p_this);
@@ -4545,7 +4611,28 @@ feed_consume(
         i_data_iterator)
     {
         /* Invalidate engine state */
-        feed_main_move_page_home(p_this);
+        /* TODO: smart invalidate of affected iterators */
+        p_this->p_page_line = NULL;
+
+        p_this->i_page_line_index = 0ul;
+
+        p_this->i_page_glyph_index = 0ul;
+
+        p_this->e_page_state = feed_main_state_prompt;
+
+        feed_text_iterator_set_line(
+            p_this->p_text,
+            &(
+                p_this->o_cursor),
+            p_this->i_page_line_index);
+
+        feed_text_iterator_set_glyph(
+            p_this->p_text,
+            &(
+                p_this->o_cursor),
+            p_this->i_page_glyph_index);
+
+        p_this->b_refresh_text = 1;
     }
 
     return
