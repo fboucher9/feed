@@ -662,17 +662,13 @@ struct feed_main_iterator
     struct feed_line *
         p_document_line;
 
-    /* Pointer to glyph object */
-    struct feed_glyph *
-        p_document_glyph;
-
     /* Pointer to prompt line */
     struct feed_line *
         p_prompt_line;
 
-    /* Pointer to prompt glyph */
+    /* Pointer to glyph object */
     struct feed_glyph *
-        p_prompt_glyph;
+        p_glyph;
 
     /* Position in screen */
     struct feed_screen_iterator
@@ -729,8 +725,6 @@ feed_main_iterator_get_prompt_glyph(
     (void)(
         p_this);
 
-    p_iterator->p_document_glyph = NULL;
-
     if (p_iterator->p_document_line)
     {
         feed_main_iterator_get_prompt_line(
@@ -739,12 +733,12 @@ feed_main_iterator_get_prompt_glyph(
 
         if (p_iterator->p_prompt_line)
         {
-            p_iterator->p_prompt_glyph =
+            p_iterator->p_glyph =
                 feed_line_get_glyph(
                     p_iterator->p_prompt_line,
                     p_iterator->i_glyph_index);
 
-            if (p_iterator->p_prompt_glyph)
+            if (p_iterator->p_glyph)
             {
                 b_result =
                     1;
@@ -770,10 +764,7 @@ feed_main_iterator_get_prompt_glyph(
 
     if (!b_result)
     {
-        p_iterator->p_prompt_line =
-            NULL;
-
-        p_iterator->p_prompt_glyph =
+        p_iterator->p_glyph =
             NULL;
 
     }
@@ -797,18 +788,14 @@ feed_main_iterator_get_text_glyph(
     (void)(
         p_this);
 
-    p_iterator->p_prompt_line = NULL;
-
-    p_iterator->p_prompt_glyph = NULL;
-
     if (p_iterator->p_document_line)
     {
-        p_iterator->p_document_glyph =
+        p_iterator->p_glyph =
             feed_line_get_glyph(
                 p_iterator->p_document_line,
                 p_iterator->i_glyph_index);
 
-        if (p_iterator->p_document_glyph)
+        if (p_iterator->p_glyph)
         {
             b_result = 1;
         }
@@ -824,7 +811,7 @@ feed_main_iterator_get_text_glyph(
 
     if (!b_result)
     {
-        p_iterator->p_document_glyph = NULL;
+        p_iterator->p_glyph = NULL;
     }
 
     return
@@ -848,19 +835,17 @@ feed_main_iterator_next_prompt_glyph(
 
     p_iterator->i_glyph_index ++;
 
-    p_iterator->p_document_glyph = NULL;
-
     if (p_iterator->p_document_line)
     {
         if (p_iterator->p_prompt_line)
         {
-            if (p_iterator->p_prompt_glyph)
+            if (p_iterator->p_glyph)
             {
-                if (p_iterator->p_prompt_glyph->o_list.p_next != &(p_iterator->p_prompt_line->o_glyphs))
+                if (p_iterator->p_glyph->o_list.p_next != &(p_iterator->p_prompt_line->o_glyphs))
                 {
-                    p_iterator->p_prompt_glyph =
+                    p_iterator->p_glyph =
                         (struct feed_glyph *)(
-                            p_iterator->p_prompt_glyph->o_list.p_next);
+                            p_iterator->p_glyph->o_list.p_next);
 
                     b_result =
                         1;
@@ -891,7 +876,7 @@ feed_main_iterator_next_prompt_glyph(
 
     if (!b_result)
     {
-        p_iterator->p_prompt_glyph = NULL;
+        p_iterator->p_glyph = NULL;
     }
 
     return
@@ -913,20 +898,18 @@ feed_main_iterator_prev_prompt_glyph(
     (void)(
         p_this);
 
-    p_iterator->p_document_glyph = NULL;
-
     if (p_iterator->i_glyph_index)
     {
         p_iterator->i_glyph_index --;
 
         if (p_iterator->p_document_line
             && p_iterator->p_prompt_line
-            && (p_iterator->p_prompt_glyph)
-            && (p_iterator->p_prompt_glyph->o_list.p_prev != &(p_iterator->p_prompt_line->o_glyphs)))
+            && (p_iterator->p_glyph)
+            && (p_iterator->p_glyph->o_list.p_prev != &(p_iterator->p_prompt_line->o_glyphs)))
         {
-            p_iterator->p_prompt_glyph =
+            p_iterator->p_glyph =
                 (struct feed_glyph *)(
-                    p_iterator->p_prompt_glyph->o_list.p_prev);
+                    p_iterator->p_glyph->o_list.p_prev);
 
             b_result =
                 1;
@@ -945,7 +928,7 @@ feed_main_iterator_prev_prompt_glyph(
 
     if (!b_result)
     {
-        p_iterator->p_prompt_glyph = NULL;
+        p_iterator->p_glyph = NULL;
     }
 
     return
@@ -971,15 +954,11 @@ feed_main_iterator_first_text_glyph(
     p_iterator->i_glyph_index =
         0u;
 
-    p_iterator->p_prompt_line = NULL;
-
-    p_iterator->p_prompt_glyph = NULL;
-
     if (p_iterator->p_document_line)
     {
         if (p_iterator->p_document_line->o_glyphs.p_next != &(p_iterator->p_document_line->o_glyphs))
         {
-            p_iterator->p_document_glyph =
+            p_iterator->p_glyph =
                 (struct feed_glyph *)(
                     p_iterator->p_document_line->o_glyphs.p_next);
 
@@ -1000,7 +979,7 @@ feed_main_iterator_first_text_glyph(
 
     if (!b_result)
     {
-        p_iterator->p_document_glyph =
+        p_iterator->p_glyph =
             NULL;
     }
 
@@ -1026,17 +1005,13 @@ feed_main_iterator_last_text_glyph(
     p_iterator->i_glyph_index =
         0u;
 
-    p_iterator->p_prompt_line = NULL;
-
-    p_iterator->p_prompt_glyph = NULL;
-
     if (p_iterator->p_document_line
         && (p_iterator->p_document_line->o_glyphs.p_prev != &(p_iterator->p_document_line->o_glyphs)))
     {
         p_iterator->i_glyph_index =
             (p_iterator->p_document_line->i_glyph_count - 1u);
 
-        p_iterator->p_document_glyph =
+        p_iterator->p_glyph =
             (struct feed_glyph *)(
                 p_iterator->p_document_line->o_glyphs.p_prev);
 
@@ -1051,7 +1026,7 @@ feed_main_iterator_last_text_glyph(
 
     if (!b_result)
     {
-        p_iterator->p_document_glyph =
+        p_iterator->p_glyph =
             NULL;
     }
 
@@ -1075,11 +1050,7 @@ feed_main_iterator_next_line(
 
     p_iterator->i_glyph_index = 0u;
 
-    p_iterator->p_document_glyph = NULL;
-
-    p_iterator->p_prompt_line = NULL;
-
-    p_iterator->p_prompt_glyph = NULL;
+    p_iterator->p_glyph = NULL;
 
     if (p_iterator->p_document_line)
     {
@@ -1128,11 +1099,7 @@ feed_main_iterator_prev_line(
 
         p_iterator->i_glyph_index = 0u;
 
-        p_iterator->p_document_glyph = NULL;
-
-        p_iterator->p_prompt_line = NULL;
-
-        p_iterator->p_prompt_glyph = NULL;
+        p_iterator->p_glyph = NULL;
 
         if (p_iterator->p_document_line)
         {
@@ -1186,19 +1153,15 @@ feed_main_iterator_next_text_glyph(
 
     p_iterator->i_glyph_index ++;
 
-    p_iterator->p_prompt_line = NULL;
-
-    p_iterator->p_prompt_glyph = NULL;
-
     if (p_iterator->p_document_line)
     {
-        if (p_iterator->p_document_glyph)
+        if (p_iterator->p_glyph)
         {
-            if (p_iterator->p_document_glyph->o_list.p_next != &(p_iterator->p_document_line->o_glyphs))
+            if (p_iterator->p_glyph->o_list.p_next != &(p_iterator->p_document_line->o_glyphs))
             {
-                p_iterator->p_document_glyph =
+                p_iterator->p_glyph =
                     (struct feed_glyph *)(
-                        p_iterator->p_document_glyph->o_list.p_next);
+                        p_iterator->p_glyph->o_list.p_next);
 
                 b_result =
                     1;
@@ -1223,7 +1186,7 @@ feed_main_iterator_next_text_glyph(
 
     if (!b_result)
     {
-        p_iterator->p_document_glyph = NULL;
+        p_iterator->p_glyph = NULL;
     }
 
     return
@@ -1245,21 +1208,17 @@ feed_main_iterator_prev_text_glyph(
     (void)(
         p_this);
 
-    p_iterator->p_prompt_line = NULL;
-
-    p_iterator->p_prompt_glyph = NULL;
-
     if (p_iterator->i_glyph_index)
     {
         p_iterator->i_glyph_index --;
 
         if (p_iterator->p_document_line
-            && p_iterator->p_document_glyph
-            && (p_iterator->p_document_glyph->o_list.p_prev != &(p_iterator->p_document_line->o_glyphs)))
+            && p_iterator->p_glyph
+            && (p_iterator->p_glyph->o_list.p_prev != &(p_iterator->p_document_line->o_glyphs)))
         {
-            p_iterator->p_document_glyph =
+            p_iterator->p_glyph =
                 (struct feed_glyph *)(
-                    p_iterator->p_document_glyph->o_list.p_prev);
+                    p_iterator->p_glyph->o_list.p_prev);
 
             b_result =
                 1;
@@ -1278,7 +1237,7 @@ feed_main_iterator_prev_text_glyph(
 
     if (!b_result)
     {
-        p_iterator->p_document_glyph = NULL;
+        p_iterator->p_glyph = NULL;
     }
 
     return
@@ -1302,7 +1261,7 @@ feed_main_iterator_first_prompt_glyph(
 
     p_iterator->i_glyph_index = 0u;
 
-    p_iterator->p_document_glyph = NULL;
+    p_iterator->p_glyph = NULL;
 
     if (p_iterator->p_document_line)
     {
@@ -1314,7 +1273,7 @@ feed_main_iterator_first_prompt_glyph(
         {
             if (p_iterator->p_prompt_line->o_glyphs.p_next != &(p_iterator->p_prompt_line->o_glyphs))
             {
-                p_iterator->p_prompt_glyph =
+                p_iterator->p_glyph =
                     (struct feed_glyph *)(
                         p_iterator->p_prompt_line->o_glyphs.p_next);
 
@@ -1341,9 +1300,7 @@ feed_main_iterator_first_prompt_glyph(
 
     if (!b_result)
     {
-        p_iterator->p_prompt_line = NULL;
-
-        p_iterator->p_prompt_glyph = NULL;
+        p_iterator->p_glyph = NULL;
     }
 
     return
@@ -1364,8 +1321,6 @@ feed_main_iterator_last_prompt_glyph(
 
     p_iterator->i_glyph_index = 0u;
 
-    p_iterator->p_document_glyph = NULL;
-
     if (p_iterator->p_document_line)
     {
         feed_main_iterator_get_prompt_line(
@@ -1379,7 +1334,7 @@ feed_main_iterator_last_prompt_glyph(
                 p_iterator->i_glyph_index =
                     (p_iterator->p_prompt_line->i_glyph_count - 1u);
 
-                p_iterator->p_prompt_glyph =
+                p_iterator->p_glyph =
                     (struct feed_glyph *)(
                         p_iterator->p_prompt_line->o_glyphs.p_prev);
 
@@ -1406,9 +1361,7 @@ feed_main_iterator_last_prompt_glyph(
 
     if (!b_result)
     {
-        p_iterator->p_prompt_line = NULL;
-
-        p_iterator->p_prompt_glyph = NULL;
+        p_iterator->p_glyph = NULL;
     }
 
     return
@@ -1449,10 +1402,7 @@ feed_main_iterator_begin(
             feed_main_state_text;
     }
 
-    p_iterator->p_prompt_glyph =
-        NULL;
-
-    p_iterator->p_document_glyph =
+    p_iterator->p_glyph =
         NULL;
 
     if (p_page_line)
@@ -1519,13 +1469,7 @@ feed_main_iterator_begin(
         p_iterator->i_glyph_index =
             0u;
 
-        p_iterator->p_prompt_line =
-            NULL;
-
-        p_iterator->p_prompt_glyph =
-            NULL;
-
-        p_iterator->p_document_glyph =
+        p_iterator->p_glyph =
             NULL;
 
         p_iterator->e_state =
@@ -1581,13 +1525,10 @@ feed_main_iterator_begin_reverse(
             feed_main_state_text;
     }
 
-    p_iterator->p_prompt_glyph =
+    p_iterator->p_glyph =
         NULL;
 
     p_iterator->p_prompt_line =
-        NULL;
-
-    p_iterator->p_document_glyph =
         NULL;
 
     p_iterator->p_document_line =
@@ -1741,13 +1682,7 @@ feed_main_iterator_begin_reverse(
         p_iterator->i_glyph_index =
             0u;
 
-        p_iterator->p_prompt_line =
-            NULL;
-
-        p_iterator->p_prompt_glyph =
-            NULL;
-
-        p_iterator->p_document_glyph =
+        p_iterator->p_glyph =
             NULL;
 
         p_iterator->e_state =
@@ -1779,9 +1714,7 @@ feed_main_iterator_test(
         p_glyph;
 
     p_glyph =
-        p_iterator->p_prompt_glyph
-        ? p_iterator->p_prompt_glyph
-        : p_iterator->p_document_glyph;
+        p_iterator->p_glyph;
 
     if (p_glyph)
     {
@@ -1794,9 +1727,7 @@ feed_main_iterator_test(
 
                 i_glyph_width =
                     feed_glyph_get_visible_width(
-                        p_iterator->p_prompt_glyph
-                        ? p_iterator->p_prompt_glyph
-                        : p_iterator->p_document_glyph);
+                        p_iterator->p_glyph);
 
                 b_result =
                     feed_screen_iterator_test_write(
@@ -1849,9 +1780,7 @@ feed_main_iterator_write(
         p_glyph;
 
     p_glyph =
-        p_iterator->p_prompt_glyph
-        ? p_iterator->p_prompt_glyph
-        : p_iterator->p_document_glyph;
+        p_iterator->p_glyph;
 
     if (p_glyph)
     {
@@ -1863,9 +1792,7 @@ feed_main_iterator_write(
             {
                 i_width =
                     feed_glyph_get_visible_width(
-                        p_iterator->p_prompt_glyph
-                        ? p_iterator->p_prompt_glyph
-                        : p_iterator->p_document_glyph);
+                        p_iterator->p_glyph);
 
                 feed_screen_iterator_write(
                     p_this->p_screen_info,
@@ -2211,7 +2138,7 @@ feed_main_move_cursor_xy(
                         o_iterator.i_glyph_index;
 
                     p_this->o_cursor.p_glyph =
-                        o_iterator.p_document_glyph;
+                        o_iterator.p_glyph;
 
                     b_more =
                         0;
@@ -2234,7 +2161,7 @@ feed_main_move_cursor_xy(
                         o_iterator.i_glyph_index;
 
                     p_this->o_cursor.p_glyph =
-                        o_iterator.p_document_glyph;
+                        o_iterator.p_glyph;
 
                     b_more =
                         1;
@@ -2252,9 +2179,7 @@ feed_main_move_cursor_xy(
                         p_glyph;
 
                     p_glyph =
-                        (o_iterator.e_state == feed_main_state_prompt)
-                        ? o_iterator.p_prompt_glyph
-                        : o_iterator.p_document_glyph;
+                        o_iterator.p_glyph;
 
                     if (p_glyph)
                     {
@@ -2300,7 +2225,7 @@ feed_main_move_cursor_xy(
                             o_iterator.i_glyph_index;
 
                         p_this->o_cursor.p_glyph =
-                            o_iterator.p_document_glyph;
+                            o_iterator.p_glyph;
 
                         b_found =
                             1;
@@ -2481,9 +2406,7 @@ feed_main_scroll_pageup(
                     p_glyph;
 
                 p_glyph =
-                    (o_iterator.e_state == feed_main_state_prompt)
-                    ? o_iterator.p_prompt_glyph
-                    : o_iterator.p_document_glyph;
+                    o_iterator.p_glyph;
 
                 /* Remember this as a valid glyph */
 
@@ -2806,9 +2729,7 @@ feed_main_refresh_job(
                         p_glyph;
 
                     p_glyph =
-                        (feed_main_state_prompt == o_iterator.e_state)
-                        ? o_iterator.p_prompt_glyph
-                        : o_iterator.p_document_glyph;
+                        o_iterator.p_glyph;
 
                     if (p_glyph)
                     {
@@ -2825,9 +2746,7 @@ feed_main_refresh_job(
 
                                 i_visible_length =
                                     feed_glyph_render_visible(
-                                        (feed_main_state_prompt == o_iterator.e_state)
-                                        ? o_iterator.p_prompt_glyph
-                                        : o_iterator.p_document_glyph,
+                                        o_iterator.p_glyph,
                                         a_visible);
 
                                 feed_screen_write(
