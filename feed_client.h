@@ -23,6 +23,9 @@ struct feed_client
     struct feed_tty *
         p_tty;
 
+    struct feed_screen_info *
+        p_screen_info;
+
 }; /* struct feed_client */
 
 char
@@ -42,6 +45,11 @@ feed_client_get_heap(
 
 struct feed_tty *
 feed_client_get_tty(
+    struct feed_client * const
+        p_client);
+
+struct feed_screen_info *
+feed_client_get_screen_info(
     struct feed_client * const
         p_client);
 

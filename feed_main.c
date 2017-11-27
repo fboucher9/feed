@@ -219,10 +219,13 @@ feed_main_notify_callback(
                 feed_length(
                     p_feed_handle);
 
+            (void)(
+                i_total_length);
+
             feed_complete(
                 p_feed_handle,
-                0,
-                i_total_length);
+                2,
+                0);
 
             {
                 /* test of suggestions */
@@ -250,6 +253,37 @@ feed_main_notify_callback(
         }
     }
 #endif /* test of complete */
+
+#if 0 /* test of consume */
+    if (i_data_length)
+    {
+        if (9 == p_data[0u])
+        {
+            unsigned char a_data[3u];
+
+            unsigned long int
+                i_data_len;
+
+            i_data_len =
+                feed_consume(
+                    p_feed_handle,
+                    a_data,
+                    (unsigned long int)(
+                        sizeof(
+                            a_data)));
+
+            printf(
+                "consumed : %lu bytes [%.*s]\n",
+                i_data_len,
+                (int)(
+                    i_data_len),
+                (char const *)(
+                    a_data));
+
+            return -1;
+        }
+    }
+#endif /* test of consume */
 
     if (i_data_length)
     {

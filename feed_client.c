@@ -20,6 +20,10 @@ feed_client_init(
         (struct feed_tty *)(
             0);
 
+    p_client->p_screen_info =
+        (struct feed_screen_info *)(
+            0);
+
     b_result =
         1;
 
@@ -39,6 +43,10 @@ feed_client_cleanup(
 
     p_client->p_tty =
         (struct feed_tty *)(
+            0);
+
+    p_client->p_screen_info =
+        (struct feed_screen_info *)(
             0);
 
 } /* feed_client_cleanup() */
@@ -62,5 +70,15 @@ feed_client_get_tty(
         p_client->p_tty;
 
 } /* feed_client_get_tty() */
+
+struct feed_screen_info *
+feed_client_get_screen_info(
+    struct feed_client * const
+        p_client)
+{
+    return
+        p_client->p_screen_info;
+
+} /* feed_client_get_screen_info() */
 
 /* end-of-file: feed_client.c */

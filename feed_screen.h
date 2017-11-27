@@ -54,14 +54,22 @@ feed_screen_destroy(
     struct feed_screen * const
         p_screen);
 
+char
+feed_screen_enter(
+    struct feed_screen * const
+        p_screen);
+
 void
-feed_screen_set_physical_size(
+feed_screen_leave(
+    struct feed_screen * const
+        p_screen);
+
+void
+feed_screen_update_info(
     struct feed_screen * const
         p_screen,
-    unsigned int const
-        i_physical_width,
-    unsigned int const
-        i_physical_height);
+    char const
+        b_fallback);
 
 unsigned long int
 feed_screen_get_cursor_pos(
@@ -74,11 +82,6 @@ feed_screen_set_cursor_pos(
         p_screen,
     unsigned long int const
         i_cursor_address);
-
-void
-feed_screen_newline_raw(
-    struct feed_screen * const
-        p_screen);
 
 void
 feed_screen_newline(
@@ -98,5 +101,12 @@ void
 feed_screen_clear_region(
     struct feed_screen * const
         p_screen);
+
+char
+feed_screen_read_character(
+    struct feed_screen * const
+        p_screen,
+    unsigned char * const
+        p_data);
 
 /* end-of-file: feed_screen.h */

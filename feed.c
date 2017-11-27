@@ -121,6 +121,14 @@ struct feed_handle
 
     /* -- */
 
+    struct feed_screen_info *
+        p_screen_info;
+
+    struct feed_suggest_node *
+        p_suggest_node;
+
+    /* -- */
+
     struct feed_text_iterator
         o_cursor;
 
@@ -143,9 +151,6 @@ struct feed_handle
 
     struct feed_suggest_list
         o_suggest_list;
-
-    struct feed_suggest_node *
-        p_suggest_node;
 
     /* -- */
 
@@ -259,9 +264,21 @@ feed_init(
             p_this->p_client);
 
     p_this->p_tty =
-    p_this->p_client->p_tty =
         feed_tty_create(
             p_this->p_client);
+
+    p_this->p_client->p_tty =
+        p_this->p_tty;
+
+    p_this->p_screen_info =
+        &(
+            p_this->o_screen_info);
+
+    feed_screen_info_init(
+        p_this->p_screen_info);
+
+    p_this->p_client->p_screen_info =
+        p_this->p_screen_info;
 
     p_this->p_screen =
         feed_screen_create(
@@ -270,10 +287,6 @@ feed_init(
     p_this->p_text =
         feed_text_create(
             p_this->p_client);
-
-    feed_screen_info_init(
-        &(
-            p_this->o_screen_info));
 
     feed_text_iterator_init(
         p_this->p_text,
@@ -315,9 +328,16 @@ feed_cleanup(
         &(
             p_this->o_cursor));
 
-    feed_screen_info_cleanup(
-        &(
-            p_this->o_screen_info));
+    if (
+        p_this->p_screen_info)
+    {
+        feed_screen_info_cleanup(
+            p_this->p_screen_info);
+
+        p_this->p_screen_info =
+            (struct feed_screen_info *)(
+                0);
+    }
 
     if (
         p_this->p_text)
@@ -1513,8 +1533,7 @@ feed_main_iterator_begin(
     }
 
     feed_screen_iterator_init(
-        &(
-            p_this->o_screen_info),
+        p_this->p_screen_info,
         &(
             p_iterator->o_screen_iterator));
 
@@ -1736,8 +1755,7 @@ feed_main_iterator_begin_reverse(
     }
 
     feed_screen_iterator_init(
-        &(
-            p_this->o_screen_info),
+        p_this->p_screen_info,
         &(
             p_iterator->o_screen_iterator));
 
@@ -1782,8 +1800,7 @@ feed_main_iterator_test(
 
                 b_result =
                     feed_screen_iterator_test_write(
-                        &(
-                            p_this->o_screen_info),
+                        p_this->p_screen_info,
                         &(
                             p_iterator->o_screen_iterator),
                         i_glyph_width);
@@ -1792,8 +1809,7 @@ feed_main_iterator_test(
             {
                 b_result =
                     feed_screen_iterator_test_newline(
-                        &(
-                            p_this->o_screen_info),
+                        p_this->p_screen_info,
                         &(
                             p_iterator->o_screen_iterator));
             }
@@ -1802,8 +1818,7 @@ feed_main_iterator_test(
         {
             b_result =
                 feed_screen_iterator_test_clear(
-                    &(
-                        p_this->o_screen_info),
+                    p_this->p_screen_info,
                     &(
                         p_iterator->o_screen_iterator));
         }
@@ -1853,8 +1868,7 @@ feed_main_iterator_write(
                         : p_iterator->p_document_glyph);
 
                 feed_screen_iterator_write(
-                    &(
-                        p_this->o_screen_info),
+                    p_this->p_screen_info,
                     &(
                         p_iterator->o_screen_iterator),
                     i_width);
@@ -1864,8 +1878,7 @@ feed_main_iterator_write(
                 /* Empty line, so do a newline */
                 i_width =
                     feed_screen_iterator_newline(
-                        &(
-                            p_this->o_screen_info),
+                        p_this->p_screen_info,
                         &(
                             p_iterator->o_screen_iterator));
             }
@@ -1874,8 +1887,7 @@ feed_main_iterator_write(
         {
             i_width =
                 feed_screen_iterator_clear(
-                    &(
-                        p_this->o_screen_info),
+                    p_this->p_screen_info,
                     &(
                         p_iterator->o_screen_iterator));
         }
@@ -2379,12 +2391,12 @@ feed_main_move_cursor_down(
     b_found =
         0;
 
-    if (p_this->o_cursor_visible.i_cursor_address < (p_this->o_screen_info.i_screen_size - p_this->o_screen_info.i_screen_width))
+    if (p_this->o_cursor_visible.i_cursor_address < (p_this->p_screen_info->i_screen_size - p_this->p_screen_info->i_screen_width))
     {
         b_found =
             feed_main_move_cursor_xy(
                 p_this,
-                p_this->o_cursor_visible.i_cursor_address + p_this->o_screen_info.i_screen_width,
+                p_this->o_cursor_visible.i_cursor_address + p_this->p_screen_info->i_screen_width,
                 0);
     }
 
@@ -2395,7 +2407,7 @@ feed_main_move_cursor_down(
             b_found =
                 feed_main_move_cursor_xy(
                     p_this,
-                    p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width,
+                    p_this->o_cursor_visible.i_cursor_address % p_this->p_screen_info->i_screen_width,
                     0);
         }
     }
@@ -2603,13 +2615,13 @@ feed_main_move_cursor_up(
         0;
 
     /* try a misaligned up in same visible page */
-    if (p_this->o_cursor_visible.i_cursor_address >= p_this->o_screen_info.i_screen_width)
+    if (p_this->o_cursor_visible.i_cursor_address >= p_this->p_screen_info->i_screen_width)
     {
         b_found =
             feed_main_move_cursor_xy(
                 p_this,
                 p_this->o_cursor_visible.i_cursor_address
-                - p_this->o_screen_info.i_screen_width,
+                - p_this->p_screen_info->i_screen_width,
                 1);
     }
 
@@ -2626,9 +2638,9 @@ feed_main_move_cursor_up(
                 b_found =
                     feed_main_move_cursor_xy(
                         p_this,
-                        p_this->o_screen_info.i_screen_size
-                        - p_this->o_screen_info.i_screen_width
-                        + (p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width),
+                        p_this->p_screen_info->i_screen_size
+                        - p_this->p_screen_info->i_screen_width
+                        + (p_this->o_cursor_visible.i_cursor_address % p_this->p_screen_info->i_screen_width),
                         1);
 
             }
@@ -2723,58 +2735,6 @@ feed_main_move_page_next(
 
 static
 void
-feed_main_update_screen_info(
-    struct feed_handle * const
-        p_this,
-    char const
-        b_fallback)
-{
-    unsigned short int
-        i_screen_width;
-
-    unsigned short int
-        i_screen_height;
-
-    if (
-        feed_tty_get_window_size(
-            p_this->p_tty,
-            &(
-                i_screen_width),
-            &(
-                i_screen_height),
-            b_fallback))
-    {
-        /* Todo: detect screen size change and invalidate current
-        page information */
-
-#if 0
-        if (i_screen_height > 13u)
-        {
-            i_screen_height = 13u;
-        }
-
-        if (i_screen_width > 50u)
-        {
-            i_screen_width = 50u;
-        }
-#endif
-
-        feed_screen_info_update(
-            &(
-                p_this->o_screen_info),
-            i_screen_width,
-            i_screen_height);
-
-        feed_screen_set_physical_size(
-            p_this->p_screen,
-            i_screen_width,
-            i_screen_height);
-    }
-
-}
-
-static
-void
 feed_main_refresh_job(
     struct feed_handle * const
         p_this)
@@ -2783,12 +2743,12 @@ feed_main_refresh_job(
         o_iterator;
 
     p_this->o_cursor_visible.i_cursor_address =
-        p_this->o_screen_info.i_screen_size;
+        p_this->p_screen_info->i_screen_size;
 
     if (p_this->b_refresh_text)
     {
-        feed_main_update_screen_info(
-            p_this,
+        feed_screen_update_info(
+            p_this->p_screen,
             0);
 
         feed_screen_set_cursor_pos(
@@ -2934,15 +2894,12 @@ feed_main_refresh_job(
 
         if (p_this->b_refresh_text || p_this->b_refresh_cursor)
         {
-            if (p_this->o_cursor_visible.i_cursor_address < p_this->o_screen_info.i_screen_size)
+            if (p_this->o_cursor_visible.i_cursor_address < p_this->p_screen_info->i_screen_size)
             {
                 feed_screen_set_cursor_pos(
                     p_this->p_screen,
                     p_this->o_cursor_visible.i_cursor_address);
             }
-
-            feed_tty_flush(
-                p_this->p_tty);
         }
     }
 
@@ -3015,7 +2972,7 @@ feed_main_insert_event(
                         p_glyph);
 
                     /* Advance cursor visible position */
-                    if ((p_this->o_cursor_visible.i_cursor_address + i_width + 1u) < p_this->o_screen_info.i_screen_size)
+                    if ((p_this->o_cursor_visible.i_cursor_address + i_width + 1u) < p_this->p_screen_info->i_screen_size)
                     {
                         p_this->o_cursor_visible.i_cursor_address += i_width;
                     }
@@ -3477,13 +3434,13 @@ feed_main_move_cursor_x0(
     struct feed_handle * const
         p_this)
 {
-    if (p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width)
+    if (p_this->o_cursor_visible.i_cursor_address % p_this->p_screen_info->i_screen_width)
     {
         if (
             feed_main_move_cursor_xy(
                 p_this,
                 p_this->o_cursor_visible.i_cursor_address
-                - (p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width),
+                - (p_this->o_cursor_visible.i_cursor_address % p_this->p_screen_info->i_screen_width),
                 0))
         {
             /* detect that cursor is still visible? */
@@ -3509,7 +3466,7 @@ feed_main_insert_newline(
                 p_this->o_cursor)))
     {
         /* Detect that cursor is visible? */
-        if ((p_this->o_cursor_visible.i_cursor_address + p_this->o_screen_info.i_screen_width) >= p_this->o_screen_info.i_screen_size)
+        if ((p_this->o_cursor_visible.i_cursor_address + p_this->p_screen_info->i_screen_width) >= p_this->p_screen_info->i_screen_size)
         {
             p_this->p_page_line = p_this->o_cursor.p_line;
 
@@ -3556,14 +3513,14 @@ feed_main_move_cursor_x1(
     struct feed_handle * const
         p_this)
 {
-    if ((p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width) < (p_this->o_screen_info.i_screen_width - 1u))
+    if ((p_this->o_cursor_visible.i_cursor_address % p_this->p_screen_info->i_screen_width) < (p_this->p_screen_info->i_screen_width - 1u))
     {
         if (
             feed_main_move_cursor_xy(
                 p_this,
                 p_this->o_cursor_visible.i_cursor_address
-                - (p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width)
-                + p_this->o_screen_info.i_screen_width - 1u,
+                - (p_this->o_cursor_visible.i_cursor_address % p_this->p_screen_info->i_screen_width)
+                + p_this->p_screen_info->i_screen_width - 1u,
                 1))
         {
         }
@@ -3757,7 +3714,7 @@ feed_main_move_cursor_top(
     feed_main_move_cursor_xy(
         p_this,
         (unsigned long int)(
-            p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width),
+            p_this->o_cursor_visible.i_cursor_address % p_this->p_screen_info->i_screen_width),
         0);
 }
 
@@ -3769,9 +3726,9 @@ feed_main_move_cursor_bottom(
 {
     feed_main_move_cursor_xy(
         p_this,
-        p_this->o_screen_info.i_screen_size
-        - p_this->o_screen_info.i_screen_width
-        + (p_this->o_cursor_visible.i_cursor_address % p_this->o_screen_info.i_screen_width),
+        p_this->p_screen_info->i_screen_size
+        - p_this->p_screen_info->i_screen_width
+        + (p_this->o_cursor_visible.i_cursor_address % p_this->p_screen_info->i_screen_width),
         1);
 }
 
@@ -4227,8 +4184,8 @@ feed_main_step(
         c;
 
     if (
-        feed_tty_read_character(
-            p_this->p_tty,
+        feed_screen_read_character(
+            p_this->p_screen,
             &(
                 c)))
     {
@@ -4305,13 +4262,9 @@ feed_start(
                 1;
 
             if (
-                feed_tty_enable(
-                    p_this->p_tty))
+                feed_screen_enter(
+                    p_this->p_screen))
             {
-                feed_main_update_screen_info(
-                    p_this,
-                    1);
-
                 /* insert a dummy glyph at end of document */
                 {
                     struct feed_utf8_code
@@ -4369,20 +4322,12 @@ feed_start(
                 feed_main_loop(
                     p_this);
 
-                {
-                    feed_screen_set_cursor_pos(
-                        p_this->p_screen,
-                        p_this->i_final_cursor_address);
+                feed_screen_set_cursor_pos(
+                    p_this->p_screen,
+                    p_this->i_final_cursor_address);
 
-                    feed_screen_newline_raw(
-                        p_this->p_screen);
-
-                    feed_tty_flush(
-                        p_this->p_tty);
-                }
-
-                feed_tty_disable(
-                    p_this->p_tty);
+                feed_screen_leave(
+                    p_this->p_screen);
 
                 i_result =
                     0;
