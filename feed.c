@@ -20,8 +20,6 @@ Description:
 
 #include "feed_heap.h"
 
-#include "feed_tty.h"
-
 #include "feed_input.h"
 
 #include "feed_keys.h"
@@ -105,27 +103,27 @@ struct feed_handle
 
     /* -- */
 
-    struct feed_tty *
-        p_tty;
-
     struct feed_screen *
         p_screen;
-
-    /* -- */
 
     struct feed_text *
         p_text;
 
+    /* -- */
+
     struct feed_line *
         p_page_line;
-
-    /* -- */
 
     struct feed_screen_info *
         p_screen_info;
 
+    /* -- */
+
     struct feed_suggest_node *
         p_suggest_node;
+
+    void *
+        pv_padding[1u];
 
     /* -- */
 
@@ -263,13 +261,6 @@ feed_init(
         feed_input_create(
             p_this->p_client);
 
-    p_this->p_tty =
-        feed_tty_create(
-            p_this->p_client);
-
-    p_this->p_client->p_tty =
-        p_this->p_tty;
-
     p_this->p_screen_info =
         &(
             p_this->o_screen_info);
@@ -358,17 +349,6 @@ feed_cleanup(
 
         p_this->p_screen =
             (struct feed_screen *)(
-                0);
-    }
-
-    if (
-        p_this->p_tty)
-    {
-        feed_tty_destroy(
-            p_this->p_tty);
-
-        p_this->p_tty =
-            (struct feed_tty *)(
                 0);
     }
 

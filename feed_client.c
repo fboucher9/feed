@@ -16,10 +16,6 @@ feed_client_init(
         (struct feed_heap *)(
             0);
 
-    p_client->p_tty =
-        (struct feed_tty *)(
-            0);
-
     p_client->p_screen_info =
         (struct feed_screen_info *)(
             0);
@@ -41,10 +37,6 @@ feed_client_cleanup(
         (struct feed_heap *)(
             0);
 
-    p_client->p_tty =
-        (struct feed_tty *)(
-            0);
-
     p_client->p_screen_info =
         (struct feed_screen_info *)(
             0);
@@ -60,16 +52,6 @@ feed_client_get_heap(
         p_client->p_heap;
 
 } /* feed_client_get_heap() */
-
-struct feed_tty *
-feed_client_get_tty(
-    struct feed_client * const
-        p_client)
-{
-    return
-        p_client->p_tty;
-
-} /* feed_client_get_tty() */
 
 struct feed_screen_info *
 feed_client_get_screen_info(
