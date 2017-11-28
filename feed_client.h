@@ -15,6 +15,10 @@ struct feed_heap;
 
 struct feed_screen_info;
 
+struct feed_prompt;
+
+struct feed_text;
+
 struct feed_client
 {
     struct feed_heap *
@@ -22,6 +26,12 @@ struct feed_client
 
     struct feed_screen_info *
         p_screen_info;
+
+    struct feed_prompt *
+        p_prompt;
+
+    struct feed_text *
+        p_text;
 
 }; /* struct feed_client */
 
