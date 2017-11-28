@@ -717,12 +717,6 @@ feed_text_index_to_offset(
                 p_line_iterator);
 
         if (
-            i_line_iterator)
-        {
-            i_offset ++;
-        }
-
-        if (
             i_line_iterator < i_line_index)
         {
             i_offset += feed_line_length(p_line);

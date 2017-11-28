@@ -4635,4 +4635,23 @@ feed_complete(
 
 } /* feed_complete() */
 
+unsigned long int
+feed_cursor(
+    struct feed_handle * const
+        p_this)
+{
+    unsigned long int
+        i_cursor_offset;
+
+    i_cursor_offset =
+        feed_text_iterator_get_offset(
+            p_this->p_text,
+            &(
+                p_this->o_cursor));
+
+    return
+        i_cursor_offset;
+
+} /* feed_cursor() */
+
 /* end-of-file: feed.c */

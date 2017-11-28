@@ -31,6 +31,7 @@ struct feed_descriptor
         unsigned char const * const p_event,
         unsigned long int const i_event_length);
 
+    /* application context for callbacks */
     void * p_context;
 
 }; /* struct feed_descriptor */
@@ -101,6 +102,10 @@ unsigned long int feed_consume(
     struct feed_handle * const p_feed_handle,
     unsigned char * const p_data,
     unsigned long int const i_data_length);
+
+/* query position of cursor */
+unsigned long int feed_cursor(
+    struct feed_handle * const p_feed_handle);
 
 #if defined(__cplusplus)
 } /* extern "C" */

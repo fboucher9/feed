@@ -124,7 +124,7 @@ FEED_LIBRARY_SRCS = \
 FEED_TEST_SRCS = \
     $(FEED_DST_PATH)/_obj_feed_os.o \
     $(FEED_DST_PATH)/_obj_feed_main.o \
-    $(FEED_DST_PATH)/libfeed.a
+    $(FEED_DST_PATH)/libfeed.so
 
 # Default target
 .PHONY: all
@@ -148,9 +148,9 @@ $(FEED_DST_PATH)/libfeed.a : $(FEED_LIBRARY_SRCS)
 	@echo creating $@
 	@$(FEED_AR) rc $(FEED_DST_PATH)/libfeed.a $(FEED_LIBRARY_SRCS)
 
-$(FEED_DST_PATH)/libfeed.so : $(FEED_LIBRARY_SRCS)
+$(FEED_DST_PATH)/libfeed.so : $(FEED_LIBRARY_SRCS) $(FEED_SRC_PATH)/feed.exports
 	@echo linking $@
-	@echo -shared -Wl,--version-script,feed.exports -o $@ $(FEED_CFLAGS) $(FEED_LIBRARY_SRCS) $(FEED_LDFLAGS) $(FEED_LIBS) > $(FEED_DST_PATH)/_obj_libfeed_so.cmd
+	@echo -shared -Wl,--version-script,$(FEED_SRC_PATH)/feed.exports -o $@ $(FEED_CFLAGS) $(FEED_LIBRARY_SRCS) $(FEED_LDFLAGS) $(FEED_LIBS) > $(FEED_DST_PATH)/_obj_libfeed_so.cmd
 	@$(FEED_CC) @$(FEED_DST_PATH)/_obj_libfeed_so.cmd
 
 # Build each object file

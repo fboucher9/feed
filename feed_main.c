@@ -285,6 +285,27 @@ feed_main_notify_callback(
     }
 #endif /* test of consume */
 
+#if 0 /* test of cursor */
+    if (i_data_length)
+    {
+        if (7 == p_data[0u])
+        {
+            unsigned long int
+                i_cursor_offset;
+
+            i_cursor_offset =
+                feed_cursor(
+                    p_feed_handle);
+
+            printf(
+                "cursor -> %lu\n",
+                i_cursor_offset);
+
+            return -1;
+        }
+    }
+#endif /* test of cursor */
+
     if (i_data_length)
     {
         if (4 == p_data[0u])

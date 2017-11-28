@@ -12,6 +12,7 @@
         feed_length;
         feed_save;
         feed_consume;
+        feed_cursor;
     local:
         *;
 };
