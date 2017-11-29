@@ -102,21 +102,20 @@ struct feed_view
 
 };
 
-char
-feed_view_begin(
+void
+feed_view_init(
     struct feed_view * const
         p_iterator,
-    struct feed_line * const
-        p_page_line,
-    unsigned long int const
-        i_page_line_index,
-    unsigned long int const
-        i_page_glyph_index,
-    enum feed_view_state const
-        e_page_state);
+    struct feed_client * const
+        p_client);
+
+void
+feed_view_cleanup(
+    struct feed_view * const
+        p_iterator);
 
 char
-feed_view_begin_reverse(
+feed_view_head(
     struct feed_view * const
         p_iterator,
     struct feed_line * const
@@ -132,6 +131,19 @@ char
 feed_view_next(
     struct feed_view * const
         p_iterator);
+
+char
+feed_view_tail(
+    struct feed_view * const
+        p_iterator,
+    struct feed_line * const
+        p_page_line,
+    unsigned long int const
+        i_page_line_index,
+    unsigned long int const
+        i_page_glyph_index,
+    enum feed_view_state const
+        e_page_state);
 
 char
 feed_view_prev(

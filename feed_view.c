@@ -719,7 +719,7 @@ feed_view_test(
 }
 
 char
-feed_view_begin(
+feed_view_head(
     struct feed_view * const
         p_iterator,
     struct feed_line * const
@@ -840,7 +840,7 @@ feed_view_begin(
 
 */
 char
-feed_view_begin_reverse(
+feed_view_tail(
     struct feed_view * const
         p_iterator,
     struct feed_line * const
@@ -1360,6 +1360,33 @@ feed_view_prev(
     return
         b_result;
 
+}
+
+void
+feed_view_init(
+    struct feed_view * const
+        p_iterator,
+    struct feed_client * const
+        p_client)
+{
+    memset(
+        p_iterator,
+        0x00u,
+        sizeof(
+            *(p_iterator)));
+
+    p_iterator->p_client =
+        p_client;
+
+}
+
+void
+feed_view_cleanup(
+    struct feed_view * const
+        p_iterator)
+{
+    (void)(
+        p_iterator);
 }
 
 /* end-of-file: feed_view.c */
