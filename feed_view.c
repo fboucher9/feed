@@ -668,7 +668,24 @@ feed_view_test(
         if (p_glyph->o_utf8_code.i_raw_len)
         {
             if (
-                '\n' != p_glyph->o_utf8_code.a_raw[0u])
+                '\n' == p_glyph->o_utf8_code.a_raw[0u])
+            {
+                b_result =
+                    feed_screen_iterator_test_newline(
+                        p_iterator->p_client->p_screen_info,
+                        &(
+                            p_iterator->o_screen_iterator));
+            }
+            else if (
+                '\t' == p_glyph->o_utf8_code.a_raw[0u])
+            {
+                b_result =
+                    feed_screen_iterator_test_tab(
+                        p_iterator->p_client->p_screen_info,
+                        &(
+                            p_iterator->o_screen_iterator));
+            }
+            else
             {
                 unsigned short int i_glyph_width;
 
@@ -682,14 +699,6 @@ feed_view_test(
                         &(
                             p_iterator->o_screen_iterator),
                         i_glyph_width);
-            }
-            else
-            {
-                b_result =
-                    feed_screen_iterator_test_newline(
-                        p_iterator->p_client->p_screen_info,
-                        &(
-                            p_iterator->o_screen_iterator));
             }
         }
         else
@@ -1061,7 +1070,25 @@ feed_view_write(
         if (p_glyph->o_utf8_code.i_raw_len)
         {
             if (
-                '\n' != p_glyph->o_utf8_code.a_raw[0u])
+                '\n' == p_glyph->o_utf8_code.a_raw[0u])
+            {
+                /* Empty line, so do a newline */
+                i_width =
+                    feed_screen_iterator_newline(
+                        p_iterator->p_client->p_screen_info,
+                        &(
+                            p_iterator->o_screen_iterator));
+            }
+            else if (
+                '\t' == p_glyph->o_utf8_code.a_raw[0u])
+            {
+                i_width =
+                    feed_screen_iterator_tab(
+                        p_iterator->p_client->p_screen_info,
+                        &(
+                            p_iterator->o_screen_iterator));
+            }
+            else
             {
                 i_width =
                     feed_glyph_get_visible_width(
@@ -1072,15 +1099,6 @@ feed_view_write(
                     &(
                         p_iterator->o_screen_iterator),
                     i_width);
-            }
-            else
-            {
-                /* Empty line, so do a newline */
-                i_width =
-                    feed_screen_iterator_newline(
-                        p_iterator->p_client->p_screen_info,
-                        &(
-                            p_iterator->o_screen_iterator));
             }
         }
         else

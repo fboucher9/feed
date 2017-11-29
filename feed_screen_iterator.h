@@ -73,6 +73,13 @@ feed_screen_iterator_test_newline(
     struct feed_screen_iterator * const
         p_screen_iterator);
 
+char
+feed_screen_iterator_test_tab(
+    struct feed_screen_info const * const
+        p_this,
+    struct feed_screen_iterator * const
+        p_screen_iterator);
+
 unsigned long int
 feed_screen_iterator_clear(
     struct feed_screen_info const * const
@@ -82,6 +89,13 @@ feed_screen_iterator_clear(
 
 unsigned long int
 feed_screen_iterator_newline(
+    struct feed_screen_info const * const
+        p_this,
+    struct feed_screen_iterator * const
+        p_screen_iterator);
+
+unsigned long int
+feed_screen_iterator_tab(
     struct feed_screen_info const * const
         p_this,
     struct feed_screen_iterator * const

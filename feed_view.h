@@ -2,6 +2,33 @@
 
 /*
 
+Module: feed_view.h
+
+Description:
+
+    Iterator for rendering of a visible page.  This object manages the rendering
+    of both prompt and text onto a single visible screen.
+
+*/
+
+/* Reverse include guard */
+#if defined(INC_FEED_VIEW_H)
+#error include feed_view.h once
+#endif /* #if defined(INC_FEED_VIEW_H) */
+
+#define INC_FEED_VIEW_H
+
+/* Predefine client handle */
+struct feed_client;
+
+/* Predefine line handle */
+struct feed_line;
+
+/* Predefine glyph handle */
+struct feed_glyph;
+
+/*
+
 Enumeration: feed_view_state
 
 Description:

@@ -1234,7 +1234,40 @@ feed_main_refresh_job(
                     if (p_glyph->o_utf8_code.i_raw_len)
                     {
                         if (
-                            '\n' != p_glyph->o_utf8_code.a_raw[0u])
+                            '\n' == p_glyph->o_utf8_code.a_raw[0u])
+                        {
+                            feed_screen_newline(
+                                p_this->p_screen);
+                        }
+                        else if (
+                            '\t' == p_glyph->o_utf8_code.a_raw[0u])
+                        {
+                            unsigned char
+                                a_visible[15u];
+
+                            unsigned char
+                                i_visible_length;
+
+                            i_visible_length =
+                                (unsigned char)(
+                                    8u
+                                    - (
+                                        (
+                                            o_iterator.o_screen_iterator.i_cursor_address %
+                                            p_this->p_screen_info->i_screen_width)
+                                        & 7u));
+
+                            memset(
+                                a_visible,
+                                ' ',
+                                i_visible_length);
+
+                            feed_screen_write(
+                                p_this->p_screen,
+                                a_visible,
+                                i_visible_length);
+                        }
+                        else
                         {
                             unsigned char
                                 a_visible[15u];
@@ -1251,11 +1284,6 @@ feed_main_refresh_job(
                                 p_this->p_screen,
                                 a_visible,
                                 i_visible_length);
-                        }
-                        else
-                        {
-                            feed_screen_newline(
-                                p_this->p_screen);
                         }
                     }
                     else
@@ -1656,6 +1684,7 @@ feed_main_move_word_left(
             {
                 if ((0u == p_this->o_cursor.p_glyph->o_utf8_code.i_raw_len)
                     || (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                    || ('\t' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
                     || ('\n' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u]))
                 {
                 }
@@ -1693,6 +1722,7 @@ feed_main_move_word_left(
                 {
                     if ((0u == p_this->o_cursor.p_glyph->o_utf8_code.i_raw_len)
                         || (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                        || ('\t' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
                         || ('\n' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u]))
                     {
                         b_found =
@@ -1743,6 +1773,7 @@ feed_main_move_word_right(
         {
             if ((0u == p_this->o_cursor.p_glyph->o_utf8_code.i_raw_len)
                 || (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                || ('\t' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
                 || ('\n' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u]))
             {
                 b_found = 1;
@@ -1784,6 +1815,7 @@ feed_main_move_word_right(
                 {
                     if ((0u == p_this->o_cursor.p_glyph->o_utf8_code.i_raw_len)
                         || (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                        || ('\t' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
                         || ('\n' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u]))
                     {
                     }
