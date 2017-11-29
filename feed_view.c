@@ -1,10 +1,24 @@
 /* See LICENSE for license details */
 
+/*
+
+Module: feed_view.c
+
+Description:
+
+    Iterator for rendered view of text and prompt on a single screen.
+
+*/
+
 #include "feed_os.h"
 
 #include "feed_cfg.h"
 
 #include "feed_screen_iterator.h"
+
+#include "feed_prompt_iterator.h"
+
+#include "feed_text_iterator.h"
 
 #include "feed_view.h"
 
@@ -26,22 +40,16 @@
 
 static
 void
-feed_view_get_prompt_line(
+feed_view_use_prompt_iterator(
     struct feed_view * const
         p_iterator)
 {
-    if (0 == p_iterator->i_line_index)
-    {
-        p_iterator->p_prompt_line =
-            feed_prompt_get1(
-                p_iterator->p_client->p_prompt);
-    }
-    else
-    {
-        p_iterator->p_prompt_line =
-            feed_prompt_get2(
-                p_iterator->p_client->p_prompt);
-    }
+    p_iterator->i_glyph_index =
+        p_iterator->o_prompt_iterator.i_glyph_index;
+
+    p_iterator->p_glyph =
+        p_iterator->o_prompt_iterator.p_glyph;
+
 }
 
 static
@@ -55,33 +63,20 @@ feed_view_get_prompt_glyph(
 
     if (p_iterator->p_document_line)
     {
-        feed_view_get_prompt_line(
-            p_iterator);
+        b_result =
+            feed_prompt_iterator_set_index(
+                p_iterator->p_client->p_prompt,
+                &(
+                    p_iterator->o_prompt_iterator),
+                p_iterator->i_line_index,
+                p_iterator->i_glyph_index);
 
-        if (p_iterator->p_prompt_line)
+        if (
+            b_result)
         {
-            p_iterator->p_glyph =
-                feed_line_get_glyph(
-                    p_iterator->p_prompt_line,
-                    p_iterator->i_glyph_index);
-
-            if (p_iterator->p_glyph)
-            {
-                b_result =
-                    1;
-            }
-            else
-            {
-                b_result =
-                    0;
-            }
+            feed_view_use_prompt_iterator(
+                p_iterator);
         }
-        else
-        {
-            b_result =
-                0;
-        }
-
     }
     else
     {
@@ -154,35 +149,17 @@ feed_view_next_prompt_glyph(
 
     if (p_iterator->p_document_line)
     {
-        if (p_iterator->p_prompt_line)
-        {
-            if (p_iterator->p_glyph)
-            {
-                if (p_iterator->p_glyph->o_list.p_next != &(p_iterator->p_prompt_line->o_glyphs))
-                {
-                    p_iterator->p_glyph =
-                        (struct feed_glyph *)(
-                            p_iterator->p_glyph->o_list.p_next);
+        b_result =
+            feed_prompt_iterator_next_glyph(
+                p_iterator->p_client->p_prompt,
+                &(
+                    p_iterator->o_prompt_iterator));
 
-                    b_result =
-                        1;
-                }
-                else
-                {
-                    b_result =
-                        0;
-                }
-            }
-            else
-            {
-                b_result =
-                    0;
-            }
-        }
-        else
+        if (
+            b_result)
         {
-            b_result =
-                0;
+            feed_view_use_prompt_iterator(
+                p_iterator);
         }
     }
     else
@@ -214,17 +191,20 @@ feed_view_prev_prompt_glyph(
     {
         p_iterator->i_glyph_index --;
 
-        if (p_iterator->p_document_line
-            && p_iterator->p_prompt_line
-            && (p_iterator->p_glyph)
-            && (p_iterator->p_glyph->o_list.p_prev != &(p_iterator->p_prompt_line->o_glyphs)))
+        if (p_iterator->p_document_line)
         {
-            p_iterator->p_glyph =
-                (struct feed_glyph *)(
-                    p_iterator->p_glyph->o_list.p_prev);
-
             b_result =
-                1;
+                feed_prompt_iterator_prev_glyph(
+                    p_iterator->p_client->p_prompt,
+                    &(
+                        p_iterator->o_prompt_iterator));
+
+            if (
+                b_result)
+            {
+                feed_view_use_prompt_iterator(
+                    p_iterator);
+            }
         }
         else
         {
@@ -548,30 +528,19 @@ feed_view_first_prompt_glyph(
 
     if (p_iterator->p_document_line)
     {
-        feed_view_get_prompt_line(
-            p_iterator);
+        b_result =
+            feed_prompt_iterator_set_index(
+                p_iterator->p_client->p_prompt,
+                &(
+                    p_iterator->o_prompt_iterator),
+                p_iterator->i_line_index,
+                p_iterator->i_glyph_index);
 
-        if (p_iterator->p_prompt_line)
+        if (
+            b_result)
         {
-            if (p_iterator->p_prompt_line->o_glyphs.p_next != &(p_iterator->p_prompt_line->o_glyphs))
-            {
-                p_iterator->p_glyph =
-                    (struct feed_glyph *)(
-                        p_iterator->p_prompt_line->o_glyphs.p_next);
-
-                b_result =
-                    1;
-            }
-            else
-            {
-                b_result =
-                    0;
-            }
-        }
-        else
-        {
-            b_result =
-                0;
+            feed_view_use_prompt_iterator(
+                p_iterator);
         }
     }
     else
@@ -603,33 +572,28 @@ feed_view_last_prompt_glyph(
 
     if (p_iterator->p_document_line)
     {
-        feed_view_get_prompt_line(
-            p_iterator);
+        b_result =
+            feed_prompt_iterator_set_line(
+                p_iterator->p_client->p_prompt,
+                &(
+                    p_iterator->o_prompt_iterator),
+                p_iterator->i_line_index);
 
-        if (p_iterator->p_prompt_line)
-        {
-            if (p_iterator->p_prompt_line->o_glyphs.p_prev != &(p_iterator->p_prompt_line->o_glyphs))
-            {
-                p_iterator->i_glyph_index =
-                    (p_iterator->p_prompt_line->i_glyph_count - 1u);
-
-                p_iterator->p_glyph =
-                    (struct feed_glyph *)(
-                        p_iterator->p_prompt_line->o_glyphs.p_prev);
-
-                b_result =
-                    1;
-            }
-            else
-            {
-                b_result =
-                    0;
-            }
-        }
-        else
+        if (
+            b_result)
         {
             b_result =
-                0;
+                feed_prompt_iterator_last_glyph(
+                    p_iterator->p_client->p_prompt,
+                    &(
+                        p_iterator->o_prompt_iterator));
+
+            if (
+                b_result)
+            {
+                feed_view_use_prompt_iterator(
+                    p_iterator);
+            }
         }
     }
     else
@@ -879,9 +843,6 @@ feed_view_tail(
     }
 
     p_iterator->p_glyph =
-        NULL;
-
-    p_iterator->p_prompt_line =
         NULL;
 
     p_iterator->p_document_line =

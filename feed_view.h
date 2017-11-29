@@ -99,13 +99,19 @@ struct feed_view
     struct feed_line *
         p_document_line;
 
-    /* Pointer to prompt line */
-    struct feed_line *
-        p_prompt_line;
-
     /* Pointer to glyph object */
     struct feed_glyph *
         p_glyph;
+
+#if 0
+    /* Position in text */
+    struct feed_text_iterator
+        o_text_iterator;
+#endif
+
+    /* Position in prompt */
+    struct feed_prompt_iterator
+        o_prompt_iterator;
 
     /* Position in screen */
     struct feed_screen_iterator

@@ -24,6 +24,8 @@ Description:
 
 #include "feed_keys.h"
 
+#include "feed_prompt_iterator.h"
+
 #include "feed_prompt.h"
 
 #include "feed_screen.h"
