@@ -306,9 +306,39 @@ feed_main_notify_callback(
     }
 #endif /* test of cursor */
 
+#if 0 /* test of exec */
     if (i_data_length)
     {
-        if (4 == p_data[0u])
+        if (9 == p_data[0u])
+        {
+            static unsigned char const cmd[] =
+            {
+                'a',
+                'b',
+                'c'
+            };
+
+            int
+                i_exec_result;
+
+            i_exec_result =
+                feed_exec(
+                    p_feed_handle,
+                    cmd,
+                    (unsigned long int)(sizeof(cmd)));
+
+            (void)(
+                i_exec_result);
+
+            return -1;
+        }
+    }
+#endif /* test of exec */
+
+    if (i_data_length)
+    {
+        if ((4 == p_data[0u])
+            || (3 == p_data[0u]))
         {
             feed_stop(
                 p_feed_handle);

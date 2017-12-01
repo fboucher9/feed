@@ -2355,7 +2355,9 @@ feed_main_event_callback(
     void * const
         p_context,
     struct feed_event const * const
-        p_event)
+        p_event,
+    char const
+        b_notify)
 {
     char
         b_done;
@@ -2451,7 +2453,8 @@ feed_main_event_callback(
     {
         /* do notify */
         /* Provide one line at a time */
-        if (p_this->o_descriptor.p_notify)
+        if (b_notify
+            && p_this->o_descriptor.p_notify)
         {
             int
                 i_notify_status;
@@ -2660,7 +2663,8 @@ feed_main_step(
                 feed_main_event_callback(
                     p_this,
                     &(
-                        o_event));
+                        o_event),
+                    1);
             }
         }
         else
@@ -3179,5 +3183,72 @@ feed_cursor(
         i_cursor_offset;
 
 } /* feed_cursor() */
+
+int
+feed_exec(
+    struct feed_handle * const
+        p_this,
+    unsigned char const * const
+        p_data,
+    unsigned long int const
+        i_data_length)
+{
+    int
+        i_result;
+
+    unsigned long int
+        i_data_iterator;
+
+    i_result =
+        0;
+
+    i_data_iterator =
+        0ul;
+
+    while (
+        (
+            0 <= i_result)
+        && (
+            i_data_iterator < i_data_length))
+    {
+        unsigned char
+            c;
+
+        struct feed_event
+            o_event;
+
+        c =
+            p_data[i_data_iterator];
+
+        i_result =
+            feed_input_write(
+                p_this->p_input,
+                c,
+                &(
+                    o_event));
+
+        if (
+            0
+            <= i_result)
+        {
+            if (
+                0
+                < i_result)
+            {
+                feed_main_event_callback(
+                    p_this,
+                    &(
+                        o_event),
+                    0);
+            }
+
+            i_data_iterator ++;
+        }
+    }
+
+    return
+        i_result;
+
+} /* feed_exec() */
 
 /* end-of-file: feed.c */

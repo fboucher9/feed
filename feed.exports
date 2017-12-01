@@ -13,6 +13,7 @@
         feed_save;
         feed_consume;
         feed_cursor;
+        feed_exec;
     local:
         *;
 };

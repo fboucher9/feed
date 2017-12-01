@@ -107,6 +107,12 @@ unsigned long int feed_consume(
 unsigned long int feed_cursor(
     struct feed_handle * const p_feed_handle);
 
+/* execute editor commands via keyboard codes */
+int feed_exec(
+    struct feed_handle * const p_feed_handle,
+    unsigned char const * const p_data,
+    unsigned long int const i_data_length);
+
 #if defined(__cplusplus)
 } /* extern "C" */
 #endif /* #if defined(__cplusplus) */
