@@ -642,16 +642,16 @@ feed_main_move_cursor_xy(
                     o_iterator.o_screen_iterator.i_cursor_address < i_cursor_address)
                 {
                     p_this->o_cursor.i_line_index =
-                        o_iterator.i_line_index;
+                        o_iterator.o_text_iterator.i_line_index;
 
                     p_this->o_cursor.p_line =
-                        o_iterator.p_document_line;
+                        o_iterator.o_text_iterator.p_line;
 
                     p_this->o_cursor.i_glyph_index =
-                        o_iterator.i_glyph_index;
+                        o_iterator.o_text_iterator.i_glyph_index;
 
                     p_this->o_cursor.p_glyph =
-                        o_iterator.p_glyph;
+                        o_iterator.o_text_iterator.p_glyph;
 
                     b_more =
                         1;
@@ -663,16 +663,16 @@ feed_main_move_cursor_xy(
                     o_iterator.o_screen_iterator.i_cursor_address == i_cursor_address)
                 {
                     p_this->o_cursor.i_line_index =
-                        o_iterator.i_line_index;
+                        o_iterator.o_text_iterator.i_line_index;
 
                     p_this->o_cursor.p_line =
-                        o_iterator.p_document_line;
+                        o_iterator.o_text_iterator.p_line;
 
                     p_this->o_cursor.i_glyph_index =
-                        o_iterator.i_glyph_index;
+                        o_iterator.o_text_iterator.i_glyph_index;
 
                     p_this->o_cursor.p_glyph =
-                        o_iterator.p_glyph;
+                        o_iterator.o_text_iterator.p_glyph;
 
                     b_more =
                         0;
@@ -685,16 +685,16 @@ feed_main_move_cursor_xy(
                     if (!b_found_after)
                     {
                         p_this->o_cursor.i_line_index =
-                            o_iterator.i_line_index;
+                            o_iterator.o_text_iterator.i_line_index;
 
                         p_this->o_cursor.p_line =
-                            o_iterator.p_document_line;
+                            o_iterator.o_text_iterator.p_line;
 
                         p_this->o_cursor.i_glyph_index =
-                            o_iterator.i_glyph_index;
+                            o_iterator.o_text_iterator.i_glyph_index;
 
                         p_this->o_cursor.p_glyph =
-                            o_iterator.p_glyph;
+                            o_iterator.o_text_iterator.p_glyph;
 
                         b_found_after =
                             1;
@@ -888,7 +888,7 @@ feed_main_scroll_pageup(
         b_reach_top =
             0;
 
-        if (0u == o_iterator.i_glyph_index)
+        if (0u == o_iterator.o_text_iterator.i_glyph_index)
         {
             feed_view_prev(
                 &(
@@ -903,7 +903,9 @@ feed_main_scroll_pageup(
                 p_glyph;
 
             p_glyph =
-                o_iterator.p_glyph;
+                (feed_view_state_prompt == o_iterator.e_state)
+                ? o_iterator.o_prompt_iterator.p_glyph
+                : o_iterator.o_text_iterator.p_glyph;
 
             /* Remember this as a valid glyph */
 
@@ -915,13 +917,15 @@ feed_main_scroll_pageup(
                         '\n' != p_glyph->o_utf8_code.a_raw[0u])
                     {
                         p_final_line =
-                            o_iterator.p_document_line;
+                            o_iterator.o_text_iterator.p_line;
 
                         i_final_line_index =
-                            o_iterator.i_line_index;
+                            o_iterator.o_text_iterator.i_line_index;
 
                         i_final_glyph_index =
-                            o_iterator.i_glyph_index;
+                            (feed_view_state_prompt == o_iterator.e_state)
+                            ? o_iterator.o_prompt_iterator.i_glyph_index
+                            : o_iterator.o_text_iterator.i_glyph_index;
 
                         e_final_state =
                             o_iterator.e_state;
@@ -930,10 +934,10 @@ feed_main_scroll_pageup(
                     else
                     {
                         p_final_line =
-                            o_iterator.p_document_line;
+                            o_iterator.o_text_iterator.p_line;
 
                         i_final_line_index =
-                            o_iterator.i_line_index;
+                            o_iterator.o_text_iterator.i_line_index;
 
                         i_final_glyph_index =
                             0u;
@@ -945,10 +949,10 @@ feed_main_scroll_pageup(
                 else
                 {
                     p_final_line =
-                        o_iterator.p_document_line;
+                        o_iterator.o_text_iterator.p_line;
 
                     i_final_line_index =
-                        o_iterator.i_line_index;
+                        o_iterator.o_text_iterator.i_line_index;
 
                     i_final_glyph_index =
                         0u;
@@ -1213,9 +1217,9 @@ feed_main_refresh_job(
             /* Detect if cursor is visible */
             if (
                 (
-                    p_this->o_cursor.i_line_index == o_iterator.i_line_index)
+                    p_this->o_cursor.i_line_index == o_iterator.o_text_iterator.i_line_index)
                 && (
-                    p_this->o_cursor.i_glyph_index == o_iterator.i_glyph_index)
+                    p_this->o_cursor.i_glyph_index == o_iterator.o_text_iterator.i_glyph_index)
                 && (
                     (o_iterator.e_state != feed_view_state_prompt)))
             {
@@ -1229,7 +1233,9 @@ feed_main_refresh_job(
                     p_glyph;
 
                 p_glyph =
-                    o_iterator.p_glyph;
+                    (feed_view_state_prompt == o_iterator.e_state)
+                    ? o_iterator.o_prompt_iterator.p_glyph
+                    : o_iterator.o_text_iterator.p_glyph;
 
                 if (p_glyph)
                 {
@@ -1279,7 +1285,7 @@ feed_main_refresh_job(
 
                             i_visible_length =
                                 feed_glyph_render_visible(
-                                    o_iterator.p_glyph,
+                                    p_glyph,
                                     a_visible);
 
                             feed_screen_write(
@@ -1306,10 +1312,12 @@ feed_main_refresh_job(
         }
 
         p_this->i_final_line_index =
-            o_iterator.i_line_index;
+            o_iterator.o_text_iterator.i_line_index;
 
         p_this->i_final_glyph_index =
-            o_iterator.i_glyph_index;
+            (feed_view_state_prompt == o_iterator.e_state)
+            ? o_iterator.o_prompt_iterator.i_glyph_index
+            : o_iterator.o_text_iterator.i_glyph_index;
 
         p_this->e_final_state =
             o_iterator.e_state;

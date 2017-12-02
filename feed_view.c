@@ -39,56 +39,31 @@ Description:
 #include "feed_client.h"
 
 static
-void
-feed_view_use_prompt_iterator(
-    struct feed_view * const
-        p_iterator)
-{
-    p_iterator->i_glyph_index =
-        p_iterator->o_prompt_iterator.i_glyph_index;
-
-    p_iterator->p_glyph =
-        p_iterator->o_prompt_iterator.p_glyph;
-
-}
-
-static
 char
 feed_view_get_prompt_glyph(
     struct feed_view * const
-        p_iterator)
+        p_iterator,
+    unsigned long int const
+        i_line_index,
+    unsigned long int const
+        i_glyph_index)
 {
     char
         b_result;
 
-    if (p_iterator->p_document_line)
-    {
-        b_result =
-            feed_prompt_iterator_set_index(
-                p_iterator->p_client->p_prompt,
-                &(
-                    p_iterator->o_prompt_iterator),
-                p_iterator->i_line_index,
-                p_iterator->i_glyph_index);
+    b_result =
+        feed_prompt_iterator_set_index(
+            p_iterator->p_client->p_prompt,
+            &(
+                p_iterator->o_prompt_iterator),
+            i_line_index,
+            i_glyph_index);
 
-        if (
-            b_result)
-        {
-            feed_view_use_prompt_iterator(
-                p_iterator);
-        }
-    }
-    else
+    if (
+        b_result)
     {
-        b_result =
-            0;
-    }
-
-    if (!b_result)
-    {
-        p_iterator->p_glyph =
-            NULL;
-
+        p_iterator->e_state =
+            feed_view_state_prompt;
     }
 
     return
@@ -100,35 +75,28 @@ static
 char
 feed_view_get_text_glyph(
     struct feed_view * const
-        p_iterator)
+        p_iterator,
+    unsigned long int const
+        i_line_index,
+    unsigned long int const
+        i_glyph_index)
 {
     char
         b_result;
 
-    if (p_iterator->p_document_line)
-    {
-        p_iterator->p_glyph =
-            feed_line_get_glyph(
-                p_iterator->p_document_line,
-                p_iterator->i_glyph_index);
+    b_result =
+        feed_text_iterator_set_index(
+            p_iterator->p_client->p_text,
+            &(
+                p_iterator->o_text_iterator),
+            i_line_index,
+            i_glyph_index);
 
-        if (p_iterator->p_glyph)
-        {
-            b_result = 1;
-        }
-        else
-        {
-            b_result = 0;
-        }
-    }
-    else
+    if (
+        b_result)
     {
-        b_result = 0;
-    }
-
-    if (!b_result)
-    {
-        p_iterator->p_glyph = NULL;
+        p_iterator->e_state =
+            feed_view_state_text;
     }
 
     return
@@ -145,32 +113,17 @@ feed_view_next_prompt_glyph(
     char
         b_result;
 
-    p_iterator->i_glyph_index ++;
+    b_result =
+        feed_prompt_iterator_next_glyph(
+            p_iterator->p_client->p_prompt,
+            &(
+                p_iterator->o_prompt_iterator));
 
-    if (p_iterator->p_document_line)
+    if (
+        b_result)
     {
-        b_result =
-            feed_prompt_iterator_next_glyph(
-                p_iterator->p_client->p_prompt,
-                &(
-                    p_iterator->o_prompt_iterator));
-
-        if (
-            b_result)
-        {
-            feed_view_use_prompt_iterator(
-                p_iterator);
-        }
-    }
-    else
-    {
-        b_result =
-            0;
-    }
-
-    if (!b_result)
-    {
-        p_iterator->p_glyph = NULL;
+        p_iterator->e_state =
+            feed_view_state_prompt;
     }
 
     return
@@ -187,40 +140,17 @@ feed_view_prev_prompt_glyph(
     char
         b_result;
 
-    if (p_iterator->i_glyph_index)
-    {
-        p_iterator->i_glyph_index --;
+    b_result =
+        feed_prompt_iterator_prev_glyph(
+            p_iterator->p_client->p_prompt,
+            &(
+                p_iterator->o_prompt_iterator));
 
-        if (p_iterator->p_document_line)
-        {
-            b_result =
-                feed_prompt_iterator_prev_glyph(
-                    p_iterator->p_client->p_prompt,
-                    &(
-                        p_iterator->o_prompt_iterator));
-
-            if (
-                b_result)
-            {
-                feed_view_use_prompt_iterator(
-                    p_iterator);
-            }
-        }
-        else
-        {
-            b_result =
-                0;
-        }
-    }
-    else
+    if (
+        b_result)
     {
-        b_result =
-            0;
-    }
-
-    if (!b_result)
-    {
-        p_iterator->p_glyph = NULL;
+        p_iterator->e_state =
+            feed_view_state_prompt;
     }
 
     return
@@ -238,36 +168,17 @@ feed_view_first_text_glyph(
     char
         b_result;
 
-    p_iterator->i_glyph_index =
-        0u;
+    b_result =
+        feed_text_iterator_home_glyph(
+            p_iterator->p_client->p_text,
+            &(
+                p_iterator->o_text_iterator));
 
-    if (p_iterator->p_document_line)
+    if (
+        b_result)
     {
-        if (p_iterator->p_document_line->o_glyphs.p_next != &(p_iterator->p_document_line->o_glyphs))
-        {
-            p_iterator->p_glyph =
-                (struct feed_glyph *)(
-                    p_iterator->p_document_line->o_glyphs.p_next);
-
-            b_result =
-                1;
-        }
-        else
-        {
-            b_result =
-                0;
-        }
-    }
-    else
-    {
-        b_result =
-            0;
-    }
-
-    if (!b_result)
-    {
-        p_iterator->p_glyph =
-            NULL;
+        p_iterator->e_state =
+            feed_view_state_text;
     }
 
     return
@@ -284,32 +195,17 @@ feed_view_last_text_glyph(
     char
         b_result;
 
-    p_iterator->i_glyph_index =
-        0u;
+    b_result =
+        feed_text_iterator_end_glyph(
+            p_iterator->p_client->p_text,
+            &(
+                p_iterator->o_text_iterator));
 
-    if (p_iterator->p_document_line
-        && (p_iterator->p_document_line->o_glyphs.p_prev != &(p_iterator->p_document_line->o_glyphs)))
+    if (
+        b_result)
     {
-        p_iterator->i_glyph_index =
-            (p_iterator->p_document_line->i_glyph_count - 1u);
-
-        p_iterator->p_glyph =
-            (struct feed_glyph *)(
-                p_iterator->p_document_line->o_glyphs.p_prev);
-
-        b_result =
-            1;
-    }
-    else
-    {
-        b_result =
-            0;
-    }
-
-    if (!b_result)
-    {
-        p_iterator->p_glyph =
-            NULL;
+        p_iterator->e_state =
+            feed_view_state_text;
     }
 
     return
@@ -326,35 +222,17 @@ feed_view_next_line(
     char
         b_result;
 
-    p_iterator->i_line_index ++;
+    b_result =
+        feed_text_iterator_next_line(
+            p_iterator->p_client->p_text,
+            &(
+                p_iterator->o_text_iterator));
 
-    p_iterator->i_glyph_index = 0u;
-
-    p_iterator->p_glyph = NULL;
-
-    if (p_iterator->p_document_line)
+    if (
+        b_result)
     {
-        if (p_iterator->p_document_line->o_list.p_next != &(p_iterator->p_client->p_text->o_lines))
-        {
-            p_iterator->p_document_line =
-                (struct feed_line *)(
-                    p_iterator->p_document_line->o_list.p_next);
-
-            b_result =
-                1;
-        }
-        else
-        {
-            p_iterator->p_document_line = NULL;
-
-            b_result =
-                0;
-        }
-    }
-    else
-    {
-        b_result =
-            0;
+        p_iterator->e_state =
+            feed_view_state_text;
     }
 
     return
@@ -371,43 +249,17 @@ feed_view_prev_line(
     char
         b_result;
 
-    if (p_iterator->i_line_index)
+    b_result =
+        feed_text_iterator_prev_line(
+            p_iterator->p_client->p_text,
+            &(
+                p_iterator->o_text_iterator));
+
+    if (
+        b_result)
     {
-        p_iterator->i_line_index --;
-
-        p_iterator->i_glyph_index = 0u;
-
-        p_iterator->p_glyph = NULL;
-
-        if (p_iterator->p_document_line)
-        {
-            if (p_iterator->p_document_line->o_list.p_prev != &(p_iterator->p_client->p_text->o_lines))
-            {
-                p_iterator->p_document_line =
-                    (struct feed_line *)(
-                        p_iterator->p_document_line->o_list.p_prev);
-
-                b_result =
-                    1;
-            }
-            else
-            {
-                p_iterator->p_document_line = NULL;
-
-                b_result =
-                    0;
-            }
-        }
-        else
-        {
-            b_result =
-                0;
-        }
-    }
-    else
-    {
-        b_result =
-            0;
+        p_iterator->e_state =
+            feed_view_state_text;
     }
 
     return
@@ -424,42 +276,17 @@ feed_view_next_text_glyph(
     char
         b_result;
 
-    p_iterator->i_glyph_index ++;
+    b_result =
+        feed_text_iterator_next_glyph(
+            p_iterator->p_client->p_text,
+            &(
+                p_iterator->o_text_iterator));
 
-    if (p_iterator->p_document_line)
+    if (
+        b_result)
     {
-        if (p_iterator->p_glyph)
-        {
-            if (p_iterator->p_glyph->o_list.p_next != &(p_iterator->p_document_line->o_glyphs))
-            {
-                p_iterator->p_glyph =
-                    (struct feed_glyph *)(
-                        p_iterator->p_glyph->o_list.p_next);
-
-                b_result =
-                    1;
-            }
-            else
-            {
-                b_result =
-                    0;
-            }
-        }
-        else
-        {
-            b_result =
-                0;
-        }
-    }
-    else
-    {
-        b_result =
-            0;
-    }
-
-    if (!b_result)
-    {
-        p_iterator->p_glyph = NULL;
+        p_iterator->e_state =
+            feed_view_state_text;
     }
 
     return
@@ -476,36 +303,17 @@ feed_view_prev_text_glyph(
     char
         b_result;
 
-    if (p_iterator->i_glyph_index)
-    {
-        p_iterator->i_glyph_index --;
+    b_result =
+        feed_text_iterator_prev_glyph(
+            p_iterator->p_client->p_text,
+            &(
+                p_iterator->o_text_iterator));
 
-        if (p_iterator->p_document_line
-            && p_iterator->p_glyph
-            && (p_iterator->p_glyph->o_list.p_prev != &(p_iterator->p_document_line->o_glyphs)))
-        {
-            p_iterator->p_glyph =
-                (struct feed_glyph *)(
-                    p_iterator->p_glyph->o_list.p_prev);
-
-            b_result =
-                1;
-        }
-        else
-        {
-            b_result =
-                0;
-        }
-    }
-    else
+    if (
+        b_result)
     {
-        b_result =
-            0;
-    }
-
-    if (!b_result)
-    {
-        p_iterator->p_glyph = NULL;
+        p_iterator->e_state =
+            feed_view_state_text;
     }
 
     return
@@ -522,36 +330,28 @@ feed_view_first_prompt_glyph(
     char
         b_result;
 
-    p_iterator->i_glyph_index = 0u;
+    b_result =
+        feed_prompt_iterator_set_line(
+            p_iterator->p_client->p_prompt,
+            &(
+                p_iterator->o_prompt_iterator),
+            p_iterator->o_text_iterator.i_line_index);
 
-    p_iterator->p_glyph = NULL;
-
-    if (p_iterator->p_document_line)
+    if (
+        b_result)
     {
         b_result =
-            feed_prompt_iterator_set_index(
+            feed_prompt_iterator_first_glyph(
                 p_iterator->p_client->p_prompt,
                 &(
-                    p_iterator->o_prompt_iterator),
-                p_iterator->i_line_index,
-                p_iterator->i_glyph_index);
+                    p_iterator->o_prompt_iterator));
 
         if (
             b_result)
         {
-            feed_view_use_prompt_iterator(
-                p_iterator);
+            p_iterator->e_state =
+                feed_view_state_prompt;
         }
-    }
-    else
-    {
-        b_result =
-            0;
-    }
-
-    if (!b_result)
-    {
-        p_iterator->p_glyph = NULL;
     }
 
     return
@@ -568,43 +368,28 @@ feed_view_last_prompt_glyph(
     char
         b_result;
 
-    p_iterator->i_glyph_index = 0u;
+    b_result =
+        feed_prompt_iterator_set_line(
+            p_iterator->p_client->p_prompt,
+            &(
+                p_iterator->o_prompt_iterator),
+            p_iterator->o_text_iterator.i_line_index);
 
-    if (p_iterator->p_document_line)
+    if (
+        b_result)
     {
         b_result =
-            feed_prompt_iterator_set_line(
+            feed_prompt_iterator_last_glyph(
                 p_iterator->p_client->p_prompt,
                 &(
-                    p_iterator->o_prompt_iterator),
-                p_iterator->i_line_index);
+                    p_iterator->o_prompt_iterator));
 
         if (
             b_result)
         {
-            b_result =
-                feed_prompt_iterator_last_glyph(
-                    p_iterator->p_client->p_prompt,
-                    &(
-                        p_iterator->o_prompt_iterator));
-
-            if (
-                b_result)
-            {
-                feed_view_use_prompt_iterator(
-                    p_iterator);
-            }
+            p_iterator->e_state =
+                feed_view_state_prompt;
         }
-    }
-    else
-    {
-        b_result =
-            0;
-    }
-
-    if (!b_result)
-    {
-        p_iterator->p_glyph = NULL;
     }
 
     return
@@ -624,8 +409,22 @@ feed_view_test(
     struct feed_glyph *
         p_glyph;
 
-    p_glyph =
-        p_iterator->p_glyph;
+    if (
+        feed_view_state_prompt == p_iterator->e_state)
+    {
+        p_glyph =
+            p_iterator->o_prompt_iterator.p_glyph;
+    }
+    else
+    {
+        feed_text_iterator_validate(
+            p_iterator->p_client->p_text,
+            &(
+                p_iterator->o_text_iterator));
+
+        p_glyph =
+            p_iterator->o_text_iterator.p_glyph;
+    }
 
     if (p_glyph)
     {
@@ -655,7 +454,7 @@ feed_view_test(
 
                 i_glyph_width =
                     feed_glyph_get_visible_width(
-                        p_iterator->p_glyph);
+                        p_glyph);
 
                 b_result =
                     feed_screen_iterator_test_write(
@@ -704,105 +503,75 @@ feed_view_head(
     enum feed_view_state const
         e_page_state)
 {
-    p_iterator->i_line_index =
+    char
+        b_result;
+
+    p_iterator->o_text_iterator.i_line_index =
         i_page_line_index;
 
-    p_iterator->i_glyph_index =
-        i_page_glyph_index;
+    p_iterator->o_text_iterator.p_line =
+        p_page_line;
 
     if (feed_view_state_prompt == e_page_state)
     {
-        p_iterator->e_state =
-            feed_view_state_prompt;
-    }
-    else
-    {
-        p_iterator->e_state =
-            feed_view_state_text;
-    }
-
-    p_iterator->p_glyph =
-        NULL;
-
-    if (p_page_line)
-    {
-        p_iterator->p_document_line =
-            p_page_line;
-    }
-    else
-    {
-        p_iterator->p_document_line =
-            feed_text_get_line(
-                p_iterator->p_client->p_text,
-                p_iterator->i_line_index);
-    }
-
-    if (p_iterator->p_document_line)
-    {
-        if (feed_view_state_prompt == p_iterator->e_state)
+        if (
+            feed_view_get_prompt_glyph(
+                p_iterator,
+                i_page_line_index,
+                i_page_glyph_index))
         {
-            if (
-                feed_view_get_prompt_glyph(
-                    p_iterator))
-            {
-                p_iterator->e_state = feed_view_state_prompt;
-            }
-            else if (
-                feed_view_first_text_glyph(
-                    p_iterator))
-            {
-                p_iterator->e_state = feed_view_state_text;
-            }
-            else
-            {
-                p_iterator->e_state = feed_view_state_null;
-            }
+            b_result =
+                1;
         }
         else if (
-            feed_view_state_text == p_iterator->e_state)
+            feed_view_first_text_glyph(
+                p_iterator))
         {
-            if (
-                feed_view_get_text_glyph(
-                    p_iterator))
-            {
-                p_iterator->e_state = feed_view_state_text;
-            }
-            else
-            {
-                p_iterator->e_state = feed_view_state_null;
-            }
+            b_result =
+                1;
         }
         else
         {
-            p_iterator->e_state = feed_view_state_null;
+            b_result =
+                0;
         }
     }
     else
     {
-        p_iterator->i_line_index =
-            p_iterator->p_client->p_text->i_line_count;
-
-        p_iterator->i_glyph_index =
-            0u;
-
-        p_iterator->p_glyph =
-            NULL;
-
-        p_iterator->e_state =
-            feed_view_state_null;
+        if (
+            feed_view_get_text_glyph(
+                p_iterator,
+                i_page_line_index,
+                i_page_glyph_index))
+        {
+            b_result =
+                1;
+        }
+        else
+        {
+            b_result =
+                0;
+        }
     }
 
-    feed_screen_iterator_init(
-        p_iterator->p_client->p_screen_info,
-        &(
-            p_iterator->o_screen_iterator));
+    if (
+        b_result)
+    {
+        feed_screen_iterator_init(
+            p_iterator->p_client->p_screen_info,
+            &(
+                p_iterator->o_screen_iterator));
 
-    p_iterator->b_screen_full =
-        0;
+        p_iterator->b_screen_full =
+            0;
+
+        b_result =
+            feed_view_test(
+                p_iterator);
+    }
 
     return
-        feed_view_test(
-            p_iterator);
+        b_result;
 
 }
 
@@ -825,101 +594,86 @@ feed_view_tail(
     enum feed_view_state const
         e_page_state)
 {
-    p_iterator->i_line_index =
+    char
+        b_result;
+
+    b_result =
+        1;
+
+    p_iterator->o_text_iterator.i_line_index =
         i_page_line_index;
 
-    p_iterator->i_glyph_index =
-        i_page_glyph_index;
+    p_iterator->o_text_iterator.p_line =
+        p_page_line;
 
     if (feed_view_state_prompt == e_page_state)
     {
+        p_iterator->o_text_iterator.i_glyph_index =
+            0ul;
+
         p_iterator->e_state =
             feed_view_state_prompt;
     }
     else
     {
+        p_iterator->o_text_iterator.i_glyph_index =
+            i_page_glyph_index;
+
         p_iterator->e_state =
             feed_view_state_text;
     }
 
-    p_iterator->p_glyph =
-        NULL;
+    feed_text_iterator_validate(
+        p_iterator->p_client->p_text,
+        &(
+            p_iterator->o_text_iterator));
 
-    p_iterator->p_document_line =
-        NULL;
-
-    if (p_page_line)
-    {
-        p_iterator->p_document_line =
-            p_page_line;
-    }
-    else
-    {
-        p_iterator->p_document_line =
-            feed_text_get_line(
-                p_iterator->p_client->p_text,
-                p_iterator->i_line_index);
-    }
-
-    if (!(p_iterator->p_document_line))
+    if (!(p_iterator->o_text_iterator.p_line))
     {
         /* we are at end of file */
-        if (p_iterator->p_client->p_text->i_line_count)
+        b_result =
+            feed_text_iterator_end_line(
+                p_iterator->p_client->p_text,
+                &(
+                    p_iterator->o_text_iterator));
+
+        if (
+            b_result)
         {
-            p_iterator->i_line_index =
-                (p_iterator->p_client->p_text->i_line_count - 1ul);
-
-            p_iterator->p_document_line =
-                feed_text_get_line(
+            b_result =
+                feed_text_iterator_end_glyph(
                     p_iterator->p_client->p_text,
-                    p_iterator->i_line_index);
+                    &(
+                        p_iterator->o_text_iterator));
 
-            if (p_iterator->p_document_line)
-            {
-                if (p_iterator->p_document_line->i_glyph_count)
-                {
-                    p_iterator->i_glyph_index =
-                        (p_iterator->p_document_line->i_glyph_count - 1ul);
-
-                    p_iterator->e_state =
-                        feed_view_state_text;
-                }
-                else
-                {
-                    p_iterator->e_state =
-                        feed_view_state_null;
-                }
-            }
-            else
+            if (
+                b_result)
             {
                 p_iterator->e_state =
-                    feed_view_state_null;
+                    feed_view_state_text;
             }
-        }
-        else
-        {
-            p_iterator->e_state =
-                feed_view_state_null;
         }
     }
 
-    if (p_iterator->p_document_line)
+    if (b_result)
     {
         if (feed_view_state_text == p_iterator->e_state)
         {
             if (
                 feed_view_get_text_glyph(
-                    p_iterator))
+                    p_iterator,
+                    i_page_line_index,
+                    i_page_glyph_index))
             {
-                p_iterator->e_state =
-                    feed_view_state_text;
+                b_result =
+                    1;
             }
             else if (
                 feed_view_last_prompt_glyph(
                     p_iterator))
             {
-                p_iterator->e_state =
-                    feed_view_state_prompt;
+                b_result =
+                    1;
             }
             else
             {
@@ -930,19 +684,19 @@ feed_view_tail(
                         feed_view_last_text_glyph(
                             p_iterator))
                     {
-                        p_iterator->e_state =
-                            feed_view_state_text;
+                        b_result =
+                            1;
                     }
                     else
                     {
-                        p_iterator->e_state =
-                            feed_view_state_null;
+                        b_result =
+                            0;
                     }
                 }
                 else
                 {
-                    p_iterator->e_state =
-                        feed_view_state_null;
+                    b_result =
+                        0;
                 }
             }
         }
@@ -950,10 +704,12 @@ feed_view_tail(
         {
             if (
                 feed_view_get_prompt_glyph(
-                    p_iterator))
+                    p_iterator,
+                    i_page_line_index,
+                    i_page_glyph_index))
             {
-                p_iterator->e_state =
-                    feed_view_state_prompt;
+                b_result =
+                    1;
             }
             else
             {
@@ -964,49 +720,42 @@ feed_view_tail(
                         feed_view_last_text_glyph(
                             p_iterator))
                     {
-                        p_iterator->e_state =
-                            feed_view_state_text;
+                        b_result =
+                            1;
                     }
                     else
                     {
-                        p_iterator->e_state =
-                            feed_view_state_null;
+                        b_result =
+                            0;
                     }
                 }
                 else
                 {
-                    p_iterator->e_state =
-                        feed_view_state_null;
+                    b_result =
+                        0;
                 }
             }
         }
     }
-    else
+
+    if (
+        b_result)
     {
-        p_iterator->i_line_index =
-            p_iterator->p_client->p_text->i_line_count;
+        feed_screen_iterator_init(
+            p_iterator->p_client->p_screen_info,
+            &(
+                p_iterator->o_screen_iterator));
 
-        p_iterator->i_glyph_index =
-            0u;
+        p_iterator->b_screen_full =
+            0;
 
-        p_iterator->p_glyph =
-            NULL;
-
-        p_iterator->e_state =
-            feed_view_state_null;
+        b_result =
+            feed_view_test(
+                p_iterator);
     }
 
-    feed_screen_iterator_init(
-        p_iterator->p_client->p_screen_info,
-        &(
-            p_iterator->o_screen_iterator));
-
-    p_iterator->b_screen_full =
-        0;
-
     return
-        feed_view_test(
-            p_iterator);
+        b_result;
 
 }
 
@@ -1022,8 +771,22 @@ feed_view_write(
     struct feed_glyph *
         p_glyph;
 
-    p_glyph =
-        p_iterator->p_glyph;
+    if (
+        feed_view_state_prompt == p_iterator->e_state)
+    {
+        p_glyph =
+            p_iterator->o_prompt_iterator.p_glyph;
+    }
+    else
+    {
+        feed_text_iterator_validate(
+            p_iterator->p_client->p_text,
+            &(
+                p_iterator->o_text_iterator));
+
+        p_glyph =
+            p_iterator->o_text_iterator.p_glyph;
+    }
 
     if (p_glyph)
     {
@@ -1053,7 +816,7 @@ feed_view_write(
             {
                 i_width =
                     feed_glyph_get_visible_width(
-                        p_iterator->p_glyph);
+                        p_glyph);
 
                 feed_screen_iterator_write(
                     p_iterator->p_client->p_screen_info,
@@ -1160,24 +923,22 @@ feed_view_next(
     {
         if (feed_view_next_prompt_glyph(p_iterator))
         {
-            p_iterator->e_state = feed_view_state_prompt;
+            b_result = 1;
         }
         else if (feed_view_first_text_glyph(p_iterator))
         {
-            p_iterator->e_state = feed_view_state_text;
+            b_result = 1;
         }
         else
         {
-            p_iterator->e_state = feed_view_state_null;
+            b_result = 0;
         }
-
-        b_result = 1;
     }
     else if (feed_view_state_text == p_iterator->e_state)
     {
         if (feed_view_next_text_glyph(p_iterator))
         {
-            p_iterator->e_state = feed_view_state_text;
+            b_result = 1;
         }
         else
         {
@@ -1185,24 +946,22 @@ feed_view_next(
             {
                 if (feed_view_first_prompt_glyph(p_iterator))
                 {
-                    p_iterator->e_state = feed_view_state_prompt;
+                    b_result = 1;
                 }
                 else if (feed_view_first_text_glyph(p_iterator))
                 {
-                    p_iterator->e_state = feed_view_state_text;
+                    b_result = 1;
                 }
                 else
                 {
-                    p_iterator->e_state = feed_view_state_null;
+                    b_result = 0;
                 }
             }
             else
             {
-                p_iterator->e_state = feed_view_state_null;
+                b_result = 0;
             }
         }
-
-        b_result = 1;
     }
     else
     {
@@ -1215,6 +974,11 @@ feed_view_next(
         b_result =
             feed_view_test(
                 p_iterator);
+    }
+    else
+    {
+        p_iterator->e_state =
+            feed_view_state_null;
     }
 
     return
@@ -1253,13 +1017,13 @@ feed_view_prev(
             feed_view_prev_text_glyph(
                 p_iterator))
         {
-            p_iterator->e_state = feed_view_state_text;
+            b_result = 1;
         }
         else if (
             feed_view_last_prompt_glyph(
                 p_iterator))
         {
-            p_iterator->e_state = feed_view_state_prompt;
+            b_result = 1;
         }
         else
         {
@@ -1271,21 +1035,18 @@ feed_view_prev(
                     feed_view_last_text_glyph(
                         p_iterator))
                 {
-                    p_iterator->e_state = feed_view_state_text;
+                    b_result = 1;
                 }
                 else
                 {
-                    p_iterator->e_state = feed_view_state_null;
+                    b_result = 0;
                 }
             }
             else
             {
-                p_iterator->e_state = feed_view_state_null;
+                b_result = 0;
             }
         }
-
-        b_result =
-            1;
     }
     else if (
         feed_view_state_prompt == p_iterator->e_state)
@@ -1294,7 +1055,7 @@ feed_view_prev(
             feed_view_prev_prompt_glyph(
                 p_iterator))
         {
-            p_iterator->e_state = feed_view_state_prompt;
+            b_result = 1;
         }
         else
         {
@@ -1306,21 +1067,18 @@ feed_view_prev(
                     feed_view_last_text_glyph(
                         p_iterator))
                 {
-                    p_iterator->e_state = feed_view_state_text;
+                    b_result = 1;
                 }
                 else
                 {
-                    p_iterator->e_state = feed_view_state_null;
+                    b_result = 0;
                 }
             }
             else
             {
-                p_iterator->e_state = feed_view_state_null;
+                b_result = 0;
             }
         }
-
-        b_result =
-            1;
     }
     else
     {
@@ -1335,6 +1093,58 @@ feed_view_prev(
             feed_view_test(
                 p_iterator);
     }
+    else
+    {
+        p_iterator->e_state =
+            feed_view_state_null;
+    }
+
+    return
+        b_result;
+
+}
+
+char
+feed_view_query(
+    struct feed_view * const
+        p_iterator,
+    struct feed_view_descriptor * const
+        p_view_descriptor)
+{
+    char
+        b_result;
+
+    p_view_descriptor->p_line =
+        p_iterator->o_text_iterator.p_line;
+
+    p_view_descriptor->i_line_index =
+        p_iterator->o_text_iterator.i_line_index;
+
+    if (
+        feed_view_state_prompt == p_iterator->e_state)
+    {
+        p_view_descriptor->p_glyph =
+            p_iterator->o_prompt_iterator.p_glyph;
+
+        p_view_descriptor->i_glyph_index =
+            p_iterator->o_prompt_iterator.i_glyph_index;
+    }
+    else
+    {
+        feed_text_iterator_validate(
+            p_iterator->p_client->p_text,
+            &(
+                p_iterator->o_text_iterator));
+
+        p_view_descriptor->p_glyph =
+            p_iterator->o_text_iterator.p_glyph;
+
+        p_view_descriptor->i_glyph_index =
+            p_iterator->o_text_iterator.i_glyph_index;
+    }
+
+    b_result =
+        1;
 
     return
         b_result;

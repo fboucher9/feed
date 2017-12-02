@@ -95,19 +95,9 @@ struct feed_view
     struct feed_client *
         p_client;
 
-    /* Pointer to documents line */
-    struct feed_line *
-        p_document_line;
-
-    /* Pointer to glyph object */
-    struct feed_glyph *
-        p_glyph;
-
-#if 0
     /* Position in text */
     struct feed_text_iterator
         o_text_iterator;
-#endif
 
     /* Position in prompt */
     struct feed_prompt_iterator
@@ -117,13 +107,6 @@ struct feed_view
     struct feed_screen_iterator
         o_screen_iterator;
 
-    /* Position in document (x is valid if not in prompt) */
-    unsigned long int
-        i_glyph_index;
-
-    unsigned long int
-        i_line_index;
-
     enum feed_view_state
         e_state;
 
@@ -132,6 +115,28 @@ struct feed_view
 
     unsigned int
         ui_padding[2u];
+
+}; /* struct feed_view */
+
+struct feed_view_descriptor
+{
+    struct feed_line *
+        p_line;
+
+    struct feed_glyph *
+        p_glyph;
+
+    unsigned long int
+        i_line_index;
+
+    unsigned long int
+        i_glyph_index;
+
+    enum feed_view_state
+        e_state;
+
+    unsigned int
+        ui_padding[3u];
 
 };
 
@@ -182,3 +187,11 @@ char
 feed_view_prev(
     struct feed_view * const
         p_iterator);
+
+char
+feed_view_query(
+    struct feed_view * const
+        p_iterator,
+    struct feed_view_descriptor * const
+        p_view_descriptor);
+
