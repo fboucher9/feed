@@ -156,14 +156,8 @@ char
 feed_view_head(
     struct feed_view * const
         p_iterator,
-    struct feed_line * const
-        p_page_line,
-    unsigned long int const
-        i_page_line_index,
-    unsigned long int const
-        i_page_glyph_index,
-    enum feed_view_state const
-        e_page_state);
+    struct feed_view_descriptor const * const
+        p_view_descriptor);
 
 char
 feed_view_next(
@@ -174,14 +168,8 @@ char
 feed_view_tail(
     struct feed_view * const
         p_iterator,
-    struct feed_line * const
-        p_page_line,
-    unsigned long int const
-        i_page_line_index,
-    unsigned long int const
-        i_page_glyph_index,
-    enum feed_view_state const
-        e_page_state);
+    struct feed_view_descriptor const * const
+        p_view_descriptor);
 
 char
 feed_view_prev(
