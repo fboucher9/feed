@@ -104,15 +104,6 @@ feed_text_save(
     struct feed_buf * const
         p_buf);
 
-char
-feed_text_load(
-    struct feed_text * const
-        p_text,
-    unsigned char const * const
-        p_data,
-    unsigned long int const
-        i_data_length);
-
 void
 feed_text_remove_line(
     struct feed_text * const
@@ -169,12 +160,5 @@ feed_text_consume(
         p_text,
     struct feed_buf * const
         p_buf);
-
-void
-feed_text_append_utf8_code(
-    struct feed_text * const
-        p_text,
-    struct feed_utf8_code const * const
-        p_utf8_code);
 
 /* end-of-file: feed_text.h */

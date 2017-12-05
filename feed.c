@@ -541,20 +541,15 @@ feed_load(
     int
         i_result;
 
-    if (
-        feed_text_load(
-            p_this->p_text,
-            p_data,
-            i_data_length))
-    {
-        i_result =
-            0;
-    }
-    else
-    {
-        i_result =
-            -1;
-    }
+    feed_text_iterator_load(
+        p_this->p_text,
+        &(
+            p_this->o_cursor),
+        p_data,
+        i_data_length);
+
+    i_result =
+        0;
 
     return
         i_result;
@@ -2556,9 +2551,6 @@ feed_main_event_callback(
         }
     }
 
-    feed_main_refresh_job(
-        p_this);
-
 }
 
 static
@@ -2569,6 +2561,9 @@ feed_main_step(
 {
     unsigned char
         c;
+
+    feed_main_refresh_job(
+        p_this);
 
     if (
         feed_screen_read_character(
@@ -2653,23 +2648,6 @@ feed_start(
                 feed_screen_enter(
                     p_this->p_screen))
             {
-                /* insert a dummy glyph at end of document */
-                {
-                    struct feed_utf8_code
-                        o_dummy_eof;
-
-                    o_dummy_eof.i_raw_len =
-                        0u;
-
-                    o_dummy_eof.a_raw[0u] =
-                        '\000';
-
-                    feed_text_append_utf8_code(
-                        p_this->p_text,
-                        &(
-                            o_dummy_eof));
-                }
-
                 /* Move cursor to begin of document? */
                 {
                     p_this->o_cursor.i_glyph_index =
@@ -2685,6 +2663,9 @@ feed_start(
                         NULL;
 
                     p_this->o_view_begin.p_line =
+                        NULL;
+
+                    p_this->o_view_begin.p_glyph =
                         NULL;
 
                     p_this->o_view_begin.i_line_index =
@@ -2703,9 +2684,6 @@ feed_start(
 
                 p_this->b_refresh_text =
                     1;
-
-                feed_main_refresh_job(
-                    p_this);
 
                 feed_main_loop(
                     p_this);

@@ -1002,88 +1002,69 @@ feed_text_iterator_load(
     unsigned long int const
         i_data_length)
 {
-    struct feed_utf8_parser
-        o_utf8_parser;
+    char
+        b_more;
 
-    (void)(
-        p_text);
-    (void)(
-        p_text_iterator);
+    unsigned long int
+        i_data_iterator;
 
-    if (
-        feed_utf8_parser_init(
-            &(
-                o_utf8_parser)))
+    b_more =
+        1;
+
+    i_data_iterator =
+        0ul;
+
+    while (
+        b_more
+        && (
+            i_data_iterator
+            < i_data_length))
     {
-        char
-            b_more;
+        struct feed_utf8_code
+            o_utf8_code;
 
-        unsigned long int
-            i_data_iterator;
+        int
+            i_result;
 
-        b_more =
-            1;
+        i_result =
+            feed_utf8_parser_write(
+                &(
+                    p_text->o_utf8_parser),
+                p_data[i_data_iterator],
+                &(
+                    o_utf8_code));
 
-        i_data_iterator =
-            0ul;
-
-        while (
-            b_more
-            && (
-                i_data_iterator
-                < i_data_length))
+        if (
+            0
+            <= i_result)
         {
-            struct feed_utf8_code
-                o_utf8_code;
-
-            int
-                i_result;
-
-            i_result =
-                feed_utf8_parser_write(
-                    &(
-                        o_utf8_parser),
-                    p_data[i_data_iterator],
-                    &(
-                        o_utf8_code));
-
             if (
                 0
-                <= i_result)
+                < i_result)
             {
-                if (
-                    0
-                    < i_result)
+                if ('\n' == o_utf8_code.a_raw[0u])
                 {
-                    if ('\n' == o_utf8_code.a_raw[0u])
-                    {
-                        feed_text_iterator_insert_newline(
-                            p_text,
-                            p_text_iterator);
-                    }
-                    else
-                    {
-                        feed_text_iterator_insert_code(
-                            p_text,
-                            p_text_iterator,
-                            &(
-                                o_utf8_code));
-                    }
+                    feed_text_iterator_insert_newline(
+                        p_text,
+                        p_text_iterator);
                 }
+                else
+                {
+                    feed_text_iterator_insert_code(
+                        p_text,
+                        p_text_iterator,
+                        &(
+                            o_utf8_code));
+                }
+            }
 
-                i_data_iterator ++;
-            }
-            else
-            {
-                b_more =
-                    0;
-            }
+            i_data_iterator ++;
         }
-
-        feed_utf8_parser_cleanup(
-            &(
-                o_utf8_parser));
-
+        else
+        {
+            b_more =
+                0;
+        }
     }
 }
 
