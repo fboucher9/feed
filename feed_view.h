@@ -52,11 +52,7 @@ enum feed_view_state
 
     /* Display of a text character, if the text is empty then the state
     machine will automatically switch to the eol state */
-    feed_view_state_text,
-
-    /* After the end-of-file.  This is used to detect that the end of the file
-    is within the current page. */
-    feed_view_state_null
+    feed_view_state_text
 
 }; /* enum feed_view_state */
 
@@ -161,18 +157,6 @@ feed_view_head(
 
 char
 feed_view_next(
-    struct feed_view * const
-        p_iterator);
-
-char
-feed_view_tail(
-    struct feed_view * const
-        p_iterator,
-    struct feed_view_descriptor const * const
-        p_view_descriptor);
-
-char
-feed_view_prev(
     struct feed_view * const
         p_iterator);
 

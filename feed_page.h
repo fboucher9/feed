@@ -26,7 +26,7 @@ struct feed_page_node
 
 };
 
-struct feed_page
+struct feed_page_history
 {
     struct feed_client *
         p_client;
@@ -41,31 +41,31 @@ struct feed_page
 
 void
 feed_page_init(
-    struct feed_page * const
+    struct feed_page_history * const
         p_page,
     struct feed_client * const
         p_client);
 
 void
 feed_page_cleanup(
-    struct feed_page * const
+    struct feed_page_history * const
         p_page);
 
 void
 feed_page_reset(
-    struct feed_page * const
+    struct feed_page_history * const
         p_page);
 
 void
 feed_page_push(
-    struct feed_page * const
+    struct feed_page_history * const
         p_page,
     struct feed_view_descriptor const * const
         p_view_descriptor);
 
 char
 feed_page_pop(
-    struct feed_page * const
+    struct feed_page_history * const
         p_page,
     struct feed_view_descriptor * const
         p_view_descriptor);

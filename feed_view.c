@@ -133,34 +133,6 @@ feed_view_next_prompt_glyph(
 
 static
 char
-feed_view_prev_prompt_glyph(
-    struct feed_view * const
-        p_iterator)
-{
-    char
-        b_result;
-
-    b_result =
-        feed_prompt_iterator_prev_glyph(
-            p_iterator->p_client->p_prompt,
-            &(
-                p_iterator->o_prompt_iterator));
-
-    if (
-        b_result)
-    {
-        p_iterator->e_state =
-            feed_view_state_prompt;
-    }
-
-    return
-        b_result;
-
-}
-
-
-static
-char
 feed_view_first_text_glyph(
     struct feed_view * const
         p_iterator)
@@ -170,33 +142,6 @@ feed_view_first_text_glyph(
 
     b_result =
         feed_text_iterator_home_glyph(
-            p_iterator->p_client->p_text,
-            &(
-                p_iterator->o_text_iterator));
-
-    if (
-        b_result)
-    {
-        p_iterator->e_state =
-            feed_view_state_text;
-    }
-
-    return
-        b_result;
-
-}
-
-static
-char
-feed_view_last_text_glyph(
-    struct feed_view * const
-        p_iterator)
-{
-    char
-        b_result;
-
-    b_result =
-        feed_text_iterator_end_glyph(
             p_iterator->p_client->p_text,
             &(
                 p_iterator->o_text_iterator));
@@ -242,33 +187,6 @@ feed_view_next_line(
 
 static
 char
-feed_view_prev_line(
-    struct feed_view * const
-        p_iterator)
-{
-    char
-        b_result;
-
-    b_result =
-        feed_text_iterator_prev_line(
-            p_iterator->p_client->p_text,
-            &(
-                p_iterator->o_text_iterator));
-
-    if (
-        b_result)
-    {
-        p_iterator->e_state =
-            feed_view_state_text;
-    }
-
-    return
-        b_result;
-
-}
-
-static
-char
 feed_view_next_text_glyph(
     struct feed_view * const
         p_iterator)
@@ -278,33 +196,6 @@ feed_view_next_text_glyph(
 
     b_result =
         feed_text_iterator_next_glyph(
-            p_iterator->p_client->p_text,
-            &(
-                p_iterator->o_text_iterator));
-
-    if (
-        b_result)
-    {
-        p_iterator->e_state =
-            feed_view_state_text;
-    }
-
-    return
-        b_result;
-
-}
-
-static
-char
-feed_view_prev_text_glyph(
-    struct feed_view * const
-        p_iterator)
-{
-    char
-        b_result;
-
-    b_result =
-        feed_text_iterator_prev_glyph(
             p_iterator->p_client->p_text,
             &(
                 p_iterator->o_text_iterator));
@@ -342,44 +233,6 @@ feed_view_first_prompt_glyph(
     {
         b_result =
             feed_prompt_iterator_first_glyph(
-                p_iterator->p_client->p_prompt,
-                &(
-                    p_iterator->o_prompt_iterator));
-
-        if (
-            b_result)
-        {
-            p_iterator->e_state =
-                feed_view_state_prompt;
-        }
-    }
-
-    return
-        b_result;
-
-}
-
-static
-char
-feed_view_last_prompt_glyph(
-    struct feed_view * const
-        p_iterator)
-{
-    char
-        b_result;
-
-    b_result =
-        feed_prompt_iterator_set_line(
-            p_iterator->p_client->p_prompt,
-            &(
-                p_iterator->o_prompt_iterator),
-            p_iterator->o_text_iterator.i_line_index);
-
-    if (
-        b_result)
-    {
-        b_result =
-            feed_prompt_iterator_last_glyph(
                 p_iterator->p_client->p_prompt,
                 &(
                     p_iterator->o_prompt_iterator));
@@ -545,184 +398,6 @@ feed_view_head(
         {
             b_result =
                 0;
-        }
-    }
-
-    if (
-        b_result)
-    {
-        feed_screen_iterator_init(
-            p_iterator->p_client->p_screen_info,
-            &(
-                p_iterator->o_screen_iterator));
-
-        p_iterator->b_screen_full =
-            0;
-
-        b_result =
-            feed_view_test(
-                p_iterator);
-    }
-
-    return
-        b_result;
-
-}
-
-/*
-
-    TEXT PROMPT EOL
-    TEXT PROMPT EOF NULL
-
-*/
-char
-feed_view_tail(
-    struct feed_view * const
-        p_iterator,
-    struct feed_view_descriptor const * const
-        p_view_descriptor)
-{
-    char
-        b_result;
-
-    b_result =
-        1;
-
-    p_iterator->o_text_iterator.i_line_index =
-        p_view_descriptor->i_line_index;
-
-    p_iterator->o_text_iterator.p_line =
-        p_view_descriptor->p_line;
-
-    if (feed_view_state_prompt == p_view_descriptor->e_state)
-    {
-        p_iterator->o_text_iterator.i_glyph_index =
-            0ul;
-
-        p_iterator->e_state =
-            feed_view_state_prompt;
-    }
-    else
-    {
-        p_iterator->o_text_iterator.i_glyph_index =
-            p_view_descriptor->i_glyph_index;
-
-        p_iterator->e_state =
-            feed_view_state_text;
-    }
-
-    feed_text_iterator_validate(
-        p_iterator->p_client->p_text,
-        &(
-            p_iterator->o_text_iterator));
-
-    if (!(p_iterator->o_text_iterator.p_line))
-    {
-        /* we are at end of file */
-        b_result =
-            feed_text_iterator_end_line(
-                p_iterator->p_client->p_text,
-                &(
-                    p_iterator->o_text_iterator));
-
-        if (
-            b_result)
-        {
-            b_result =
-                feed_text_iterator_end_glyph(
-                    p_iterator->p_client->p_text,
-                    &(
-                        p_iterator->o_text_iterator));
-
-            if (
-                b_result)
-            {
-                p_iterator->e_state =
-                    feed_view_state_text;
-            }
-        }
-    }
-
-    if (b_result)
-    {
-        if (feed_view_state_text == p_iterator->e_state)
-        {
-            if (
-                feed_view_get_text_glyph(
-                    p_iterator,
-                    p_view_descriptor->i_line_index,
-                    p_view_descriptor->i_glyph_index))
-            {
-                b_result =
-                    1;
-            }
-            else if (
-                feed_view_last_prompt_glyph(
-                    p_iterator))
-            {
-                b_result =
-                    1;
-            }
-            else
-            {
-                if (feed_view_prev_line(
-                        p_iterator))
-                {
-                    if (
-                        feed_view_last_text_glyph(
-                            p_iterator))
-                    {
-                        b_result =
-                            1;
-                    }
-                    else
-                    {
-                        b_result =
-                            0;
-                    }
-                }
-                else
-                {
-                    b_result =
-                        0;
-                }
-            }
-        }
-        else if (feed_view_state_prompt == p_iterator->e_state)
-        {
-            if (
-                feed_view_get_prompt_glyph(
-                    p_iterator,
-                    p_view_descriptor->i_line_index,
-                    p_view_descriptor->i_glyph_index))
-            {
-                b_result =
-                    1;
-            }
-            else
-            {
-                if (feed_view_prev_line(
-                        p_iterator))
-                {
-                    if (
-                        feed_view_last_text_glyph(
-                            p_iterator))
-                    {
-                        b_result =
-                            1;
-                    }
-                    else
-                    {
-                        b_result =
-                            0;
-                    }
-                }
-                else
-                {
-                    b_result =
-                        0;
-                }
-            }
         }
     }
 
@@ -954,119 +629,6 @@ feed_view_next(
     else
     {
         b_result = 0;
-    }
-
-    if (
-        b_result)
-    {
-        b_result =
-            feed_view_test(
-                p_iterator);
-    }
-
-    return
-        b_result;
-
-}
-
-/*
-
-Function: feed_view_prev
-
-Description:
-
-    Move to previous character in document and in screen.
-
-Comments:
-
-    TEXT PROMPT EOL
-    TEXT PROMPT EOF NULL
-
-*/
-char
-feed_view_prev(
-    struct feed_view * const
-        p_iterator)
-{
-    char
-        b_result;
-
-    feed_view_write(
-        p_iterator);
-
-    if (feed_view_state_text == p_iterator->e_state)
-    {
-        if (
-            feed_view_prev_text_glyph(
-                p_iterator))
-        {
-            b_result = 1;
-        }
-        else if (
-            feed_view_last_prompt_glyph(
-                p_iterator))
-        {
-            b_result = 1;
-        }
-        else
-        {
-            if (
-                feed_view_prev_line(
-                    p_iterator))
-            {
-                if (
-                    feed_view_last_text_glyph(
-                        p_iterator))
-                {
-                    b_result = 1;
-                }
-                else
-                {
-                    b_result = 0;
-                }
-            }
-            else
-            {
-                b_result = 0;
-            }
-        }
-    }
-    else if (
-        feed_view_state_prompt == p_iterator->e_state)
-    {
-        if (
-            feed_view_prev_prompt_glyph(
-                p_iterator))
-        {
-            b_result = 1;
-        }
-        else
-        {
-            if (
-                feed_view_prev_line(
-                    p_iterator))
-            {
-                if (
-                    feed_view_last_text_glyph(
-                        p_iterator))
-                {
-                    b_result = 1;
-                }
-                else
-                {
-                    b_result = 0;
-                }
-            }
-            else
-            {
-                b_result = 0;
-            }
-        }
-    }
-    else
-    {
-        b_result =
-            0;
     }
 
     if (

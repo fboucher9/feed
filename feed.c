@@ -54,6 +54,8 @@ Description:
 
 #include "feed_view.h"
 
+#include "feed_page.h"
+
 struct feed_handle
 {
     /* -- */
@@ -112,6 +114,9 @@ struct feed_handle
 
     struct feed_suggest_list
         o_suggest_list;
+
+    struct feed_page_history
+        o_page_history;
 
     /* -- */
 
@@ -251,6 +256,11 @@ feed_init(
     p_this->b_suggest =
         0;
 
+    feed_page_init(
+        &(
+            p_this->o_page_history),
+        p_this->p_client);
+
     b_result =
         1;
 
@@ -265,6 +275,10 @@ feed_cleanup(
     struct feed_handle * const
         p_this)
 {
+    feed_page_cleanup(
+        &(
+            p_this->o_page_history));
+
     feed_suggest_list_cleanup(
         &(
             p_this->o_suggest_list));
@@ -712,6 +726,27 @@ feed_main_move_cursor_xy(
 }
 
 static
+void
+feed_main_page_push(
+    struct feed_handle * const
+        p_this,
+    struct feed_view_descriptor const * const
+        p_view_descriptor)
+{
+    feed_page_push(
+        &(
+            p_this->o_page_history),
+        &(
+            p_this->o_view_begin));
+
+    p_this->o_view_begin =
+        *(
+            p_view_descriptor);
+
+    p_this->b_refresh_text = 1;
+}
+
+static
 char
 feed_main_latch_next_page(
     struct feed_handle * const
@@ -722,13 +757,13 @@ feed_main_latch_next_page(
 
     if (p_this->b_view_end)
     {
-        p_this->o_view_begin = p_this->o_view_end;
-
-        p_this->b_refresh_text = 1;
+        feed_main_page_push(
+            p_this,
+            &(
+                p_this->o_view_end));
 
         b_result =
             1;
-
     }
     else
     {
@@ -815,129 +850,18 @@ feed_main_scroll_pageup(
     char
         b_found;
 
-    struct feed_view
-        o_iterator;
-
-    feed_view_init(
-        &(
-            o_iterator),
-        p_this->p_client);
+    b_found =
+        feed_page_pop(
+            &(
+                p_this->o_page_history),
+            &(
+                p_this->o_view_begin));
 
     if (
-        feed_view_tail(
-            &(o_iterator),
-            &(p_this->o_view_begin)))
+        b_found)
     {
-        char
-            b_more;
-
-        char
-            b_reach_top;
-
-        struct feed_view_descriptor
-            o_final;
-
-        b_more =
-            1;
-
-        b_reach_top =
-            0;
-
-        if (0u == o_iterator.o_text_iterator.i_glyph_index)
-        {
-            feed_view_prev(
-                &(
-                    o_iterator));
-        }
-
-        while (
-            b_more
-            && (!b_reach_top))
-        {
-            /* Remember this as a valid glyph */
-            if (
-                feed_view_query(
-                    &(
-                        o_iterator),
-                    &(
-                        o_final)))
-            {
-                if (o_final.p_glyph)
-                {
-                    if (o_final.p_glyph->o_utf8_code.i_raw_len)
-                    {
-                        if (
-                            '\n' != o_final.p_glyph->o_utf8_code.a_raw[0u])
-                        {
-                        }
-                        else
-                        {
-                            o_final.i_glyph_index =
-                                0u;
-
-                            o_final.e_state =
-                                feed_view_state_prompt;
-                        }
-                    }
-                    else
-                    {
-                        o_final.i_glyph_index =
-                            0u;
-
-                        o_final.e_state =
-                            feed_view_state_prompt;
-                    }
-
-                    b_found =
-                        1;
-                }
-            }
-
-            if (
-                feed_view_prev(
-                    &(
-                        o_iterator)))
-            {
-            }
-            else
-            {
-                if (o_iterator.b_screen_full)
-                {
-                }
-                else
-                {
-                    b_reach_top =
-                        1;
-                }
-
-                b_more =
-                    0;
-            }
-        }
-
-        if (b_found)
-        {
-            p_this->o_view_begin =
-                o_final;
-
-            p_this->b_refresh_text = 1;
-
-            if (b_reach_top)
-            {
-                b_found =
-                    0;
-            }
-        }
+        p_this->b_refresh_text = 1;
     }
-    else
-    {
-        b_found =
-            0;
-    }
-
-    feed_view_cleanup(
-        &(
-            o_iterator));
 
     return
         b_found;
@@ -1343,13 +1267,25 @@ feed_main_insert_event(
                         /* Change page */
                         p_this->o_cursor_visible.i_cursor_address = 0ul;
 
-                        p_this->o_view_begin.p_line = p_this->o_cursor.p_line;
+                        {
+                            struct feed_view_descriptor
+                                o_view_descriptor;
 
-                        p_this->o_view_begin.i_line_index = p_this->o_cursor.i_line_index;
+                            o_view_descriptor.p_line = p_this->o_cursor.p_line;
 
-                        p_this->o_view_begin.i_glyph_index = p_this->o_cursor.i_glyph_index;
+                            o_view_descriptor.p_glyph = p_this->o_cursor.p_glyph;
 
-                        p_this->o_view_begin.e_state = feed_view_state_text;
+                            o_view_descriptor.i_line_index = p_this->o_cursor.i_line_index;
+
+                            o_view_descriptor.i_glyph_index = p_this->o_cursor.i_glyph_index;
+
+                            o_view_descriptor.e_state = feed_view_state_text;
+
+                            feed_main_page_push(
+                                p_this,
+                                &(
+                                    o_view_descriptor));
+                        }
                     }
 
                     p_this->b_refresh_text = 1;
@@ -1841,13 +1777,23 @@ feed_main_insert_newline(
         /* Detect that cursor is visible? */
         if ((p_this->o_cursor_visible.i_cursor_address + p_this->p_screen_info->i_screen_width) >= p_this->p_screen_info->i_screen_size)
         {
-            p_this->o_view_begin.p_line = p_this->o_cursor.p_line;
+            struct feed_view_descriptor
+                o_view_descriptor;
 
-            p_this->o_view_begin.i_line_index = p_this->o_cursor.i_line_index;
+            o_view_descriptor.p_line = p_this->o_cursor.p_line;
 
-            p_this->o_view_begin.i_glyph_index = p_this->o_cursor.i_glyph_index;
+            o_view_descriptor.p_glyph = p_this->o_cursor.p_glyph;
 
-            p_this->o_view_begin.e_state = feed_view_state_prompt;
+            o_view_descriptor.i_line_index = p_this->o_cursor.i_line_index;
+
+            o_view_descriptor.i_glyph_index = p_this->o_cursor.i_glyph_index;
+
+            o_view_descriptor.e_state = feed_view_state_prompt;
+
+            feed_main_page_push(
+                p_this,
+                &(
+                    o_view_descriptor));
         }
 
         p_this->b_refresh_text =
@@ -1936,6 +1882,10 @@ feed_main_move_page_home(
             &(
                 p_this->o_cursor),
             p_this->o_view_begin.i_glyph_index);
+
+        feed_page_reset(
+            &(
+                p_this->o_page_history));
 
         p_this->b_refresh_text = 1;
     }
@@ -2474,8 +2424,11 @@ feed_main_event_callback(
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_PAGEDOWN) == p_event->i_code)
         {
-            feed_main_move_page_end(
-                p_this);
+            if (0)
+            {
+                feed_main_move_page_end(
+                    p_this);
+            }
         }
         else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_HOME) == p_event->i_code)
         {

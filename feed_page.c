@@ -32,7 +32,7 @@ Description:
 
 void
 feed_page_init(
-    struct feed_page * const
+    struct feed_page_history * const
         p_page,
     struct feed_client * const
         p_client)
@@ -51,7 +51,7 @@ feed_page_init(
 
 void
 feed_page_cleanup(
-    struct feed_page * const
+    struct feed_page_history * const
         p_page)
 {
     feed_page_reset(
@@ -61,7 +61,7 @@ feed_page_cleanup(
 
 void
 feed_page_reset(
-    struct feed_page * const
+    struct feed_page_history * const
         p_page)
 {
     struct feed_view_descriptor
@@ -76,7 +76,7 @@ feed_page_reset(
 
 void
 feed_page_push(
-    struct feed_page * const
+    struct feed_page_history * const
         p_page,
     struct feed_view_descriptor const * const
         p_view_descriptor)
@@ -115,7 +115,7 @@ feed_page_push(
 
 char
 feed_page_pop(
-    struct feed_page * const
+    struct feed_page_history * const
         p_page,
     struct feed_view_descriptor * const
         p_view_descriptor)
