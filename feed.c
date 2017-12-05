@@ -157,8 +157,11 @@ struct feed_handle
     char
         b_suggest;
 
+    char
+        b_view_end;
+
     unsigned char
-        uc_padding[3u];
+        uc_padding[2u];
 
 }; /* struct feed_handle */
 
@@ -722,24 +725,9 @@ feed_main_latch_next_page(
     char
         b_result;
 
-    if (p_this->o_view_end.e_state != feed_view_state_null)
+    if (p_this->b_view_end)
     {
-        p_this->o_view_begin.p_line = NULL;
-
-        p_this->o_view_begin.p_glyph = NULL;
-
-        p_this->o_view_begin.i_line_index = p_this->o_view_end.i_line_index;
-
-        p_this->o_view_begin.i_glyph_index = p_this->o_view_end.i_glyph_index;
-
-        if (p_this->o_view_end.e_state == feed_view_state_prompt)
-        {
-            p_this->o_view_begin.e_state = feed_view_state_prompt;
-        }
-        else
-        {
-            p_this->o_view_begin.e_state = feed_view_state_text;
-        }
+        p_this->o_view_begin = p_this->o_view_end;
 
         p_this->b_refresh_text = 1;
 
@@ -1245,11 +1233,20 @@ feed_main_refresh_job(
             }
         }
 
-        feed_view_query(
-            &(
-                o_iterator),
-            &(
-                p_this->o_view_end));
+        if (o_iterator.b_screen_full)
+        {
+            p_this->b_view_end = 1;
+
+            feed_view_query(
+                &(
+                    o_iterator),
+                &(
+                    p_this->o_view_end));
+        }
+        else
+        {
+            p_this->b_view_end = 0;
+        }
 
         if (p_this->b_refresh_text)
         {
@@ -1402,23 +1399,26 @@ feed_main_detect_visible_cursor(
 
     if (b_result)
     {
-        if (p_this->o_cursor.i_line_index < p_this->o_view_end.i_line_index)
+        if (p_this->b_view_end)
         {
-        }
-        else if (p_this->o_cursor.i_line_index == p_this->o_view_end.i_line_index)
-        {
-            if ((p_this->o_cursor.i_glyph_index < p_this->o_view_end.i_glyph_index)
-                && (p_this->o_view_end.e_state == feed_view_state_text))
+            if (p_this->o_cursor.i_line_index < p_this->o_view_end.i_line_index)
             {
+            }
+            else if (p_this->o_cursor.i_line_index == p_this->o_view_end.i_line_index)
+            {
+                if ((p_this->o_cursor.i_glyph_index < p_this->o_view_end.i_glyph_index)
+                    && (p_this->o_view_end.e_state == feed_view_state_text))
+                {
+                }
+                else
+                {
+                    b_result = 0;
+                }
             }
             else
             {
                 b_result = 0;
             }
-        }
-        else
-        {
-            b_result = 0;
         }
     }
 

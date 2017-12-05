@@ -963,25 +963,6 @@ feed_view_next(
             feed_view_test(
                 p_iterator);
     }
-    else
-    {
-        p_iterator->o_text_iterator.p_line =
-            (struct feed_line *)(
-                0);
-
-        p_iterator->o_text_iterator.p_glyph =
-            (struct feed_glyph *)(
-                0);
-
-        p_iterator->o_text_iterator.i_line_index =
-            p_iterator->p_client->p_text->i_line_count;
-
-        p_iterator->o_text_iterator.i_glyph_index =
-            0ul;
-
-        p_iterator->e_state =
-            feed_view_state_null;
-    }
 
     return
         b_result;
@@ -1094,25 +1075,6 @@ feed_view_prev(
         b_result =
             feed_view_test(
                 p_iterator);
-    }
-    else
-    {
-        p_iterator->o_text_iterator.p_line =
-            (struct feed_line *)(
-                0);
-
-        p_iterator->o_text_iterator.p_glyph =
-            (struct feed_glyph *)(
-                0);
-
-        p_iterator->o_text_iterator.i_line_index =
-            p_iterator->p_client->p_text->i_line_count;
-
-        p_iterator->o_text_iterator.i_glyph_index =
-            0ul;
-
-        p_iterator->e_state =
-            feed_view_state_null;
     }
 
     return

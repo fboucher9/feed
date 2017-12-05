@@ -121,6 +121,7 @@ FEED_LIBRARY_SRCS = \
     $(FEED_DST_PATH)/_obj_feed_utf8.o \
     $(FEED_DST_PATH)/_obj_feed_text_iterator.o \
     $(FEED_DST_PATH)/_obj_feed_view.o \
+    $(FEED_DST_PATH)/_obj_feed_page.o \
     $(FEED_DST_PATH)/_obj_feed.o
 
 FEED_TEST_SRCS = \
