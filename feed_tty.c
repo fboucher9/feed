@@ -1692,4 +1692,60 @@ feed_tty_write_el(
 
 } /* feed_tty_write_el() */
 
+char
+feed_tty_write_sgr(
+    struct feed_tty * const
+        p_tty,
+    unsigned char const * const
+        p_attr,
+    unsigned int const
+        i_count)
+{
+    char
+        b_result;
+
+    unsigned char
+        a_buf[64u];
+
+    struct feed_buf
+        o_buf;
+
+    b_result =
+        feed_buf_init(
+            &(
+                o_buf),
+            a_buf,
+            sizeof(
+                a_buf));
+
+    if (
+        b_result)
+    {
+        b_result =
+            feed_esc_write_sgr(
+                &(
+                    o_buf),
+                p_attr,
+                i_count);
+
+        if (
+            b_result)
+        {
+            b_result =
+                feed_tty_write_character_array(
+                    p_tty,
+                    o_buf.p_buf,
+                    o_buf.i_len);
+        }
+
+        feed_buf_cleanup(
+            &(
+                o_buf));
+    }
+
+    return
+        b_result;
+
+}
+
 /* end-of-file: feed_tty.c */

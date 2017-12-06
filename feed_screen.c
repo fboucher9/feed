@@ -54,6 +54,17 @@ struct feed_screen
     unsigned int
         ui_padding[3u];
 
+    /* -- */
+
+    unsigned char
+        i_foreground;
+
+    unsigned char
+        i_background;
+
+    unsigned char
+        uc_padding[6u];
+
 }; /* struct feed_screen */
 
 static
@@ -249,6 +260,12 @@ feed_screen_init(
         0u;
 
     p_screen->i_region_cy =
+        0u;
+
+    p_screen->i_foreground =
+        0u;
+
+    p_screen->i_background =
         0u;
 
     return
@@ -680,6 +697,17 @@ feed_screen_enter(
                 feed_tty_enable(
                     p_screen->p_tty))
             {
+                unsigned char
+                    a_sgr_reset[1u];
+
+                a_sgr_reset[0u] =
+                    0u;
+
+                feed_tty_write_sgr(
+                    p_screen->p_tty,
+                    a_sgr_reset,
+                    1);
+
                 b_result =
                     1;
             }
@@ -723,6 +751,11 @@ feed_screen_leave(
         {
             feed_screen_newline_raw(
                 p_screen);
+
+            feed_screen_color(
+                p_screen,
+                FEED_SCREEN_COLOR_DEFAULT,
+                FEED_SCREEN_COLOR_DEFAULT);
 
             feed_tty_flush(
                 p_screen->p_tty);
@@ -837,5 +870,82 @@ feed_screen_read_character(
         b_result;
 
 } /* feed_screen_read_character() */
+
+void
+feed_screen_color(
+    struct feed_screen * const
+        p_screen,
+    unsigned char const
+        i_foreground,
+    unsigned char const
+        i_background)
+{
+    if ((i_foreground != p_screen->i_foreground)
+        || (i_background != p_screen->i_background))
+    {
+        unsigned char
+            p_attr[3u];
+
+        unsigned int
+            i_count;
+
+        i_count = 0u;
+
+        if (i_foreground || i_background)
+        {
+            if (i_foreground != p_screen->i_foreground)
+            {
+                if (FEED_SCREEN_COLOR_DEFAULT == i_foreground)
+                {
+                    p_attr[i_count ++] = 39u;
+                }
+                else
+                {
+                    if (FEED_SCREEN_COLOR_BRIGHT_BLACK <= i_foreground)
+                    {
+                        p_attr[i_count ++] = 1;
+                    }
+
+                    p_attr[i_count ++] = (unsigned char)(30u + (i_foreground & 15u));
+                }
+            }
+
+            if (i_background != p_screen->i_background)
+            {
+                if (FEED_SCREEN_COLOR_DEFAULT == i_background)
+                {
+                    p_attr[i_count ++] = 49u;
+                }
+                else if (FEED_SCREEN_COLOR_BRIGHT_BLACK < i_background)
+                {
+                    p_attr[i_count ++] = (unsigned char)(40u + (i_background & 15u));
+                }
+                else
+                {
+                    p_attr[i_count ++] = (unsigned char)(100u + (i_background & 15u));
+                }
+            }
+        }
+        else
+        {
+            p_attr[i_count ++] = 0u;
+        }
+
+        if (i_count)
+        {
+            feed_tty_write_sgr(
+                p_screen->p_tty,
+                p_attr,
+                i_count);
+        }
+
+        p_screen->i_foreground =
+            i_foreground;
+
+        p_screen->i_background =
+            i_background;
+    }
+
+} /* feed_screen_color() */
 
 /* end-of-file: feed_screen.c */

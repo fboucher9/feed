@@ -282,9 +282,10 @@ feed_esc_write_cup(
         if (
             b_result)
         {
-            feed_buf_write_character(
-                p_buf,
-                FEED_CSI_CUP);
+            b_result =
+                feed_buf_write_character(
+                    p_buf,
+                    FEED_CSI_CUP);
         }
     }
 
@@ -293,7 +294,6 @@ feed_esc_write_cup(
 
 }
 
-#if 0
 char
 feed_esc_write_sgr(
     struct feed_buf * const
@@ -303,6 +303,56 @@ feed_esc_write_sgr(
     unsigned int const
         i_count)
 {
+    char
+        b_result;
+
+    b_result =
+        feed_esc_write_prefix(
+            p_buf);
+
+    if (
+        b_result)
+    {
+        unsigned int
+            i;
+
+        i =
+            0u;
+
+        while (
+            b_result
+            && (i < i_count))
+        {
+            if (
+                i)
+            {
+                b_result =
+                    feed_buf_write_character(
+                        p_buf,
+                        ';');
+            }
+
+            if (
+                b_result)
+            {
+                b_result =
+                    feed_buf_write_number(
+                        p_buf,
+                        (signed long int)(
+                            p_attr[i]));
+            }
+
+            i ++;
+        }
+
+        b_result =
+            feed_buf_write_character(
+                p_buf,
+                FEED_CSI_SGR);
+    }
+
+    return
+        b_result;
+
 }
-#endif
 

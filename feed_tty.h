@@ -185,4 +185,13 @@ feed_tty_write_el(
     unsigned int const
         i_count);
 
+char
+feed_tty_write_sgr(
+    struct feed_tty * const
+        p_tty,
+    unsigned char const * const
+        p_attr,
+    unsigned int const
+        i_count);
+
 /* end-of-file: feed_tty.h */

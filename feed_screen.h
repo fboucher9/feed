@@ -109,4 +109,31 @@ feed_screen_read_character(
     unsigned char * const
         p_data);
 
+#define FEED_SCREEN_COLOR_DEFAULT 0x00
+#define FEED_SCREEN_COLOR_DARK_BLACK 0x10
+#define FEED_SCREEN_COLOR_DARK_RED 0x11
+#define FEED_SCREEN_COLOR_DARK_GREEN 0x12
+#define FEED_SCREEN_COLOR_DARK_YELLOW 0x13
+#define FEED_SCREEN_COLOR_DARK_BLUE 0x14
+#define FEED_SCREEN_COLOR_DARK_MAGENTA 0x15
+#define FEED_SCREEN_COLOR_DARK_CYAN 0x16
+#define FEED_SCREEN_COLOR_DARK_WHITE 0x17
+#define FEED_SCREEN_COLOR_BRIGHT_BLACK 0x20
+#define FEED_SCREEN_COLOR_BRIGHT_RED 0x21
+#define FEED_SCREEN_COLOR_BRIGHT_GREEN 0x22
+#define FEED_SCREEN_COLOR_BRIGHT_YELLOW 0x23
+#define FEED_SCREEN_COLOR_BRIGHT_BLUE 0x24
+#define FEED_SCREEN_COLOR_BRIGHT_MAGENTA 0x25
+#define FEED_SCREEN_COLOR_BRIGHT_CYAN 0x26
+#define FEED_SCREEN_COLOR_BRIGHT_WHITE 0x27
+
+void
+feed_screen_color(
+    struct feed_screen * const
+        p_screen,
+    unsigned char const
+        i_foreground,
+    unsigned char const
+        i_background);
+
 /* end-of-file: feed_screen.h */
