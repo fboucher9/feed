@@ -124,28 +124,13 @@ FEED_LIBRARY_SRCS = \
     $(FEED_DST_PATH)/_obj_feed_page.o \
     $(FEED_DST_PATH)/_obj_feed.o
 
-FEED_TEST_SRCS = \
-    $(FEED_DST_PATH)/_obj_feed_os.o \
-    $(FEED_DST_PATH)/_obj_feed_main.o \
-    $(FEED_DST_PATH)/libfeed.a
-
 # Default target
 .PHONY: all
-all : testfeed libfeed
-
-# Test application
-.PHONY: testfeed
-testfeed: $(FEED_DST_PATH)/testfeed.exe
+all : libfeed
 
 # Library
 .PHONY: libfeed
 libfeed: $(FEED_DST_PATH)/libfeed.a $(FEED_DST_PATH)/libfeed.so
-
-# Link the target
-$(FEED_DST_PATH)/testfeed.exe : $(FEED_TEST_SRCS)
-	@echo linking $@
-	@echo -o $@ $(FEED_CFLAGS) $(FEED_TEST_SRCS) $(FEED_LDFLAGS) $(FEED_LIBS) > $(FEED_DST_PATH)/_obj_testfeed.cmd
-	@$(FEED_CC) @$(FEED_DST_PATH)/_obj_testfeed.cmd
 
 $(FEED_DST_PATH)/libfeed.a : $(FEED_LIBRARY_SRCS)
 	@echo creating $@
@@ -169,28 +154,13 @@ $(FEED_DST_PATH)/feed_os.h.gch : $(FEED_SRC_PATH)/feed_os.h
 	@$(FEED_CXX) -c -o $@.oxx $(FEED_CXXFLAGS) $(FEED_SRC_PATH)/feed_os.h
 	@$(FEED_CC) -c -o $@ $(FEED_CFLAGS) $(FEED_SRC_PATH)/feed_os.h
 
-# Indicate that all object files have dependency on precompiled header
-$(FEED_TEST_SRCS) : $(FEED_DST_PATH)/feed_os.h.gch
-
 # Indicate dependency on makefile
-$(FEED_DST_PATH)/testfeed.exe : $(FEED_SRC_PATH)/feed_project.mak
-
 $(FEED_DST_PATH)/libfeed.a : $(FEED_SRC_PATH)/feed_project.mak
 
+$(FEED_DST_PATH)/libfeed.so : $(FEED_SRC_PATH)/feed_project.mak
+
 # Indicate dependency on makefile
-$(FEED_TEST_SRCS): $(FEED_SRC_PATH)/feed_project.mak
-
 $(FEED_LIBRARY_SRCS) : $(FEED_SRC_PATH)/feed_project.mak
-
-# Clean temporary files
-.PHONY: clean
-clean :
-	-rm -f $(FEED_DST_PATH)/_obj_*
-	-rm -f $(FEED_DST_PATH)/feed_os.h.gch
-	-rm -f $(FEED_DST_PATH)/feed_os.h.gch.oxx
-	-rm -f $(FEED_DST_PATH)/testfeed.exe
-	-rm -f $(FEED_DST_PATH)/libfeed.a
-	-rm -f $(FEED_DST_PATH)/libfeed.so
 
 # Include header dependency files
 -include $(FEED_DST_PATH)/_obj_*.o.d
