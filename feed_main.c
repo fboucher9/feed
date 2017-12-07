@@ -213,7 +213,14 @@ feed_main_notify_callback(
         if (9 == p_data[0u])
         {
             unsigned long int
+                i_cursor_offset;
+
+            unsigned long int
                 i_total_length;
+
+            i_cursor_offset =
+                feed_cursor(
+                    p_feed_handle);
 
             i_total_length =
                 feed_length(
@@ -224,7 +231,7 @@ feed_main_notify_callback(
 
             feed_complete(
                 p_feed_handle,
-                2,
+                i_cursor_offset,
                 0);
 
             {
@@ -236,7 +243,7 @@ feed_main_notify_callback(
                     p_feed_handle,
                     s_suggest1,
                     sizeof(s_suggest1),
-                    1);
+                    i_cursor_offset + 1);
             }
 
             {
@@ -248,7 +255,7 @@ feed_main_notify_callback(
                     p_feed_handle,
                     s_suggest2,
                     sizeof(s_suggest2),
-                    4);
+                    i_cursor_offset + 3);
             }
         }
     }

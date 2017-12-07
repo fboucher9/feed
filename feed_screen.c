@@ -906,7 +906,7 @@ feed_screen_color(
                         p_attr[i_count ++] = 1;
                     }
 
-                    p_attr[i_count ++] = (unsigned char)(30u + (i_foreground & 15u));
+                    p_attr[i_count ++] = (unsigned char)(30u + (i_foreground & 7u));
                 }
             }
 
@@ -918,11 +918,11 @@ feed_screen_color(
                 }
                 else if (FEED_SCREEN_COLOR_BRIGHT_BLACK < i_background)
                 {
-                    p_attr[i_count ++] = (unsigned char)(40u + (i_background & 15u));
+                    p_attr[i_count ++] = (unsigned char)(40u + (i_background & 7u));
                 }
                 else
                 {
-                    p_attr[i_count ++] = (unsigned char)(100u + (i_background & 15u));
+                    p_attr[i_count ++] = (unsigned char)(100u + (i_background & 7u));
                 }
             }
         }

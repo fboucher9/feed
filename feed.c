@@ -1129,6 +1129,31 @@ feed_main_refresh_job(
                                     p_glyph,
                                     a_visible);
 
+                            if (o_iterator.e_state == feed_view_state_prompt)
+                            {
+                                feed_screen_color(
+                                    p_this->p_screen,
+                                    FEED_SCREEN_COLOR_DARK_YELLOW,
+                                    FEED_SCREEN_COLOR_DEFAULT);
+                            }
+                            else
+                            {
+                                if (p_this->b_suggest)
+                                {
+                                    feed_screen_color(
+                                        p_this->p_screen,
+                                        FEED_SCREEN_COLOR_DARK_GREEN,
+                                        FEED_SCREEN_COLOR_DEFAULT);
+                                }
+                                else
+                                {
+                                    feed_screen_color(
+                                        p_this->p_screen,
+                                        FEED_SCREEN_COLOR_DEFAULT,
+                                        FEED_SCREEN_COLOR_DEFAULT);
+                                }
+                            }
+
                             feed_screen_write(
                                 p_this->p_screen,
                                 a_visible,
@@ -2142,6 +2167,13 @@ feed_main_suggest_node(
                 p_this->p_suggest_node->p_buffer,
                 p_this->p_suggest_node->i_length);
         }
+
+        /* Move cursor */
+        feed_text_iterator_set_offset(
+            p_this->p_text,
+            &(
+                p_this->o_cursor),
+            p_this->p_suggest_node->i_cursor_offset);
     }
     else
     {
@@ -2217,6 +2249,9 @@ feed_main_suggest_exit(
 
     p_this->b_suggest =
         0;
+
+    p_this->b_refresh_text =
+        1;
 
 }
 

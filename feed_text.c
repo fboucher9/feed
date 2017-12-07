@@ -648,7 +648,7 @@ feed_text_offset_to_index(
 
     while (
         !b_result
-        && (i_line_index < p_text->i_line_count))
+        && (i_line_index < (p_text->i_line_count - 1u)))
     {
         struct feed_line *
             p_line;
@@ -690,6 +690,35 @@ feed_text_offset_to_index(
 
             p_line_iterator =
                 p_line_iterator->p_next;
+        }
+    }
+
+    if (!b_result
+        && (i_line_index < p_text->i_line_count))
+    {
+        struct feed_line *
+            p_line;
+
+        p_line =
+            (struct feed_line *)(
+                p_line_iterator);
+
+        if (
+            feed_line_offset_to_index(
+                p_line,
+                (i_offset - i_raw_iterator),
+                &(i_glyph_index)))
+        {
+            *(
+                p_line_index) =
+                i_line_index;
+
+            *(
+                p_glyph_index) =
+                i_glyph_index;
+
+            b_result =
+                1;
         }
     }
 

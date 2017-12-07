@@ -127,7 +127,7 @@ FEED_LIBRARY_SRCS = \
 FEED_TEST_SRCS = \
     $(FEED_DST_PATH)/_obj_feed_os.o \
     $(FEED_DST_PATH)/_obj_feed_main.o \
-    $(FEED_DST_PATH)/libfeed.so
+    $(FEED_DST_PATH)/libfeed.a
 
 # Default target
 .PHONY: all
