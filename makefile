@@ -16,5 +16,3 @@ endif
 include $(FEED_SRC_PATH)/feed_project.mak
 
 include $(FEED_SRC_PATH)/feed_test.mak
-
-include $(FEED_SRC_PATH)/feed_clean.mak

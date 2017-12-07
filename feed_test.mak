@@ -39,3 +39,10 @@ $(FEED_TEST_SRCS): \
     $(FEED_SRC_PATH)/feed_project.mak \
     $(FEED_SRC_PATH)/feed_test.mak
 
+.PHONY: clean
+clean: feed_test_clean
+
+.PHONY: feed_test_clean
+feed_test_clean:
+	-rm -f $(FEED_TEST_SRCS)
+	-rm -f $(FEED_DST_PATH)/testfeed.exe

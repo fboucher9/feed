@@ -2354,7 +2354,9 @@ feed_main_event_callback(
                     1;
             }
             else if (((FEED_EVENT_KEY_FLAG | FEED_KEY_UP) == p_event->i_code)
-                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'I') == p_event->i_code))
+                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'P') == p_event->i_code)
+                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'I') == p_event->i_code)
+                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_ALT | '.') == p_event->i_code))
             {
                 feed_main_suggest_next(
                     p_this);
@@ -2363,7 +2365,9 @@ feed_main_event_callback(
                     1;
             }
             else if (((FEED_EVENT_KEY_FLAG | FEED_KEY_DOWN) == p_event->i_code)
-                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_SHIFT | 'I') == p_event->i_code))
+                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'N') == p_event->i_code)
+                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_SHIFT | 'I') == p_event->i_code)
+                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_ALT | ',') == p_event->i_code))
             {
                 feed_main_suggest_prev(
                     p_this);

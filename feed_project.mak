@@ -162,5 +162,17 @@ $(FEED_DST_PATH)/libfeed.so : $(FEED_SRC_PATH)/feed_project.mak
 # Indicate dependency on makefile
 $(FEED_LIBRARY_SRCS) : $(FEED_SRC_PATH)/feed_project.mak
 
+# Cleanup of temporary files
+.PHONY: clean
+clean : feed_library_clean
+
+.PHONY: feed_library_clean
+feed_library_clean:
+	-rm -f $(FEED_DST_PATH)/_obj_*
+	-rm -f $(FEED_DST_PATH)/feed_os.h.gch
+	-rm -f $(FEED_DST_PATH)/feed_os.h.gch.oxx
+	-rm -f $(FEED_DST_PATH)/libfeed.a
+	-rm -f $(FEED_DST_PATH)/libfeed.so
+
 # Include header dependency files
 -include $(FEED_DST_PATH)/_obj_*.o.d
