@@ -1098,6 +1098,11 @@ feed_main_refresh_job(
                         if (
                             '\n' == p_glyph->o_utf8_code.a_raw[0u])
                         {
+                            feed_screen_color(
+                                p_this->p_screen,
+                                feed_color_default,
+                                feed_color_default);
+
                             feed_screen_newline(
                                 p_this->p_screen);
                         }
@@ -1123,6 +1128,11 @@ feed_main_refresh_job(
                                 a_visible,
                                 ' ',
                                 i_visible_length);
+
+                            feed_screen_color(
+                                p_this->p_screen,
+                                feed_color_default,
+                                feed_color_default);
 
                             feed_screen_write(
                                 p_this->p_screen,
@@ -1181,6 +1191,21 @@ feed_main_refresh_job(
                                     e_syntax =
                                         feed_syntax_suggest;
                                 }
+                                else
+                                {
+                                    /* Try to determine the syntax */
+                                    if (p_glyph->o_utf8_code.i_raw_len)
+                                    {
+                                        if (('+' == p_glyph->o_utf8_code.a_raw[0u])
+                                            || (';' == p_glyph->o_utf8_code.a_raw[0u])
+                                            || ('|' == p_glyph->o_utf8_code.a_raw[0u]))
+                                        {
+                                            e_syntax =
+                                                feed_syntax_operator;
+                                        }
+                                    }
+
+                                }
                             }
 
                             feed_theme_get(
@@ -1205,6 +1230,11 @@ feed_main_refresh_job(
                     }
                     else
                     {
+                        feed_screen_color(
+                            p_this->p_screen,
+                            feed_color_default,
+                            feed_color_default);
+
                         feed_screen_clear_region(
                             p_this->p_screen);
                     }

@@ -515,6 +515,12 @@ feed_main(
                 feed_syntax_prompt2,
                 feed_color_dark_magenta,
                 feed_color_default);
+
+            feed_theme(
+                p_feed_handle,
+                feed_syntax_operator,
+                feed_color_dark_black,
+                feed_color_dark_white);
         }
 
         feed_start(
