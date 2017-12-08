@@ -502,6 +502,21 @@ feed_main(
             }
         }
 
+        /* Setup of color theme */
+        {
+            feed_theme(
+                p_feed_handle,
+                feed_syntax_prompt1,
+                feed_color_dark_yellow,
+                feed_color_default);
+
+            feed_theme(
+                p_feed_handle,
+                feed_syntax_prompt2,
+                feed_color_dark_magenta,
+                feed_color_default);
+        }
+
         feed_start(
             p_feed_handle);
 

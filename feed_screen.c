@@ -10,6 +10,8 @@ Description:
 
 #include "feed_os.h"
 
+#include "feed.h"
+
 #include "feed_screen.h"
 
 #include "feed_client.h"
@@ -51,19 +53,14 @@ struct feed_screen
     unsigned int
         i_region_cy;
 
-    unsigned int
-        ui_padding[3u];
-
-    /* -- */
-
-    unsigned char
+    enum feed_color
         i_foreground;
 
-    unsigned char
+    enum feed_color
         i_background;
 
-    unsigned char
-        uc_padding[6u];
+    unsigned int
+        ui_padding[1u];
 
 }; /* struct feed_screen */
 
@@ -263,10 +260,10 @@ feed_screen_init(
         0u;
 
     p_screen->i_foreground =
-        0u;
+        feed_color_default;
 
     p_screen->i_background =
-        0u;
+        feed_color_default;
 
     return
         1;
@@ -754,8 +751,8 @@ feed_screen_leave(
 
             feed_screen_color(
                 p_screen,
-                FEED_SCREEN_COLOR_DEFAULT,
-                FEED_SCREEN_COLOR_DEFAULT);
+                feed_color_default,
+                feed_color_default);
 
             feed_tty_flush(
                 p_screen->p_tty);
@@ -875,9 +872,9 @@ void
 feed_screen_color(
     struct feed_screen * const
         p_screen,
-    unsigned char const
+    enum feed_color const
         i_foreground,
-    unsigned char const
+    enum feed_color const
         i_background)
 {
     if ((i_foreground != p_screen->i_foreground)
@@ -895,34 +892,35 @@ feed_screen_color(
         {
             if (i_foreground != p_screen->i_foreground)
             {
-                if (FEED_SCREEN_COLOR_DEFAULT == i_foreground)
+                if (feed_color_default == i_foreground)
                 {
                     p_attr[i_count ++] = 39u;
                 }
+                else if (feed_color_bright_black > i_foreground)
+                {
+                    p_attr[i_count ++] = (unsigned char)(30u + i_foreground - feed_color_dark_black);
+                }
                 else
                 {
-                    if (FEED_SCREEN_COLOR_BRIGHT_BLACK <= i_foreground)
-                    {
-                        p_attr[i_count ++] = 1;
-                    }
+                    p_attr[i_count ++] = 1;
 
-                    p_attr[i_count ++] = (unsigned char)(30u + (i_foreground & 7u));
+                    p_attr[i_count ++] = (unsigned char)(30u + i_foreground - feed_color_bright_black);
                 }
             }
 
             if (i_background != p_screen->i_background)
             {
-                if (FEED_SCREEN_COLOR_DEFAULT == i_background)
+                if (feed_color_default == i_background)
                 {
                     p_attr[i_count ++] = 49u;
                 }
-                else if (FEED_SCREEN_COLOR_BRIGHT_BLACK < i_background)
+                else if (feed_color_bright_black > i_background)
                 {
-                    p_attr[i_count ++] = (unsigned char)(40u + (i_background & 7u));
+                    p_attr[i_count ++] = (unsigned char)(40u + i_background - feed_color_dark_black);
                 }
                 else
                 {
-                    p_attr[i_count ++] = (unsigned char)(100u + (i_background & 7u));
+                    p_attr[i_count ++] = (unsigned char)(100u + (i_background - feed_color_bright_black));
                 }
             }
         }

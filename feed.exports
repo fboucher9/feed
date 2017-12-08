@@ -14,6 +14,7 @@
         feed_consume;
         feed_cursor;
         feed_exec;
+        feed_theme;
     local:
         *;
 };

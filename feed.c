@@ -56,6 +56,8 @@ Description:
 
 #include "feed_page.h"
 
+#include "feed_theme.h"
+
 struct feed_handle
 {
     /* -- */
@@ -117,6 +119,9 @@ struct feed_handle
 
     struct feed_page_history
         o_page_history;
+
+    struct feed_color_list
+        o_color_list;
 
     /* -- */
 
@@ -261,6 +266,10 @@ feed_init(
             p_this->o_page_history),
         p_this->p_client);
 
+    feed_theme_init(
+        &(
+            p_this->o_color_list));
+
     b_result =
         1;
 
@@ -275,6 +284,10 @@ feed_cleanup(
     struct feed_handle * const
         p_this)
 {
+    feed_theme_cleanup(
+        &(
+            p_this->o_color_list));
+
     feed_page_cleanup(
         &(
             p_this->o_page_history));
@@ -1124,35 +1137,65 @@ feed_main_refresh_job(
                             unsigned char
                                 i_visible_length;
 
+                            enum feed_color
+                                i_foreground;
+
+                            enum feed_color
+                                i_background;
+
+                            enum feed_syntax
+                                e_syntax;
+
                             i_visible_length =
                                 feed_glyph_render_visible(
                                     p_glyph,
                                     a_visible);
 
+                            i_foreground =
+                                feed_color_default;
+
+                            i_background =
+                                feed_color_default;
+
+                            e_syntax =
+                                feed_syntax_default;
+
                             if (o_iterator.e_state == feed_view_state_prompt)
                             {
-                                feed_screen_color(
-                                    p_this->p_screen,
-                                    FEED_SCREEN_COLOR_DARK_YELLOW,
-                                    FEED_SCREEN_COLOR_DEFAULT);
+                                if (
+                                    0u == o_iterator.o_text_iterator.i_line_index)
+                                {
+                                    e_syntax =
+                                        feed_syntax_prompt1;
+                                }
+                                else
+                                {
+                                    e_syntax =
+                                        feed_syntax_prompt2;
+                                }
                             }
                             else
                             {
                                 if (p_this->b_suggest)
                                 {
-                                    feed_screen_color(
-                                        p_this->p_screen,
-                                        FEED_SCREEN_COLOR_DARK_GREEN,
-                                        FEED_SCREEN_COLOR_DEFAULT);
-                                }
-                                else
-                                {
-                                    feed_screen_color(
-                                        p_this->p_screen,
-                                        FEED_SCREEN_COLOR_DEFAULT,
-                                        FEED_SCREEN_COLOR_DEFAULT);
+                                    e_syntax =
+                                        feed_syntax_suggest;
                                 }
                             }
+
+                            feed_theme_get(
+                                &(
+                                    p_this->o_color_list),
+                                e_syntax,
+                                &(
+                                    i_foreground),
+                                &(
+                                    i_background));
+
+                            feed_screen_color(
+                                p_this->p_screen,
+                                i_foreground,
+                                i_background);
 
                             feed_screen_write(
                                 p_this->p_screen,
@@ -3173,5 +3216,42 @@ feed_exec(
         i_result;
 
 } /* feed_exec() */
+
+/* Define color theme */
+int
+feed_theme(
+    struct feed_handle * const
+        p_this,
+    enum feed_syntax const
+        e_syntax,
+    enum feed_color const
+        i_foreground,
+    enum feed_color const
+        i_background)
+{
+    int
+        i_result;
+
+    if (
+        feed_theme_set(
+            &(
+                p_this->o_color_list),
+            e_syntax,
+            i_foreground,
+            i_background))
+    {
+        i_result =
+            0;
+    }
+    else
+    {
+        i_result =
+            -1;
+    }
+
+    return
+        i_result;
+
+} /* feed_theme() */
 
 /* end-of-file: feed.c */

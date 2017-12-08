@@ -36,6 +36,45 @@ struct feed_descriptor
 
 }; /* struct feed_descriptor */
 
+/* Define colors */
+enum feed_color
+{
+    feed_color_default = 0,
+    feed_color_dark_black,
+    feed_color_dark_red,
+    feed_color_dark_green,
+    feed_color_dark_yellow,
+    feed_color_dark_blue,
+    feed_color_dark_magenta,
+    feed_color_dark_cyan,
+    feed_color_dark_white,
+    feed_color_bright_black,
+    feed_color_bright_red,
+    feed_color_bright_green,
+    feed_color_bright_yellow,
+    feed_color_bright_blue,
+    feed_color_bright_magenta,
+    feed_color_bright_cyan,
+    feed_color_bright_white
+};
+
+/* Define syntax groups */
+enum feed_syntax
+{
+    feed_syntax_default = 0,
+    feed_syntax_prompt1,
+    feed_syntax_prompt2,
+    feed_syntax_suggest,
+    feed_syntax_operator,
+    feed_syntax_number,
+    feed_syntax_string,
+    feed_syntax_keyword,
+    feed_syntax_comment,
+    feed_syntax_preprocessor,
+    feed_syntax_escape,
+    feed_syntax_special
+};
+
 #if defined(__cplusplus)
 extern "C" {
 #endif /* #if defined(__cplusplus) */
@@ -112,6 +151,13 @@ int feed_exec(
     struct feed_handle * const p_feed_handle,
     unsigned char const * const p_data,
     unsigned long int const i_data_length);
+
+/* Define color theme */
+int feed_theme(
+    struct feed_handle * const p_feed_handle,
+    enum feed_syntax const e_syntax,
+    enum feed_color const i_foreground,
+    enum feed_color const i_background);
 
 #if defined(__cplusplus)
 } /* extern "C" */
