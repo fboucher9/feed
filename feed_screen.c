@@ -26,6 +26,19 @@ Description:
 
 #include "feed_screen_info.h"
 
+struct feed_screen_descriptor
+{
+    unsigned short int
+        i_max_screen_width;
+
+    unsigned short int
+        i_max_screen_height;
+
+    unsigned short int
+        us_padding[2u];
+
+}; /* struct feed_screen_descriptor */
+
 struct feed_screen
 {
     struct feed_client *
@@ -61,6 +74,11 @@ struct feed_screen
 
     unsigned int
         ui_padding[1u];
+
+    /* -- */
+
+    struct feed_screen_descriptor
+        o_descriptor;
 
 }; /* struct feed_screen */
 
@@ -224,12 +242,16 @@ feed_screen_init(
     struct feed_screen *
         p_screen;
 
+    struct feed_screen_descriptor const *
+        p_screen_descriptor;
+
     p_screen =
         (struct feed_screen *)(
             p_buf);
 
-    (void)(
-        p_descriptor);
+    p_screen_descriptor =
+        (struct feed_screen_descriptor const *)(
+            p_descriptor);
 
     memset(
         p_screen,
@@ -264,6 +286,10 @@ feed_screen_init(
 
     p_screen->i_background =
         feed_color_default;
+
+    p_screen->o_descriptor =
+        *(
+            p_screen_descriptor);
 
     return
         1;
@@ -312,8 +338,21 @@ feed_screen_cleanup(
 struct feed_screen *
 feed_screen_create(
     struct feed_client * const
-        p_client)
+        p_client,
+    unsigned short int const
+        i_max_screen_width,
+    unsigned short int const
+        i_max_screen_height)
 {
+    struct feed_screen_descriptor
+        o_descriptor;
+
+    o_descriptor.i_max_screen_width =
+        i_max_screen_width;
+
+    o_descriptor.i_max_screen_height =
+        i_max_screen_height;
+
     return
         (struct feed_screen *)(
             feed_object_create(
@@ -322,7 +361,8 @@ feed_screen_create(
                     struct feed_screen),
                 &(
                     feed_screen_init),
-                NULL));
+                &(
+                    o_descriptor)));
 
 } /* feed_screen_create() */
 
@@ -804,17 +844,21 @@ feed_screen_update_info(
                 /* Todo: detect screen size change and invalidate current
                 page information */
 
-#if 0
-                if (i_screen_height > 13u)
+                if (p_screen->o_descriptor.i_max_screen_height)
                 {
-                    i_screen_height = 13u;
+                    if (i_screen_height > p_screen->o_descriptor.i_max_screen_height)
+                    {
+                        i_screen_height = p_screen->o_descriptor.i_max_screen_height;
+                    }
                 }
 
-                if (i_screen_width > 50u)
+                if (p_screen->o_descriptor.i_max_screen_width)
                 {
-                    i_screen_width = 50u;
+                    if (i_screen_width > p_screen->o_descriptor.i_max_screen_width)
+                    {
+                        i_screen_width = p_screen->o_descriptor.i_max_screen_width;
+                    }
                 }
-#endif
 
                 if (
                     p_screen_info)

@@ -379,6 +379,12 @@ feed_main(
             o_feed_descriptor.p_notify =
                 &(
                     feed_main_notify_callback);
+
+            o_feed_descriptor.i_max_screen_width =
+                0;
+
+            o_feed_descriptor.i_max_screen_height =
+                0;
         }
 
         p_feed_handle =

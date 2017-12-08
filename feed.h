@@ -34,6 +34,14 @@ struct feed_descriptor
     /* application context for callbacks */
     void * p_context;
 
+    /* Option for maximum screen width */
+    unsigned short int i_max_screen_width;
+
+    /* Option for maximum screen height */
+    unsigned short int i_max_screen_height;
+
+    unsigned short int us_padding[2u];
+
 }; /* struct feed_descriptor */
 
 /* Define colors */
@@ -72,7 +80,8 @@ enum feed_syntax
     feed_syntax_comment,
     feed_syntax_preprocessor,
     feed_syntax_escape,
-    feed_syntax_special
+    feed_syntax_special,
+    feed_syntax_whitespace
 };
 
 #if defined(__cplusplus)

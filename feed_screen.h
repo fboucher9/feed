@@ -47,7 +47,11 @@ struct feed_screen;
 struct feed_screen *
 feed_screen_create(
     struct feed_client * const
-        p_client);
+        p_client,
+    unsigned short int const
+        i_max_screen_width,
+    unsigned short int const
+        i_max_screen_height);
 
 void
 feed_screen_destroy(

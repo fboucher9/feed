@@ -235,7 +235,9 @@ feed_init(
 
     p_this->p_screen =
         feed_screen_create(
-            p_this->p_client);
+            p_this->p_client,
+            p_this->o_descriptor.i_max_screen_width,
+            p_this->o_descriptor.i_max_screen_height);
 
     p_this->p_text =
         feed_text_create(
@@ -1204,7 +1206,6 @@ feed_main_refresh_job(
                                                 feed_syntax_operator;
                                         }
                                     }
-
                                 }
                             }
 
