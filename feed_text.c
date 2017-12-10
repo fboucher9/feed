@@ -771,7 +771,7 @@ feed_text_consume(
                         feed_buf_write_character_array(
                             p_buf,
                             p_glyph->o_utf8_code.a_raw,
-                            p_glyph->o_utf8_code.i_raw_len))
+                            p_glyph->o_utf8_code.a_raw + p_glyph->o_utf8_code.i_raw_len))
                     {
                         feed_line_remove_glyph(
                             p_line,

@@ -97,9 +97,9 @@ feed_screen_write(
     struct feed_screen * const
         p_screen,
     unsigned char const * const
-        p_data,
-    unsigned int const
-        i_count);
+        p_data_min,
+    unsigned char const * const
+        p_data_max);
 
 void
 feed_screen_clear_region(

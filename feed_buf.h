@@ -21,19 +21,10 @@ Description:
 struct feed_buf
 {
     unsigned char *
-        p_buf;
+        p_buf_min;
 
-    void *
-        v_padding[1u];
-
-    unsigned long int
-        i_max_len;
-
-    unsigned long int
-        i_len;
-
-    unsigned int
-        i_padding[2u];
+    unsigned char *
+        p_buf_max;
 
 }; /* struct feed_buf */
 
@@ -44,9 +35,9 @@ feed_buf_init(
     struct feed_buf * const
         p_this,
     unsigned char * const
-        p_buf,
-    unsigned long int const
-        i_max_len);
+        p_buf_min,
+    unsigned char * const
+        p_buf_max);
 
 void
 feed_buf_cleanup(
@@ -65,22 +56,62 @@ feed_buf_write_character_array(
     struct feed_buf * const
         p_this,
     unsigned char const * const
-        p_buf,
-    unsigned int const
-        i_buf_len);
+        p_data_min,
+    unsigned char const * const
+        p_data_max);
 
 char
 feed_buf_write_number(
     struct feed_buf * const
-        p_buf,
+        p_this,
     signed long int const
         i_data);
 
 char
 feed_buf_write_unicode_character(
     struct feed_buf * const
-        p_buf,
+        p_this,
     unsigned long int const
         i_code);
+
+struct feed_buf_const
+{
+    unsigned char const *
+        p_buf_min;
+
+    unsigned char const *
+        p_buf_max;
+
+}; /* struct feed_buf_const */
+
+char
+feed_buf_const_init(
+    struct feed_buf_const * const
+        p_this,
+    unsigned char const * const
+        p_buf_min,
+    unsigned char const * const
+        p_buf_max);
+
+void
+feed_buf_const_cleanup(
+    struct feed_buf_const * const
+        p_this);
+
+char
+feed_buf_const_read_character(
+    struct feed_buf_const * const
+        p_this,
+    unsigned char * const
+        p_data);
+
+char
+feed_buf_const_read_character_array(
+    struct feed_buf_const * const
+        p_this,
+    unsigned char * const
+        p_data_min,
+    unsigned char * const
+        p_data_max);
 
 /* end-of-file: feed_buf.h */

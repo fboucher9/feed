@@ -650,43 +650,47 @@ feed_tty_write_character(
 }
 
 char
-feed_tty_write_character_array(
+feed_tty_write_character_buf(
     struct feed_tty * const
         p_tty,
-    unsigned char const * const
-        p_buf,
-    unsigned long int const
-        i_buf_len)
+    struct feed_buf_const * const
+        p_buf)
 {
     char
         b_result;
 
-    unsigned int
-        i_index;
+    struct feed_buf_const
+        o_buf_read;
+
+    unsigned char
+        c_data;
 
     b_result =
         1;
 
-    i_index =
-        0u;
+    feed_buf_const_init(
+        &(
+            o_buf_read),
+        p_buf->p_buf_min,
+        p_buf->p_buf_max);
 
     while (
         b_result
-        && (
-            i_index
-            < i_buf_len))
+        && feed_buf_const_read_character(
+            &(
+                o_buf_read),
+            &(
+                c_data)))
     {
         b_result =
             feed_tty_write_character(
                 p_tty,
-                p_buf[i_index]);
-
-        if (
-            b_result)
-        {
-            i_index ++;
-        }
+                c_data);
     }
+
+    feed_buf_const_cleanup(
+        &(
+            o_buf_read));
 
     return
         b_result;
@@ -694,15 +698,57 @@ feed_tty_write_character_array(
 }
 
 char
+feed_tty_write_character_array(
+    struct feed_tty * const
+        p_tty,
+    unsigned char const * const
+        p_buf_min,
+    unsigned char const * const
+        p_buf_max)
+{
+    char
+        b_result;
+
+    unsigned char const *
+        p_buf_iterator;
+
+    unsigned char
+        c_data;
+
+    b_result =
+        1;
+
+    p_buf_iterator =
+        p_buf_min;
+
+    while (
+        b_result
+        && (p_buf_iterator < p_buf_max))
+    {
+        c_data =
+            *(
+                p_buf_iterator);
+
+        p_buf_iterator ++;
+
+        b_result =
+            feed_tty_write_character(
+                p_tty,
+                c_data);
+    }
+
+    return
+        b_result;
+
+}
+
+
+char
 feed_tty_read_unicode_character(
     struct feed_tty * const
         p_tty,
-    unsigned char * const
+    struct feed_buf * const
         p_buf,
-    unsigned int const
-        i_buf_len,
-    unsigned int * const
-        p_actual_len,
     unsigned long int * const
         p_value)
 {
@@ -710,22 +756,10 @@ feed_tty_read_unicode_character(
         b_result;
 
     unsigned char
-        a_bytes[4u];
-
-    unsigned int
-        i_count;
-
-    unsigned int
-        i_index;
+        c_data;
 
     unsigned long int
         i_value;
-
-    i_count =
-        1u;
-
-    i_index =
-        0u;
 
     i_value =
         0ul;
@@ -734,81 +768,119 @@ feed_tty_read_unicode_character(
     b_result =
         feed_tty_read_character(
             p_tty,
-            a_bytes + i_index);
+            &(
+                c_data));
 
     if (
         b_result)
     {
-        i_index ++;
-
-        if (
-            0x00u == (a_bytes[0u] & 0x80u))
-        {
-            i_value = (a_bytes[0u] & 0x7Fu);
-
-            i_count =
-                1u;
-        }
-        else if (
-                0xC0u == (a_bytes[0u] & 0xE0u))
-        {
-            i_value = (a_bytes[0u] & 0x1Fu);
-
-            i_count =
-                2u;
-        }
-        else if (
-            0xE0u == (a_bytes[0u] & 0xF0u))
-        {
-            i_value = (a_bytes[0u] & 0x0Fu);
-
-            i_count =
-                3u;
-        }
-        else if (
-            0xF0u == (a_bytes[0u] & 0xF8u))
-        {
-            i_value = (a_bytes[0u] & 0x07u);
-
-            i_count =
-                4u;
-        }
-        else
-        {
-            /* is this an error? */
-
-            i_value = (a_bytes[0u]);
-
-            i_count =
-                1u;
-        }
+        b_result =
+            feed_buf_write_character(
+                p_buf,
+                c_data);
 
         if (
             b_result)
         {
-            while (
-                b_result
-                && (
-                    i_index < i_count))
+            unsigned char
+                i_count;
+
+            if (
+                0x00u == (c_data & 0x80u))
             {
-                b_result =
-                    feed_tty_read_character(
-                        p_tty,
-                        a_bytes + i_index);
+                i_value = (c_data & 0x7Fu);
 
-                if (
-                    b_result)
+                i_count =
+                    1u;
+            }
+            else if (
+                    0xC0u == (c_data & 0xE0u))
+            {
+                i_value = (c_data & 0x1Fu);
+
+                i_count =
+                    2u;
+            }
+            else if (
+                0xE0u == (c_data & 0xF0u))
+            {
+                i_value = (c_data & 0x0Fu);
+
+                i_count =
+                    3u;
+            }
+            else if (
+                0xF0u == (c_data & 0xF8u))
+            {
+                i_value = (c_data & 0x07u);
+
+                i_count =
+                    4u;
+            }
+            else if (
+                0xF8u == (c_data & 0xFCu))
+            {
+                i_value = (c_data & 0x03u);
+
+                i_count =
+                    5u;
+            }
+            else if (
+                0xFCu == (c_data & 0xFEu))
+            {
+                i_value = (c_data & 0x01u);
+
+                i_count =
+                    6u;
+            }
+            else
+            {
+                /* is this an error? */
+
+                i_value = (c_data);
+
+                i_count =
+                    1u;
+            }
+
+            if (
+                b_result)
+            {
+                i_count --;
+
+                while (
+                    b_result
+                    && i_count)
                 {
-                    if (0x80u == (a_bytes[i_index] & 0xC0u))
-                    {
-                        i_value = (i_value << 6u) | (a_bytes[i_index] & 0x3Fu);
+                    b_result =
+                        feed_tty_read_character(
+                            p_tty,
+                            &(
+                                c_data));
 
-                        i_index ++;
-                    }
-                    else
+                    if (
+                        b_result)
                     {
                         b_result =
-                            0;
+                            feed_buf_write_character(
+                                p_buf,
+                                c_data);
+
+                        if (
+                            b_result)
+                        {
+                            if (0x80u == (c_data & 0xC0u))
+                            {
+                                i_value = (i_value << 6u) | (c_data & 0x3Fu);
+                            }
+                            else
+                            {
+                                b_result =
+                                    0;
+                            }
+
+                            i_count --;
+                        }
                     }
                 }
             }
@@ -818,33 +890,9 @@ feed_tty_read_unicode_character(
     if (
         b_result)
     {
-        if (
-            i_count <= i_buf_len)
-        {
-            i_index =
-                0u;
-
-            while (
-                i_index < i_count)
-            {
-                p_buf[i_index] = a_bytes[i_index];
-
-                i_index ++;
-            }
-
-            *(
-                p_actual_len) =
-                i_count;
-
-            *(
-                p_value) =
-                i_value;
-        }
-        else
-        {
-            b_result =
-                0;
-        }
+        *(
+            p_value) =
+            i_value;
     }
 
     return
@@ -856,12 +904,8 @@ char
 feed_tty_read_escape_sequence(
     struct feed_tty * const
         p_tty,
-    unsigned char * const
-        p_buf,
-    unsigned int const
-        i_buf_len,
-    unsigned int * const
-        p_actual_len)
+    struct feed_buf * const
+        p_buf)
 {
     /* ESC alpha */
     /* ESC [ digit ; digit alpha */
@@ -870,34 +914,19 @@ feed_tty_read_escape_sequence(
     char
         b_result;
 
-    unsigned int
-        i_char_len;
-
-    unsigned int
-        i_buf_iterator;
-
     unsigned long int
         i_value;
-
-    i_buf_iterator =
-        0u;
 
     b_result =
         feed_tty_read_unicode_character(
             p_tty,
-            p_buf + i_buf_iterator,
-            i_buf_len - i_buf_iterator,
-            &(
-                i_char_len),
+            p_buf,
             &(
                 i_value));
 
     if (
         b_result)
     {
-        i_buf_iterator +=
-            i_char_len;
-
         if (
             FEED_ESC_CHAR == i_value)
         {
@@ -905,19 +934,13 @@ feed_tty_read_escape_sequence(
             b_result =
                 feed_tty_read_unicode_character(
                     p_tty,
-                    p_buf + i_buf_iterator,
-                    i_buf_len - i_buf_iterator,
-                    &(
-                        i_char_len),
+                    p_buf,
                     &(
                         i_value));
 
             if (
                 b_result)
             {
-                i_buf_iterator +=
-                    i_char_len;
-
                 if (
                     '[' == i_value)
                 {
@@ -935,19 +958,13 @@ feed_tty_read_escape_sequence(
                         b_result =
                             feed_tty_read_unicode_character(
                                 p_tty,
-                                p_buf + i_buf_iterator,
-                                i_buf_len - i_buf_iterator,
-                                &(
-                                    i_char_len),
+                                p_buf,
                                 &(
                                     i_value));
 
                         if (
                             b_result)
                         {
-                            i_buf_iterator +=
-                                i_char_len;
-
                             if (
                                 (
                                     i_value >= 0x30)
@@ -990,33 +1007,15 @@ feed_tty_read_escape_sequence(
                     b_result =
                         feed_tty_read_unicode_character(
                             p_tty,
-                            p_buf + i_buf_iterator,
-                            i_buf_len - i_buf_iterator,
-                            &(
-                                i_char_len),
+                            p_buf,
                             &(
                                 i_value));
-
-                    if (
-                        b_result)
-                    {
-                        i_buf_iterator +=
-                            i_char_len;
-                    }
                 }
             }
         }
         else
         {
         }
-    }
-
-    if (
-        b_result)
-    {
-        *(
-            p_actual_len) =
-            i_buf_iterator;
     }
 
     return
@@ -1045,9 +1044,6 @@ feed_tty_get_cursor_position(
     int
         i_result;
 
-    unsigned char
-        a_buf[32u];
-
     static unsigned char const g_escape_report_cursor_location [] =
     {
         FEED_ESC_CHAR,
@@ -1060,30 +1056,39 @@ feed_tty_get_cursor_position(
         feed_tty_write_character_array(
             p_tty,
             g_escape_report_cursor_location,
-            sizeof(
-                g_escape_report_cursor_location));
+            g_escape_report_cursor_location + sizeof(g_escape_report_cursor_location));
 
     if (
         b_result)
     {
-        unsigned int
-            i;
+        struct feed_buf
+            o_buf_write;
 
-        i =
-            0;
+        unsigned char
+            a_buf[32u];
+
+        feed_buf_init(
+            &(
+                o_buf_write),
+            a_buf,
+            a_buf + sizeof(a_buf));
 
         b_result =
             feed_tty_read_escape_sequence(
                 p_tty,
-                a_buf,
-                sizeof(
-                    a_buf),
                 &(
-                    i));
+                    o_buf_write));
 
         if (
             b_result)
         {
+            unsigned int
+                i;
+
+            i =
+                (unsigned int)(
+                    o_buf_write.p_buf_min - a_buf);
+
             if (i >= 4)
             {
                 if (
@@ -1174,13 +1179,14 @@ feed_tty_set_cursor_position(
         a_buf[32u];
 
     struct feed_buf
-        o_buf;
+        o_buf_write;
 
     b_result =
         feed_buf_init(
             &(
-                o_buf),
+                o_buf_write),
             a_buf,
+            a_buf +
             sizeof(
                 a_buf));
 
@@ -1190,23 +1196,41 @@ feed_tty_set_cursor_position(
         b_result =
             feed_esc_write_cup(
                 &(
-                    o_buf),
+                    o_buf_write),
                 i_row,
                 i_col);
 
         if (
             b_result)
         {
+            struct feed_buf_const
+                o_buf_read;
+
             b_result =
-                feed_tty_write_character_array(
-                    p_tty,
-                    o_buf.p_buf,
-                    o_buf.i_len);
+                feed_buf_const_init(
+                    &(
+                        o_buf_read),
+                    a_buf,
+                    o_buf_write.p_buf_min);
+
+            if (
+                b_result)
+            {
+                b_result =
+                    feed_tty_write_character_buf(
+                        p_tty,
+                        &(
+                            o_buf_read));
+
+                feed_buf_const_cleanup(
+                    &(
+                        o_buf_read));
+            }
         }
 
         feed_buf_cleanup(
             &(
-                o_buf));
+                o_buf_write));
     }
 
     return
@@ -1246,7 +1270,8 @@ feed_tty_move_cursor(
             &(
                 o_buf),
             a_buf,
-            sizeof(
+            a_buf
+            + sizeof(
                 a_buf));
 
     if (b_result)
@@ -1292,11 +1317,29 @@ feed_tty_move_cursor(
         if (
             b_result)
         {
+            struct feed_buf_const
+                o_buf_read;
+
             b_result =
-                feed_tty_write_character_array(
-                    p_tty,
-                    o_buf.p_buf,
-                    o_buf.i_len);
+                feed_buf_const_init(
+                    &(
+                        o_buf_read),
+                    a_buf,
+                    o_buf.p_buf_min);
+
+            if (
+                b_result)
+            {
+                b_result =
+                    feed_tty_write_character_buf(
+                        p_tty,
+                        &(
+                            o_buf_read));
+
+                feed_buf_const_cleanup(
+                    &(
+                        o_buf_read));
+            }
         }
 
         feed_buf_cleanup(
@@ -1513,7 +1556,7 @@ feed_tty_clear(
         a_buf[64u];
 
     struct feed_buf
-        o_buf;
+        o_buf_write;
 
     (void)(
         p_tty);
@@ -1521,9 +1564,10 @@ feed_tty_clear(
     b_result =
         feed_buf_init(
             &(
-                o_buf),
+                o_buf_write),
             a_buf,
-            sizeof(
+            a_buf
+            + sizeof(
                 a_buf));
 
     if (
@@ -1532,18 +1576,40 @@ feed_tty_clear(
         b_result =
             feed_esc_write_ed(
                 &(
-                    o_buf),
+                    o_buf_write),
                 i_count);
 
         if (
             b_result)
         {
+            struct feed_buf_const
+                o_buf_read;
+
             b_result =
-                feed_tty_write_character_array(
-                    p_tty,
-                    o_buf.p_buf,
-                    o_buf.i_len);
+                feed_buf_const_init(
+                    &(
+                        o_buf_read),
+                    a_buf,
+                    o_buf_write.p_buf_min);
+
+            if (
+                b_result)
+            {
+                b_result =
+                    feed_tty_write_character_buf(
+                        p_tty,
+                        &(
+                            o_buf_read));
+
+                feed_buf_const_cleanup(
+                    &(
+                        o_buf_read));
+            }
         }
+
+        feed_buf_cleanup(
+            &(
+                o_buf_write));
     }
 
     return
@@ -1608,6 +1674,9 @@ feed_tty_line_wrap(
     unsigned char
         a_buf[4u];
 
+    struct feed_buf_const
+        o_buf_read;
+
     a_buf[0u] =
         FEED_ESC_CHAR;
 
@@ -1629,10 +1698,25 @@ feed_tty_line_wrap(
     }
 
     b_result =
-        feed_tty_write_character_array(
-            p_tty,
+        feed_buf_const_init(
+            &(
+                o_buf_read),
             a_buf,
-            4u);
+            a_buf + 4u);
+
+    if (
+        b_result)
+    {
+        b_result =
+            feed_tty_write_character_buf(
+                p_tty,
+                &(
+                    o_buf_read));
+
+        feed_buf_const_cleanup(
+            &(
+                o_buf_read));
+    }
 
     return
         b_result;
@@ -1653,14 +1737,15 @@ feed_tty_write_el(
         a_buf[16u];
 
     struct feed_buf
-        o_buf;
+        o_buf_write;
 
     b_result =
         feed_buf_init(
             &(
-                o_buf),
+                o_buf_write),
             a_buf,
-            sizeof(
+            a_buf
+            + sizeof(
                 a_buf));
 
     if (
@@ -1669,22 +1754,40 @@ feed_tty_write_el(
         b_result =
             feed_esc_write_el(
                 &(
-                    o_buf),
+                    o_buf_write),
                 i_count);
 
         if (
             b_result)
         {
+            struct feed_buf_const
+                o_buf_read;
+
             b_result =
-                feed_tty_write_character_array(
-                    p_tty,
-                    o_buf.p_buf,
-                    o_buf.i_len);
+                feed_buf_const_init(
+                    &(
+                        o_buf_read),
+                    a_buf,
+                    o_buf_write.p_buf_min);
+
+            if (
+                b_result)
+            {
+                b_result =
+                    feed_tty_write_character_buf(
+                        p_tty,
+                        &(
+                            o_buf_read));
+
+                feed_buf_const_cleanup(
+                    &(
+                        o_buf_read));
+            }
         }
 
         feed_buf_cleanup(
             &(
-                o_buf));
+                o_buf_write));
     }
 
     return
@@ -1708,14 +1811,15 @@ feed_tty_write_sgr(
         a_buf[64u];
 
     struct feed_buf
-        o_buf;
+        o_buf_write;
 
     b_result =
         feed_buf_init(
             &(
-                o_buf),
+                o_buf_write),
             a_buf,
-            sizeof(
+            a_buf
+            + sizeof(
                 a_buf));
 
     if (
@@ -1724,23 +1828,41 @@ feed_tty_write_sgr(
         b_result =
             feed_esc_write_sgr(
                 &(
-                    o_buf),
+                    o_buf_write),
                 p_attr,
                 i_count);
 
         if (
             b_result)
         {
+            struct feed_buf_const
+                o_buf_read;
+
             b_result =
-                feed_tty_write_character_array(
-                    p_tty,
-                    o_buf.p_buf,
-                    o_buf.i_len);
+                feed_buf_const_init(
+                    &(
+                        o_buf_read),
+                    a_buf,
+                    o_buf_write.p_buf_min);
+
+            if (
+                b_result)
+            {
+                b_result =
+                    feed_tty_write_character_buf(
+                        p_tty,
+                        &(
+                            o_buf_read));
+
+                feed_buf_const_cleanup(
+                    &(
+                        o_buf_read));
+            }
         }
 
         feed_buf_cleanup(
             &(
-                o_buf));
+                o_buf_write));
     }
 
     return

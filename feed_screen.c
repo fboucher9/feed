@@ -18,6 +18,8 @@ Description:
 
 #include "feed_heap.h"
 
+#include "feed_buf.h"
+
 #include "feed_tty.h"
 
 #include "feed_utf8.h"
@@ -107,8 +109,7 @@ feed_screen_newline_raw(
             feed_tty_write_character_array(
                 p_screen->p_tty,
                 g_crlf,
-                sizeof(
-                    g_crlf));
+                g_crlf + sizeof(g_crlf));
         }
     }
 }
@@ -119,9 +120,9 @@ feed_screen_write_clip(
     struct feed_screen * const
         p_screen,
     unsigned char const * const
-        p_data,
-    unsigned int const
-        i_count)
+        p_data_min,
+    unsigned char const * const
+        p_data_max)
 {
     if (
         p_screen)
@@ -151,8 +152,8 @@ feed_screen_write_clip(
                         {
                             feed_tty_write_character_array(
                                 p_screen->p_tty,
-                                p_data,
-                                i_count);
+                                p_data_min,
+                                p_data_max);
 
                             p_screen->i_screen_cx += 1;
                         }
@@ -161,8 +162,8 @@ feed_screen_write_clip(
                         {
                             feed_tty_write_character_array(
                                 p_screen->p_tty,
-                                p_data,
-                                i_count);
+                                p_data_min,
+                                p_data_max);
 
                             p_screen->i_screen_cx ++;
 
@@ -185,8 +186,8 @@ feed_screen_write_clip(
                         {
                             feed_tty_write_character_array(
                                 p_screen->p_tty,
-                                p_data,
-                                i_count);
+                                p_data_min,
+                                p_data_max);
 
                             p_screen->i_screen_cx += 1;
                         }
@@ -225,7 +226,7 @@ feed_screen_event_callback(
         feed_screen_write_clip(
             p_screen,
             p_event->a_raw,
-            p_event->i_raw_len);
+            p_event->a_raw + p_event->i_raw_len);
     }
 }
 
@@ -462,16 +463,9 @@ feed_screen_set_cursor_pos(
                     }
                     else if (0 == i_screen_cx)
                     {
-                        static unsigned char g_cr[] =
-                        {
-                            '\r'
-                        };
-
-                        feed_tty_write_character_array(
+                        feed_tty_write_character(
                             p_screen->p_tty,
-                            g_cr,
-                            sizeof(
-                                g_cr));
+                            '\r');
                     }
                     else if (i_screen_cx < p_screen->i_screen_cx)
                     {
@@ -611,9 +605,9 @@ feed_screen_write(
     struct feed_screen * const
         p_screen,
     unsigned char const * const
-        p_data,
-    unsigned int const
-        i_count)
+        p_data_min,
+    unsigned char const * const
+        p_data_max)
 {
     struct feed_utf8_parser
         o_utf8_parser;
@@ -623,34 +617,54 @@ feed_screen_write(
             &(
                 o_utf8_parser)))
     {
-        unsigned int
-            i;
+        struct feed_buf_const
+            o_buf_read;
 
-        for (i=0u; i<i_count; i++)
+        if (
+            feed_buf_const_init(
+                &(
+                    o_buf_read),
+                p_data_min,
+                p_data_max))
         {
-            int
-                i_result;
+            unsigned char
+                c_data;
 
-            struct feed_utf8_code
-                o_utf8_code;
-
-            i_result =
-                feed_utf8_parser_write(
+            while (
+                feed_buf_const_read_character(
                     &(
-                        o_utf8_parser),
-                    p_data[i],
+                        o_buf_read),
                     &(
-                        o_utf8_code));
-
-            if (
-                0
-                < i_result)
+                        c_data)))
             {
-                feed_screen_event_callback(
-                    p_screen,
-                    &(
-                        o_utf8_code));
+                int
+                    i_result;
+
+                struct feed_utf8_code
+                    o_utf8_code;
+
+                i_result =
+                    feed_utf8_parser_write(
+                        &(
+                            o_utf8_parser),
+                        c_data,
+                        &(
+                            o_utf8_code));
+
+                if (
+                    0
+                    < i_result)
+                {
+                    feed_screen_event_callback(
+                        p_screen,
+                        &(
+                            o_utf8_code));
+                }
             }
+
+            feed_buf_const_cleanup(
+                &(
+                    o_buf_read));
         }
 
         feed_utf8_parser_cleanup(

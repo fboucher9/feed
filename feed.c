@@ -1139,7 +1139,7 @@ feed_main_refresh_job(
                             feed_screen_write(
                                 p_this->p_screen,
                                 a_visible,
-                                i_visible_length);
+                                a_visible + i_visible_length);
                         }
                         else
                         {
@@ -1226,7 +1226,7 @@ feed_main_refresh_job(
                             feed_screen_write(
                                 p_this->p_screen,
                                 a_visible,
-                                i_visible_length);
+                                a_visible + i_visible_length);
                         }
                     }
                     else
@@ -2938,7 +2938,7 @@ feed_save(
             &(
                 o_raw_content),
             p_data,
-            i_data_length))
+            p_data + i_data_length))
     {
         feed_text_save(
             p_this->p_text,
@@ -2946,7 +2946,8 @@ feed_save(
                 o_raw_content));
 
         i_result =
-            o_raw_content.i_len;
+            (unsigned long int)(
+                o_raw_content.p_buf_min - p_data);
 
         feed_buf_cleanup(
             &(
@@ -2986,7 +2987,7 @@ feed_consume(
             &(
                 o_buf),
             p_data,
-            i_data_length))
+            p_data + i_data_length))
     {
         feed_text_consume(
             p_this->p_text,
@@ -2994,7 +2995,8 @@ feed_consume(
                 o_buf));
 
         i_data_iterator =
-            o_buf.i_len;
+            (unsigned long int)(
+                o_buf.p_buf_min - p_data);
 
         feed_buf_cleanup(
             &(
@@ -3111,7 +3113,7 @@ feed_complete(
                     &(
                         o_buf),
                     p_word_buf,
-                    i_word_length))
+                    p_word_buf + i_word_length))
             {
                 feed_text_iterator_save(
                     p_this->p_text,

@@ -1329,7 +1329,7 @@ feed_keys_print(
                 feed_buf_write_character_array(
                     p_buf,
                     p_node->p_name + 1u,
-                    i_name_length);
+                    p_node->p_name + 1u + i_name_length);
 
                 b_result =
                     1;

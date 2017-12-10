@@ -849,7 +849,8 @@ feed_text_iterator_save(
                 feed_buf_write_character_array(
                     p_buf,
                     p_text_iterator->p_glyph->o_utf8_code.a_raw,
-                    p_text_iterator->p_glyph->o_utf8_code.i_raw_len))
+                    p_text_iterator->p_glyph->o_utf8_code.a_raw
+                    + p_text_iterator->p_glyph->o_utf8_code.i_raw_len))
             {
             }
             else

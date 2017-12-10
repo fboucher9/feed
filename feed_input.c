@@ -626,7 +626,7 @@ feed_input_print(
                 feed_buf_write_character_array(
                     p_buf,
                     p_event->a_raw,
-                    p_event->i_raw_len);
+                    p_event->a_raw + p_event->i_raw_len);
             }
         }
     }

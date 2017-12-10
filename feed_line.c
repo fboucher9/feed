@@ -435,7 +435,7 @@ feed_line_save(
         feed_buf_write_character_array(
             p_buf,
             p_glyph->o_utf8_code.a_raw,
-            p_glyph->o_utf8_code.i_raw_len);
+            p_glyph->o_utf8_code.a_raw + p_glyph->o_utf8_code.i_raw_len);
 
         p_iterator =
             p_iterator->p_next;

@@ -14,6 +14,10 @@ struct feed_client;
 
 struct feed_tty;
 
+struct feed_buf;
+
+struct feed_buf_const;
+
 struct feed_tty *
 feed_tty_create(
     struct feed_client * const
@@ -63,24 +67,27 @@ feed_tty_write_character(
         i_value);
 
 char
+feed_tty_write_character_buf(
+    struct feed_tty * const
+        p_tty,
+    struct feed_buf_const * const
+        p_buf);
+
+char
 feed_tty_write_character_array(
     struct feed_tty * const
         p_tty,
     unsigned char const * const
-        p_buf,
-    unsigned long int const
-        i_buf_len);
+        p_buf_min,
+    unsigned char const * const
+        p_buf_max);
 
 char
 feed_tty_read_unicode_character(
     struct feed_tty * const
         p_tty,
-    unsigned char * const
+    struct feed_buf * const
         p_buf,
-    unsigned int const
-        i_buf_len,
-    unsigned int * const
-        p_actual_len,
     unsigned long int * const
         p_value);
 
@@ -88,12 +95,8 @@ char
 feed_tty_read_escape_sequence(
     struct feed_tty * const
         p_tty,
-    unsigned char * const
-        p_buf,
-    unsigned int const
-        i_buf_len,
-    unsigned int * const
-        p_actual_len);
+    struct feed_buf * const
+        p_buf);
 
 char
 feed_tty_get_cursor_position(
