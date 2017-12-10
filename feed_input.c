@@ -204,7 +204,7 @@ feed_input_lookup(
     struct feed_input * const
         p_input)
 {
-    unsigned long int
+    unsigned short int
         i_code;
 
     i_code =
@@ -268,7 +268,7 @@ feed_input_store_data(
             p_utf8_code->i_raw_len;
 
         p_input->o_event.i_code =
-            0ul;
+            0u;
 
         b_result =
             1;
@@ -324,8 +324,7 @@ feed_input_process_idle_state(
     else
     {
         p_input->o_event.i_code =
-            feed_utf8_decode(
-                p_utf8_code);
+            0u;
 
         i_result =
             feed_input_notify(
@@ -373,7 +372,7 @@ feed_input_process_escape_state(
     {
         /* Lookup for a key */
         p_input->o_event.i_code =
-            FEED_EVENT_KEY_FLAG;
+            0u;
 
         /* Notify */
         i_result =
@@ -400,7 +399,7 @@ feed_input_process_csi_state(
     if (0x40u <= p_utf8_code->a_raw[0u])
     {
         p_input->o_event.i_code =
-            FEED_EVENT_KEY_FLAG;
+            0u;
 
         /* Notify */
         i_result =
@@ -433,7 +432,7 @@ feed_input_process_ssx_state(
         p_utf8_code);
 
     p_input->o_event.i_code =
-        FEED_EVENT_KEY_FLAG;
+        0u;
 
     /* Notify */
     i_result =
@@ -581,52 +580,20 @@ feed_input_print(
     struct feed_buf * const
         p_buf)
 {
-    if (p_event->i_code < 32)
+    if (0u == p_event->i_code)
     {
-        static unsigned char const g_feed_input_ctrl_table[32u] =
+        if (p_event->i_raw_len)
         {
-            '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
-            'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
-            'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W',
-            'X', 'Y', 'Z', '[', '\\', ']', '^', '_'
-        };
-
-        feed_buf_write_character(
-            p_buf,
-            'C');
-
-        feed_buf_write_character(
-            p_buf,
-            '-');
-
-        feed_buf_write_character(
-            p_buf,
-            g_feed_input_ctrl_table[
-                p_event->i_code]);
-    }
-    else if (p_event->i_code < FEED_EVENT_KEY_FLAG)
-    {
-        feed_buf_write_character_array(
-            p_buf,
-            p_event->a_raw,
-            p_event->i_raw_len);
-    }
-    else if (FEED_EVENT_KEY_FLAG == p_event->i_code)
-    {
-        /* code that has no key equivalent */
-        if ((2u == p_event->i_raw_len)
-            && (27 == p_event->a_raw[0u]))
-        {
-            feed_buf_write_character(
-                p_buf,
-                'A');
-
-            feed_buf_write_character(
-                p_buf,
-                '-');
-
-            if (p_event->a_raw[1u] < 32u)
+            if (p_event->a_raw[0u] < 32u)
             {
+                static unsigned char const g_feed_input_ctrl_table[32u] =
+                {
+                    '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
+                    'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+                    'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W',
+                    'X', 'Y', 'Z', '[', '\\', ']', '^', '_'
+                };
+
                 feed_buf_write_character(
                     p_buf,
                     'C');
@@ -637,10 +604,10 @@ feed_input_print(
 
                 feed_buf_write_character(
                     p_buf,
-                    (unsigned char)(
-                        '@' + p_event->a_raw[1u]));
+                    g_feed_input_ctrl_table[
+                        p_event->i_code]);
             }
-            else if ((p_event->a_raw[1u] >= 'a') && (p_event->a_raw[1u] <= 'z'))
+            else if (p_event->a_raw[0u] == 127u)
             {
                 feed_buf_write_character(
                     p_buf,
@@ -652,24 +619,23 @@ feed_input_print(
 
                 feed_buf_write_character(
                     p_buf,
-                    (unsigned char)(
-                        p_event->a_raw[1u] + 'A' - 'a'));
+                    '?');
             }
             else
             {
-                feed_buf_write_character(
+                feed_buf_write_character_array(
                     p_buf,
-                    p_event->a_raw[1u]);
+                    p_event->a_raw,
+                    p_event->i_raw_len);
             }
         }
     }
-    else if (FEED_EVENT_KEY_FLAG & p_event->i_code)
+    else
     {
         feed_keys_print(
             p_event->i_code,
             p_buf);
     }
-
 } /* feed_input_print() */
 
 /* end-of-file: feed_input.c */

@@ -2397,7 +2397,7 @@ feed_main_event_callback(
                 0;
 
             /* Split event into unicode characters */
-            if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
+            if ((FEED_KEY_CTRL | 'M') == p_event->i_code)
             {
                 feed_main_insert_newline(
                     p_this);
@@ -2419,7 +2419,7 @@ feed_main_event_callback(
         if (
             p_this->b_suggest)
         {
-            if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'G') == p_event->i_code)
+            if ((FEED_KEY_CTRL | 'G') == p_event->i_code)
             {
                 feed_main_suggest_reset(
                     p_this);
@@ -2427,10 +2427,10 @@ feed_main_event_callback(
                 b_done =
                     1;
             }
-            else if (((FEED_EVENT_KEY_FLAG | FEED_KEY_UP) == p_event->i_code)
-                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'P') == p_event->i_code)
-                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'I') == p_event->i_code)
-                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_ALT | '.') == p_event->i_code))
+            else if (((FEED_KEY_UP) == p_event->i_code)
+                || ((FEED_KEY_CTRL | 'P') == p_event->i_code)
+                || ((FEED_KEY_CTRL | 'I') == p_event->i_code)
+                || ((FEED_KEY_ALT | '.') == p_event->i_code))
             {
                 feed_main_suggest_next(
                     p_this);
@@ -2438,10 +2438,10 @@ feed_main_event_callback(
                 b_done =
                     1;
             }
-            else if (((FEED_EVENT_KEY_FLAG | FEED_KEY_DOWN) == p_event->i_code)
-                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'N') == p_event->i_code)
-                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_SHIFT | 'I') == p_event->i_code)
-                || ((FEED_EVENT_KEY_FLAG | FEED_KEY_ALT | ',') == p_event->i_code))
+            else if (((FEED_KEY_DOWN) == p_event->i_code)
+                || ((FEED_KEY_CTRL | 'N') == p_event->i_code)
+                || ((FEED_KEY_CTRL | FEED_KEY_SHIFT | 'I') == p_event->i_code)
+                || ((FEED_KEY_ALT | ',') == p_event->i_code))
             {
                 feed_main_suggest_prev(
                     p_this);
@@ -2474,6 +2474,7 @@ feed_main_event_callback(
                 (*(p_this->o_descriptor.p_notify))(
                     p_this->o_descriptor.p_context,
                     p_this,
+                    p_event->i_code,
                     p_event->a_raw,
                     p_event->i_raw_len);
 
@@ -2515,109 +2516,109 @@ feed_main_event_callback(
         if (!p_this->b_started)
         {
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'H') == p_event->i_code)
+        else if ((FEED_KEY_CTRL | 'H') == p_event->i_code)
         {
             feed_main_delete_glyph_prev(p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'W') == p_event->i_code)
+        else if ((FEED_KEY_CTRL | 'W') == p_event->i_code)
         {
             feed_main_delete_word_prev(p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'L') == p_event->i_code)
+        else if ((FEED_KEY_CTRL | 'L') == p_event->i_code)
         {
             p_this->b_refresh_text = 1;
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_DELETE) == p_event->i_code)
+        else if ((FEED_KEY_DELETE) == p_event->i_code)
         {
             feed_main_delete_glyph_next(
                 p_this);
         }
         else if (
-            ((FEED_EVENT_KEY_FLAG | FEED_KEY_HOME) == p_event->i_code)
-            || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'A') == p_event->i_code))
+            ((FEED_KEY_HOME) == p_event->i_code)
+            || ((FEED_KEY_CTRL | 'A') == p_event->i_code))
         {
             feed_main_move_cursor_x0(
                 p_this);
         }
         else if (
-            ((FEED_EVENT_KEY_FLAG | FEED_KEY_END) == p_event->i_code)
-            || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'E') == p_event->i_code))
+            ((FEED_KEY_END) == p_event->i_code)
+            || ((FEED_KEY_CTRL | 'E') == p_event->i_code))
         {
             feed_main_move_cursor_x1(
                 p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_PAGEUP) == p_event->i_code)
+        else if ((FEED_KEY_CTRL | FEED_KEY_PAGEUP) == p_event->i_code)
         {
             feed_main_move_page_home(
                 p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_PAGEDOWN) == p_event->i_code)
+        else if ((FEED_KEY_CTRL | FEED_KEY_PAGEDOWN) == p_event->i_code)
         {
             feed_main_move_page_end(
                 p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_HOME) == p_event->i_code)
+        else if ((FEED_KEY_CTRL | FEED_KEY_HOME) == p_event->i_code)
         {
             feed_main_move_cursor_top(
                 p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_END) == p_event->i_code)
+        else if ((FEED_KEY_CTRL | FEED_KEY_END) == p_event->i_code)
         {
             feed_main_move_cursor_bottom(
                 p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_LEFT) == p_event->i_code)
+        else if ((FEED_KEY_LEFT) == p_event->i_code)
         {
             feed_main_move_cursor_left(
                 p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_RIGHT) == p_event->i_code)
+        else if ((FEED_KEY_RIGHT) == p_event->i_code)
         {
             feed_main_move_cursor_right(
                 p_this);
         }
         else if (
-            ((FEED_EVENT_KEY_FLAG | FEED_KEY_UP) == p_event->i_code)
-            || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'P') == p_event->i_code))
+            ((FEED_KEY_UP) == p_event->i_code)
+            || ((FEED_KEY_CTRL | 'P') == p_event->i_code))
         {
             feed_main_move_cursor_up(
                 p_this);
         }
         else if (
-            ((FEED_EVENT_KEY_FLAG | FEED_KEY_DOWN) == p_event->i_code)
-            || ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'N') == p_event->i_code))
+            ((FEED_KEY_DOWN) == p_event->i_code)
+            || ((FEED_KEY_CTRL | 'N') == p_event->i_code))
         {
             feed_main_move_cursor_down(
                 p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_PAGEUP) == p_event->i_code)
+        else if ((FEED_KEY_PAGEUP) == p_event->i_code)
         {
             feed_main_move_page_prev(
                 p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_PAGEDOWN) == p_event->i_code)
+        else if ((FEED_KEY_PAGEDOWN) == p_event->i_code)
         {
             feed_main_move_page_next(
                 p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_LEFT) == p_event->i_code)
+        else if ((FEED_KEY_CTRL | FEED_KEY_LEFT) == p_event->i_code)
         {
             /* Go left until reach begin of word */
             feed_main_move_word_left(
                 p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | FEED_KEY_RIGHT) == p_event->i_code)
+        else if ((FEED_KEY_CTRL | FEED_KEY_RIGHT) == p_event->i_code)
         {
             /* Go right until reach begin of next word */
             feed_main_move_word_right(
                 p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'M') == p_event->i_code)
+        else if ((FEED_KEY_CTRL | 'M') == p_event->i_code)
         {
             feed_main_insert_newline(
                 p_this);
         }
-        else if ((FEED_EVENT_KEY_FLAG | FEED_KEY_CTRL | 'V') == p_event->i_code)
+        else if ((FEED_KEY_CTRL | 'V') == p_event->i_code)
         {
             /* Verbose state */
             p_this->b_verbose = 1;

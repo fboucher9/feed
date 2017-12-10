@@ -25,21 +25,6 @@ struct feed_input;
 /* Predefine buffer object */
 struct feed_buf;
 
-/* Flag to indicate that the code is for a special key */
-#define FEED_EVENT_KEY_FLAG     0x80000000ul
-
-/* Mask of shift modifier */
-#define FEED_EVENT_KEY_SHIFT    0x10000000ul
-
-/* Mask of alt modifier */
-#define FEED_EVENT_KEY_ALT      0x20000000ul
-
-/* Mask of control modifier */
-#define FEED_EVENT_KEY_CTRL     0x40000000ul
-
-/* Mask of base key code */
-#define FEED_EVENT_KEY_MASK     0x0FFFFFFFul
-
 /*
 
 Structure: feed_event
@@ -49,8 +34,11 @@ Description:
 */
 struct feed_event
 {
-    unsigned long int
+    unsigned short int
         i_code;
+
+    unsigned short int
+        us_padding[3u];
 
     unsigned char
         i_raw_len;

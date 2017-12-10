@@ -15,6 +15,8 @@ Description:
 
 #include "feed_buf.h"
 
+#include "feed.h"
+
 /* Up ^[[A */
 static unsigned char const g_feed_key_up[] =
 { FEED_KEY_UP, 0, 27, '[', 'A' };
@@ -996,14 +998,14 @@ feed_keys_compare_node(
 
 }
 
-unsigned long int
+unsigned short int
 feed_keys_lookup(
     unsigned char const * const
         p_data,
     unsigned int const
         i_data_length)
 {
-    unsigned long int
+    unsigned short int
         i_code;
 
     unsigned int
@@ -1013,7 +1015,7 @@ feed_keys_lookup(
         p_node;
 
     i_code =
-        0ul;
+        0u;
 
     i =
         0;
@@ -1033,10 +1035,9 @@ feed_keys_lookup(
                 p_node))
         {
             i_code =
-                (unsigned long int)(
-                    0x80000000ul
-                    | (unsigned long int)(unsigned char)(p_node->p_name[0u])
-                    | ((unsigned long int)(unsigned char)(p_node->p_name[1u]) << 28u));
+                (unsigned short int)(
+                    (unsigned short int)(unsigned char)(p_node->p_name[0u])
+                    | ((unsigned short int)(unsigned char)(p_node->p_name[1u]) << 8u));
         }
         else
         {
@@ -1064,18 +1065,16 @@ feed_keys_lookup(
         {
             /* ctrl+@ */
             i_code =
-                (unsigned long int)(
-                    0x80000000ul
-                    | (unsigned long int)(unsigned char)(g_feed_keys_control_table[p_data[0u]])
+                (unsigned short int)(
+                    (unsigned short int)(unsigned char)(g_feed_keys_control_table[p_data[0u]])
                     | FEED_KEY_CTRL);
         }
         else if ((i_data_length == 2u) && (p_data[0u] == 27) && (p_data[1u] < 32))
         {
             /* alt+ctrl+@ */
             i_code =
-                (unsigned long int)(
-                    0x80000000ul
-                    | (unsigned long int)(unsigned char)(g_feed_keys_control_table[p_data[1u]])
+                (unsigned short int)(
+                    (unsigned short int)(unsigned char)(g_feed_keys_control_table[p_data[1u]])
                     | FEED_KEY_CTRL
                     | FEED_KEY_ALT);
         }
@@ -1083,9 +1082,8 @@ feed_keys_lookup(
         {
             /* alt+A */
             i_code =
-                (unsigned long int)(
-                    0x80000000ul
-                    | ((unsigned long int)(unsigned char)(p_data[1u]) + 'A' - 'a')
+                (unsigned short int)(
+                    ((unsigned short int)(unsigned char)(p_data[1u]) + 'A' - 'a')
                     | FEED_KEY_ALT);
 
         }
@@ -1093,9 +1091,8 @@ feed_keys_lookup(
         {
             /* alt+shift+A */
             i_code =
-                (unsigned long int)(
-                    0x80000000ul
-                    | (unsigned long int)(unsigned char)(p_data[1u])
+                (unsigned short int)(
+                    (unsigned short int)(unsigned char)(p_data[1u])
                     | FEED_KEY_SHIFT
                     | FEED_KEY_ALT);
         }
@@ -1103,19 +1100,16 @@ feed_keys_lookup(
         {
             /* alt+key */
             i_code =
-                (unsigned long int)(
-                    0x80000000ul
-                    | (unsigned long int)(unsigned char)(p_data[1u])
+                (unsigned short int)(
+                    (unsigned short int)(unsigned char)(p_data[1u])
                     | FEED_KEY_ALT);
         }
         else if ((i_data_length == 2u) && (p_data[0u] == 27) && (p_data[1u] == 127))
         {
             /* alt+backspace */
             i_code =
-                (unsigned long int)(
-                    0x80000000ul
-                    | (unsigned long int)(unsigned char)('H')
-                    | FEED_KEY_ALT
+                (unsigned short int)(
+                    (unsigned short int)(unsigned char)('H')
                     | FEED_KEY_CTRL);
         }
         else
@@ -1255,13 +1249,13 @@ static unsigned int const g_feed_keys_print_table_length =
 
 void
 feed_keys_print(
-    unsigned long int const
+    unsigned short int const
         i_code,
     struct feed_buf * const
         p_buf)
 {
     if (
-        0x80000000ul & i_code)
+        i_code)
     {
         char
             b_result;

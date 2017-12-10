@@ -179,6 +179,8 @@ feed_main_notify_callback(
         p_context,
     struct feed_handle * const
         p_feed_handle,
+    unsigned short int const
+        i_code,
     unsigned char const * const
         p_data,
     unsigned long int const
@@ -188,6 +190,8 @@ feed_main_notify_callback(
         p_context);
     (void)(
         p_feed_handle);
+    (void)(
+        i_code);
     (void)(
         p_data);
     (void)(

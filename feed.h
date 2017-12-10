@@ -28,6 +28,7 @@ struct feed_descriptor
     int (* p_notify)(
         void * const p_context,
         struct feed_handle * const p_feed_handle,
+        unsigned short int i_key,
         unsigned char const * const p_event,
         unsigned long int const i_event_length);
 
@@ -83,6 +84,33 @@ enum feed_syntax
     feed_syntax_special,
     feed_syntax_whitespace
 };
+
+/* Definitions for key codes */
+#define FEED_KEY_SHIFT (1ul << 8u)
+#define FEED_KEY_ALT (1ul << 9u)
+#define FEED_KEY_CTRL (1ul << 10u)
+#define FEED_KEY_UP 130
+#define FEED_KEY_DOWN 131
+#define FEED_KEY_RIGHT 132
+#define FEED_KEY_LEFT 133
+#define FEED_KEY_INSERT 134
+#define FEED_KEY_DELETE 135
+#define FEED_KEY_HOME 136
+#define FEED_KEY_END 137
+#define FEED_KEY_PAGEUP 138
+#define FEED_KEY_PAGEDOWN 139
+#define FEED_KEY_F1 141
+#define FEED_KEY_F2 142
+#define FEED_KEY_F3 143
+#define FEED_KEY_F4 144
+#define FEED_KEY_F5 145
+#define FEED_KEY_F6 146
+#define FEED_KEY_F7 147
+#define FEED_KEY_F8 148
+#define FEED_KEY_F9 149
+#define FEED_KEY_F10 150
+#define FEED_KEY_F11 151
+#define FEED_KEY_F12 152
 
 #if defined(__cplusplus)
 extern "C" {
