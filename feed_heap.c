@@ -40,10 +40,16 @@ struct feed_heap
         i_stat_total_free;
 
     unsigned long int
+        i_stat_total_realloc;
+
+    unsigned long int
         i_stat_total_alloc_error;
 
     unsigned long int
         i_stat_total_free_error;
+
+    unsigned long int
+        i_stat_total_realloc_error;
 
 };
 
@@ -213,5 +219,62 @@ feed_heap_free(
     }
 
 } /* feed_heap_free() */
+
+void *
+feed_heap_realloc(
+    struct feed_heap * const
+        p_heap,
+    void * const
+        p_buffer,
+    unsigned long int const
+        i_buffer_length)
+{
+    void *
+        p_result;
+
+    if (
+        p_buffer)
+    {
+        if (
+            i_buffer_length)
+        {
+            p_result =
+                realloc(
+                    p_buffer,
+                    i_buffer_length);
+
+            if (
+                p_result)
+            {
+                p_heap->i_stat_total_realloc ++;
+            }
+            else
+            {
+                p_heap->i_stat_total_realloc_error ++;
+            }
+        }
+        else
+        {
+            feed_heap_free(
+                p_heap,
+                p_buffer);
+
+            p_result =
+                (void *)(
+                    0);
+        }
+    }
+    else
+    {
+        p_result =
+            feed_heap_alloc(
+                p_heap,
+                i_buffer_length);
+    }
+
+    return
+        p_result;
+
+}
 
 /* end-of-file: feed_heap.c */

@@ -39,4 +39,13 @@ feed_heap_free(
     void * const
         p_buffer);
 
+void *
+feed_heap_realloc(
+    struct feed_heap * const
+        p_heap,
+    void * const
+        p_buffer,
+    unsigned long int const
+        i_buffer_length);
+
 /* end-of-file: feed_heap.h */
