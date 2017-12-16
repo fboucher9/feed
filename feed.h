@@ -86,31 +86,80 @@ enum feed_syntax
 };
 
 /* Definitions for key codes */
-#define FEED_KEY_SHIFT (1ul << 8u)
-#define FEED_KEY_ALT (1ul << 9u)
-#define FEED_KEY_CTRL (1ul << 10u)
-#define FEED_KEY_UP 130
-#define FEED_KEY_DOWN 131
-#define FEED_KEY_RIGHT 132
-#define FEED_KEY_LEFT 133
-#define FEED_KEY_INSERT 134
-#define FEED_KEY_DELETE 135
-#define FEED_KEY_HOME 136
-#define FEED_KEY_END 137
-#define FEED_KEY_PAGEUP 138
-#define FEED_KEY_PAGEDOWN 139
-#define FEED_KEY_F1 141
-#define FEED_KEY_F2 142
-#define FEED_KEY_F3 143
-#define FEED_KEY_F4 144
-#define FEED_KEY_F5 145
-#define FEED_KEY_F6 146
-#define FEED_KEY_F7 147
-#define FEED_KEY_F8 148
-#define FEED_KEY_F9 149
-#define FEED_KEY_F10 150
-#define FEED_KEY_F11 151
-#define FEED_KEY_F12 152
+#define FEED_KEY_SHIFT \
+    ((unsigned short int)(256u))
+
+#define FEED_KEY_ALT \
+    ((unsigned short int)(512u))
+
+#define FEED_KEY_CTRL \
+    ((unsigned short int)(1024u))
+
+#define FEED_KEY_UP \
+    ((unsigned short int)(130u))
+
+#define FEED_KEY_DOWN \
+    ((unsigned short int)(131u))
+
+#define FEED_KEY_RIGHT \
+    ((unsigned short int)(132u))
+
+#define FEED_KEY_LEFT \
+    ((unsigned short int)(133u))
+
+#define FEED_KEY_INSERT \
+    ((unsigned short int)(134u))
+
+#define FEED_KEY_DELETE \
+    ((unsigned short int)(135u))
+
+#define FEED_KEY_HOME \
+    ((unsigned short int)(136u))
+
+#define FEED_KEY_END \
+    ((unsigned short int)(137u))
+
+#define FEED_KEY_PAGEUP \
+    ((unsigned short int)(138u))
+
+#define FEED_KEY_PAGEDOWN \
+    ((unsigned short int)(139u))
+
+#define FEED_KEY_F1 \
+    ((unsigned short int)(141u))
+
+#define FEED_KEY_F2 \
+    ((unsigned short int)(142u))
+
+#define FEED_KEY_F3 \
+    ((unsigned short int)(143u))
+
+#define FEED_KEY_F4 \
+    ((unsigned short int)(144u))
+
+#define FEED_KEY_F5 \
+    ((unsigned short int)(145u))
+
+#define FEED_KEY_F6 \
+    ((unsigned short int)(146u))
+
+#define FEED_KEY_F7 \
+    ((unsigned short int)(147u))
+
+#define FEED_KEY_F8 \
+    ((unsigned short int)(148u))
+
+#define FEED_KEY_F9 \
+    ((unsigned short int)(149u))
+
+#define FEED_KEY_F10 \
+    ((unsigned short int)(150u))
+
+#define FEED_KEY_F11 \
+    ((unsigned short int)(151u))
+
+#define FEED_KEY_F12 \
+    ((unsigned short int)(152u))
 
 #if defined(__cplusplus)
 extern "C" {
