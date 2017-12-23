@@ -6,6 +6,8 @@
 
 #include "feed_main.h"
 
+#include "feed_buf.h"
+
 #if 0
 
 /* MOVE ME */
@@ -363,10 +365,8 @@ feed_main_notify_callback(
 
 int
 feed_main(
-    unsigned int const
-        argc,
-    char const * const * const
-        argv)
+    struct feed_options const * const
+        p_options)
 {
     /* Test the library */
     struct feed_handle *
@@ -408,30 +408,81 @@ feed_main(
 
         if (
             (
-                argc > 1u)
+                (p_options->p_max - p_options->p_min) > 1)
             || (
                 !isatty(STDIN_FILENO)))
         {
             FILE *
                 p_file_handle;
 
-            if (
-                (argc < 2u)
-                || (
-                    0
-                    == strcmp(
-                        argv[1u],
-                        "-")))
+            if ((p_options->p_max - p_options->p_min) > 1)
             {
-                p_file_handle =
-                    stdin;
+                struct feed_buf const *
+                    p_file_name_buf;
+
+                unsigned char *
+                    p_file_name0;
+
+                unsigned long int
+                    argl;
+
+                p_file_name_buf =
+                    p_options->p_min + 1;
+
+                argl =
+                    (unsigned long int)(
+                        p_file_name_buf->p_buf_max
+                        - p_file_name_buf->p_buf_min);
+
+                p_file_name0 =
+                    (unsigned char *)(
+                        malloc(
+                            argl + 1ul));
+
+                if (
+                    p_file_name0)
+                {
+                    memcpy(
+                        p_file_name0,
+                        p_file_name_buf->p_buf_min,
+                        argl);
+
+                    p_file_name0[argl] =
+                        '\000';
+
+                    if (
+                        0
+                        == strcmp(
+                            (char const *)(
+                                p_file_name0),
+                            "-"))
+                    {
+                        p_file_handle =
+                            stdin;
+                    }
+                    else
+                    {
+                        p_file_handle =
+                            fopen(
+                                (char const *)(
+                                    p_file_name0),
+                                "rt");
+                    }
+
+                    free(
+                        (void *)(
+                            p_file_name0));
+                }
+                else
+                {
+                    p_file_handle =
+                        stdin;
+                }
             }
             else
             {
                 p_file_handle =
-                fopen(
-                    argv[1u],
-                    "rt");
+                    stdin;
             }
 
             if (
@@ -448,10 +499,10 @@ feed_main(
                 {
                     unsigned char a_block[1024u];
 
-                    int iResult;
+                    signed long int iResult;
 
                     iResult =
-                        (int)(
+                        (signed long int)(
                             fread(
                                 a_block,
                                 sizeof(a_block[0u]),
@@ -464,8 +515,14 @@ feed_main(
                         feed_load(
                             p_feed_handle,
                             a_block,
-                            (unsigned int)(
+                            (unsigned long int)(
                                 iResult));
+
+                        if (feof(p_file_handle))
+                        {
+                            b_eof =
+                                1;
+                        }
                     }
                     else
                     {
