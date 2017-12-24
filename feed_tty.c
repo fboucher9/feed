@@ -653,13 +653,13 @@ char
 feed_tty_write_character_buf(
     struct feed_tty * const
         p_tty,
-    struct feed_buf_const * const
+    struct feed_buf const * const
         p_buf)
 {
     char
         b_result;
 
-    struct feed_buf_const
+    struct feed_buf
         o_buf_read;
 
     unsigned char
@@ -668,15 +668,13 @@ feed_tty_write_character_buf(
     b_result =
         1;
 
-    feed_buf_const_init(
-        &(
-            o_buf_read),
-        p_buf->p_buf_min,
-        p_buf->p_buf_max);
+    o_buf_read =
+        *(
+            p_buf);
 
     while (
         b_result
-        && feed_buf_const_read_character(
+        && feed_buf_read_character(
             &(
                 o_buf_read),
             &(
@@ -687,10 +685,6 @@ feed_tty_write_character_buf(
                 p_tty,
                 c_data);
     }
-
-    feed_buf_const_cleanup(
-        &(
-            o_buf_read));
 
     return
         b_result;
@@ -1087,7 +1081,7 @@ feed_tty_get_cursor_position(
 
             i =
                 (unsigned int)(
-                    o_buf_write.p_buf_min - a_buf);
+                    o_buf_write.o_min.pc - a_buf);
 
             if (i >= 4)
             {
@@ -1203,15 +1197,15 @@ feed_tty_set_cursor_position(
         if (
             b_result)
         {
-            struct feed_buf_const
+            struct feed_buf
                 o_buf_read;
 
             b_result =
-                feed_buf_const_init(
+                feed_buf_init(
                     &(
                         o_buf_read),
                     a_buf,
-                    o_buf_write.p_buf_min);
+                    o_buf_write.o_min.pc);
 
             if (
                 b_result)
@@ -1222,7 +1216,7 @@ feed_tty_set_cursor_position(
                         &(
                             o_buf_read));
 
-                feed_buf_const_cleanup(
+                feed_buf_cleanup(
                     &(
                         o_buf_read));
             }
@@ -1317,15 +1311,15 @@ feed_tty_move_cursor(
         if (
             b_result)
         {
-            struct feed_buf_const
+            struct feed_buf
                 o_buf_read;
 
             b_result =
-                feed_buf_const_init(
+                feed_buf_init(
                     &(
                         o_buf_read),
                     a_buf,
-                    o_buf.p_buf_min);
+                    o_buf.o_min.pc);
 
             if (
                 b_result)
@@ -1336,7 +1330,7 @@ feed_tty_move_cursor(
                         &(
                             o_buf_read));
 
-                feed_buf_const_cleanup(
+                feed_buf_cleanup(
                     &(
                         o_buf_read));
             }
@@ -1582,15 +1576,15 @@ feed_tty_clear(
         if (
             b_result)
         {
-            struct feed_buf_const
+            struct feed_buf
                 o_buf_read;
 
             b_result =
-                feed_buf_const_init(
+                feed_buf_init(
                     &(
                         o_buf_read),
                     a_buf,
-                    o_buf_write.p_buf_min);
+                    o_buf_write.o_min.pc);
 
             if (
                 b_result)
@@ -1601,7 +1595,7 @@ feed_tty_clear(
                         &(
                             o_buf_read));
 
-                feed_buf_const_cleanup(
+                feed_buf_cleanup(
                     &(
                         o_buf_read));
             }
@@ -1674,7 +1668,7 @@ feed_tty_line_wrap(
     unsigned char
         a_buf[4u];
 
-    struct feed_buf_const
+    struct feed_buf
         o_buf_read;
 
     a_buf[0u] =
@@ -1698,7 +1692,7 @@ feed_tty_line_wrap(
     }
 
     b_result =
-        feed_buf_const_init(
+        feed_buf_init(
             &(
                 o_buf_read),
             a_buf,
@@ -1713,7 +1707,7 @@ feed_tty_line_wrap(
                 &(
                     o_buf_read));
 
-        feed_buf_const_cleanup(
+        feed_buf_cleanup(
             &(
                 o_buf_read));
     }
@@ -1760,15 +1754,15 @@ feed_tty_write_el(
         if (
             b_result)
         {
-            struct feed_buf_const
+            struct feed_buf
                 o_buf_read;
 
             b_result =
-                feed_buf_const_init(
+                feed_buf_init(
                     &(
                         o_buf_read),
                     a_buf,
-                    o_buf_write.p_buf_min);
+                    o_buf_write.o_min.pc);
 
             if (
                 b_result)
@@ -1779,7 +1773,7 @@ feed_tty_write_el(
                         &(
                             o_buf_read));
 
-                feed_buf_const_cleanup(
+                feed_buf_cleanup(
                     &(
                         o_buf_read));
             }
@@ -1835,15 +1829,15 @@ feed_tty_write_sgr(
         if (
             b_result)
         {
-            struct feed_buf_const
+            struct feed_buf
                 o_buf_read;
 
             b_result =
-                feed_buf_const_init(
+                feed_buf_init(
                     &(
                         o_buf_read),
                     a_buf,
-                    o_buf_write.p_buf_min);
+                    o_buf_write.o_min.pc);
 
             if (
                 b_result)
@@ -1854,7 +1848,7 @@ feed_tty_write_sgr(
                         &(
                             o_buf_read));
 
-                feed_buf_const_cleanup(
+                feed_buf_cleanup(
                     &(
                         o_buf_read));
             }

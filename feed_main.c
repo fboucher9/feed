@@ -431,8 +431,8 @@ feed_main(
 
                 argl =
                     (unsigned long int)(
-                        p_file_name_buf->p_buf_max
-                        - p_file_name_buf->p_buf_min);
+                        p_file_name_buf->o_max.pc
+                        - p_file_name_buf->o_min.pc);
 
                 p_file_name0 =
                     (unsigned char *)(
@@ -444,7 +444,7 @@ feed_main(
                 {
                     memcpy(
                         p_file_name0,
-                        p_file_name_buf->p_buf_min,
+                        p_file_name_buf->o_min.pc,
                         argl);
 
                     p_file_name0[argl] =

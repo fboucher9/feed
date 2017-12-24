@@ -617,11 +617,11 @@ feed_screen_write(
             &(
                 o_utf8_parser)))
     {
-        struct feed_buf_const
+        struct feed_buf
             o_buf_read;
 
         if (
-            feed_buf_const_init(
+            feed_buf_init(
                 &(
                     o_buf_read),
                 p_data_min,
@@ -631,7 +631,7 @@ feed_screen_write(
                 c_data;
 
             while (
-                feed_buf_const_read_character(
+                feed_buf_read_character(
                     &(
                         o_buf_read),
                     &(
@@ -662,7 +662,7 @@ feed_screen_write(
                 }
             }
 
-            feed_buf_const_cleanup(
+            feed_buf_cleanup(
                 &(
                     o_buf_read));
         }

@@ -103,13 +103,13 @@ feed_options_init(
                 argv[argi],
                 argl);
 
-            p_buf->p_buf_min =
+            p_buf->o_min.p =
                 p_data;
 
             p_data +=
                 argl;
 
-            p_buf->p_buf_max =
+            p_buf->o_max.p =
                 p_data;
         }
 
@@ -172,14 +172,14 @@ feed_options_report(
 
         argl =
             (unsigned long int)(
-                p_iterator->p_buf_max - p_iterator->p_buf_min);
+                p_iterator->o_max.pc - p_iterator->o_min.pc);
 
         printf("option index=%u len=%lu value=%.*s\n",
             argi,
             argl,
             (int)(
                 argl),
-            p_iterator->p_buf_min);
+            p_iterator->o_min.pc);
 
         p_iterator ++;
 

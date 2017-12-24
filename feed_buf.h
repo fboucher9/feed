@@ -18,13 +18,23 @@ Description:
 
 #define INC_FEED_BUF_H
 
-struct feed_buf
+union feed_ptr
 {
     unsigned char *
-        p_buf_min;
+        p;
 
-    unsigned char *
-        p_buf_max;
+    unsigned char const *
+        pc;
+
+};
+
+struct feed_buf
+{
+    union feed_ptr
+        o_min;
+
+    union feed_ptr
+        o_max;
 
 }; /* struct feed_buf */
 
@@ -34,9 +44,9 @@ char
 feed_buf_init(
     struct feed_buf * const
         p_this,
-    unsigned char * const
+    unsigned char const * const
         p_buf_min,
-    unsigned char * const
+    unsigned char const * const
         p_buf_max);
 
 void
@@ -74,40 +84,16 @@ feed_buf_write_unicode_character(
     unsigned long int const
         i_code);
 
-struct feed_buf_const
-{
-    unsigned char const *
-        p_buf_min;
-
-    unsigned char const *
-        p_buf_max;
-
-}; /* struct feed_buf_const */
-
 char
-feed_buf_const_init(
-    struct feed_buf_const * const
-        p_this,
-    unsigned char const * const
-        p_buf_min,
-    unsigned char const * const
-        p_buf_max);
-
-void
-feed_buf_const_cleanup(
-    struct feed_buf_const * const
-        p_this);
-
-char
-feed_buf_const_read_character(
-    struct feed_buf_const * const
+feed_buf_read_character(
+    struct feed_buf * const
         p_this,
     unsigned char * const
         p_data);
 
 char
-feed_buf_const_read_character_array(
-    struct feed_buf_const * const
+feed_buf_read_character_array(
+    struct feed_buf * const
         p_this,
     unsigned char * const
         p_data_min,

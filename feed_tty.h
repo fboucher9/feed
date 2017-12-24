@@ -16,8 +16,6 @@ struct feed_tty;
 
 struct feed_buf;
 
-struct feed_buf_const;
-
 struct feed_tty *
 feed_tty_create(
     struct feed_client * const
@@ -70,7 +68,7 @@ char
 feed_tty_write_character_buf(
     struct feed_tty * const
         p_tty,
-    struct feed_buf_const * const
+    struct feed_buf const * const
         p_buf);
 
 char

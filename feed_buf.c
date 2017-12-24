@@ -10,18 +10,18 @@ char
 feed_buf_init(
     struct feed_buf * const
         p_this,
-    unsigned char * const
+    unsigned char const * const
         p_buf_min,
-    unsigned char * const
+    unsigned char const * const
         p_buf_max)
 {
     char
         b_result;
 
-    p_this->p_buf_min =
+    p_this->o_min.pc =
         p_buf_min;
 
-    p_this->p_buf_max =
+    p_this->o_max.pc =
         p_buf_max;
 
     b_result =
@@ -34,6 +34,7 @@ feed_buf_init(
 
 static
 unsigned char
+const
 g_feed_buf_empty[1u] =
 {
     '@'
@@ -44,10 +45,10 @@ feed_buf_cleanup(
     struct feed_buf * const
         p_this)
 {
-    p_this->p_buf_min =
+    p_this->o_min.pc =
         g_feed_buf_empty;
 
-    p_this->p_buf_max =
+    p_this->o_max.pc =
         g_feed_buf_empty;
 
 }
@@ -62,12 +63,12 @@ feed_buf_write_character(
     char
         b_result;
 
-    if ((p_this->p_buf_min + 1) < p_this->p_buf_max)
+    if ((p_this->o_min.p + 1) < p_this->o_max.p)
     {
-        *(p_this->p_buf_min) =
+        *(p_this->o_min.p) =
             c_data;
 
-        p_this->p_buf_min ++;
+        p_this->o_min.p ++;
 
         b_result =
             1;
@@ -95,15 +96,15 @@ feed_buf_write_character_array(
     char
         b_result;
 
-    if ((p_this->p_buf_min + (p_data_max - p_data_min)) <= p_this->p_buf_max)
+    if ((p_this->o_min.p + (p_data_max - p_data_min)) <= p_this->o_max.p)
     {
         memcpy(
-            p_this->p_buf_min,
+            p_this->o_min.p,
             p_data_min,
             (size_t)(
                 p_data_max - p_data_min));
 
-        p_this->p_buf_min +=
+        p_this->o_min.p +=
             (p_data_max - p_data_min);
 
         b_result =
@@ -330,54 +331,8 @@ feed_buf_write_unicode_character(
 }
 
 char
-feed_buf_const_init(
-    struct feed_buf_const * const
-        p_this,
-    unsigned char const * const
-        p_buf_min,
-    unsigned char const * const
-        p_buf_max)
-{
-    char
-        b_result;
-
-    p_this->p_buf_min =
-        p_buf_min;
-
-    p_this->p_buf_max =
-        p_buf_max;
-
-    b_result =
-        1;
-
-    return
-        b_result;
-
-}
-
-static
-unsigned char const
-g_feed_buf_const_empty[1u] =
-{
-    '@'
-};
-
-void
-feed_buf_const_cleanup(
-    struct feed_buf_const * const
-        p_this)
-{
-    p_this->p_buf_min =
-        g_feed_buf_const_empty;
-
-    p_this->p_buf_max =
-        g_feed_buf_const_empty;
-
-}
-
-char
-feed_buf_const_read_character(
-    struct feed_buf_const * const
+feed_buf_read_character(
+    struct feed_buf* const
         p_this,
     unsigned char * const
         p_data)
@@ -386,14 +341,14 @@ feed_buf_const_read_character(
         b_result;
 
     if (
-        (p_this->p_buf_min + 1u) <= p_this->p_buf_max)
+        (p_this->o_min.pc + 1u) <= p_this->o_max.pc)
     {
         *(
             p_data) =
             *(
-                p_this->p_buf_min);
+                p_this->o_min.pc);
 
-        p_this->p_buf_min ++;
+        p_this->o_min.pc ++;
 
         b_result =
             1;
@@ -407,11 +362,11 @@ feed_buf_const_read_character(
     return
         b_result;
 
-} /* feed_buf_const_read_character() */
+} /* feed_buf_read_character() */
 
 char
-feed_buf_const_read_character_array(
-    struct feed_buf_const * const
+feed_buf_read_character_array(
+    struct feed_buf * const
         p_this,
     unsigned char * const
         p_data_min,
@@ -422,15 +377,15 @@ feed_buf_const_read_character_array(
         b_result;
 
     if (
-        (p_this->p_buf_min + (p_data_max - p_data_min)) <= p_this->p_buf_max)
+        (p_this->o_min.pc + (p_data_max - p_data_min)) <= p_this->o_max.pc)
     {
         memcpy(
             p_data_min,
-            p_this->p_buf_min,
+            p_this->o_min.pc,
             (size_t)(
                 p_data_max - p_data_min));
 
-        p_this->p_buf_min +=
+        p_this->o_min.pc +=
             (p_data_max - p_data_min);
 
         b_result =
@@ -445,6 +400,6 @@ feed_buf_const_read_character_array(
     return
         b_result;
 
-} /* feed_buf_const_read_character_array() */
+} /* feed_buf_read_character_array() */
 
 /* end-of-file: feed_buf.c */

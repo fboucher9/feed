@@ -2947,7 +2947,7 @@ feed_save(
 
         i_result =
             (unsigned long int)(
-                o_raw_content.p_buf_min - p_data);
+                o_raw_content.o_min.p - p_data);
 
         feed_buf_cleanup(
             &(
@@ -2996,7 +2996,7 @@ feed_consume(
 
         i_data_iterator =
             (unsigned long int)(
-                o_buf.p_buf_min - p_data);
+                o_buf.o_min.p - p_data);
 
         feed_buf_cleanup(
             &(
