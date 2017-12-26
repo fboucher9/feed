@@ -402,4 +402,71 @@ feed_buf_read_character_array(
 
 } /* feed_buf_read_character_array() */
 
+int
+feed_buf_compare(
+    struct feed_buf const * const
+        p_buf1,
+    struct feed_buf const * const
+        p_buf2)
+{
+    int
+        i_result;
+
+    struct feed_buf
+        it1;
+
+    struct feed_buf
+        it2;
+
+    it1 =
+        *(
+            p_buf1);
+
+    it2 =
+        *(
+            p_buf2);
+
+    i_result =
+        0;
+
+    while (
+        (0 == i_result)
+        && (
+            (
+                it1.o_min.pc < it1.o_max.pc)
+            || (
+                it2.o_min.pc < it2.o_max.pc)))
+    {
+        unsigned char
+            c_ref1;
+
+        unsigned char
+            c_ref2;
+
+        c_ref1 =
+            0u;
+
+        c_ref2 =
+            0u;
+
+        feed_buf_read_character(
+            &(
+                it1),
+            &(
+                c_ref1));
+
+        feed_buf_read_character(
+            &(
+                it2),
+            &(
+                c_ref2));
+
+        i_result = (c_ref1 - c_ref2);
+    }
+
+    return
+        i_result;
+
+} /* feed_buf_compare() */
+
 /* end-of-file: feed_buf.c */

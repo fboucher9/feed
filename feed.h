@@ -232,7 +232,7 @@ unsigned long int feed_consume(
 unsigned long int feed_cursor(
     struct feed_handle * const p_feed_handle);
 
-/* execute editor commands via keyboard codes */
+/* execute editor commands via keyboard escape sequences */
 int feed_exec(
     struct feed_handle * const p_feed_handle,
     unsigned char const * const p_data,
@@ -244,6 +244,31 @@ int feed_theme(
     enum feed_syntax const e_syntax,
     enum feed_color const i_foreground,
     enum feed_color const i_background);
+
+/* Define keywords for color theme */
+int feed_keyword(
+    struct feed_handle * const p_feed_handle,
+    unsigned char const * const p_data,
+    unsigned long int const i_data_length);
+
+#if 0
+
+/* execute editor commands via a single keyboard code */
+int feed_key(
+    struct feed_handle * const p_feed_handle,
+    unsigned short int i_key);
+
+/* update position of cursor */
+int feed_move(
+    struct feed_handle * const p_feed_handle,
+    unsigned long int const i_cursor_offset);
+
+/* delete text from cursor position */
+int feed_delete(
+    struct feed_handle * const p_feed_handle,
+    unsigned long int const i_data_length);
+
+#endif
 
 #if defined(__cplusplus)
 } /* extern "C" */

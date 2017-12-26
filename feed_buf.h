@@ -100,4 +100,11 @@ feed_buf_read_character_array(
     unsigned char * const
         p_data_max);
 
+int
+feed_buf_compare(
+    struct feed_buf const * const
+        p_buf1,
+    struct feed_buf const * const
+        p_buf2);
+
 /* end-of-file: feed_buf.h */

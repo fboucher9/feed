@@ -58,6 +58,8 @@ Description:
 
 #include "feed_theme.h"
 
+#include "feed_dict.h"
+
 struct feed_handle
 {
     /* -- */
@@ -91,6 +93,14 @@ struct feed_handle
 
     struct feed_suggest_node *
         p_suggest_node;
+
+    /* -- */
+
+    struct feed_dict *
+        p_dict;
+
+    void *
+        pv_padding[1u];
 
     /* -- */
 
@@ -272,6 +282,10 @@ feed_init(
         &(
             p_this->o_color_list));
 
+    p_this->p_dict =
+        feed_dict_create(
+            p_this->p_client);
+
     b_result =
         1;
 
@@ -286,6 +300,17 @@ feed_cleanup(
     struct feed_handle * const
         p_this)
 {
+    if (
+        p_this->p_dict)
+    {
+        feed_dict_destroy(
+            p_this->p_dict);
+
+        p_this->p_dict =
+            (struct feed_dict *)(
+                0);
+    }
+
     feed_theme_cleanup(
         &(
             p_this->o_color_list));
@@ -3287,5 +3312,52 @@ feed_theme(
         i_result;
 
 } /* feed_theme() */
+
+int
+feed_keyword(
+    struct feed_handle * const
+        p_this,
+    unsigned char const * const
+        p_data,
+    unsigned long int const
+        i_data_length)
+{
+    int
+        i_result;
+
+    if (
+        p_this->p_dict)
+    {
+        struct feed_buf
+            o_word;
+
+        feed_buf_init(
+            &(
+                o_word),
+            p_data,
+            p_data + i_data_length);
+
+        feed_dict_add(
+            p_this->p_dict,
+            &(
+                o_word));
+
+        feed_buf_cleanup(
+            &(
+                o_word));
+
+        i_result =
+            0;
+    }
+    else
+    {
+        i_result =
+            -1;
+    }
+
+    return
+        i_result;
+
+} /* feed_keyword() */
 
 /* end-of-file: feed.c */

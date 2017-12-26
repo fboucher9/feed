@@ -123,6 +123,7 @@ FEED_LIBRARY_SRCS = \
     $(FEED_DST_PATH)/_obj_feed_view.o \
     $(FEED_DST_PATH)/_obj_feed_page.o \
     $(FEED_DST_PATH)/_obj_feed_theme.o \
+    $(FEED_DST_PATH)/_obj_feed_dict.o \
     $(FEED_DST_PATH)/_obj_feed.o
 
 # Default target
