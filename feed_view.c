@@ -40,9 +40,9 @@ Description:
 
 static
 char
-feed_view_get_prompt_glyph(
-    struct feed_view * const
-        p_iterator,
+feed_combo_iterator_get_prompt_glyph(
+    struct feed_combo_iterator * const
+        p_combo_iterator,
     unsigned long int const
         i_line_index,
     unsigned long int const
@@ -53,16 +53,15 @@ feed_view_get_prompt_glyph(
 
     b_result =
         feed_prompt_iterator_set_index(
-            p_iterator->p_client->p_prompt,
             &(
-                p_iterator->o_prompt_iterator),
+                p_combo_iterator->o_prompt_iterator),
             i_line_index,
             i_glyph_index);
 
     if (
         b_result)
     {
-        p_iterator->e_state =
+        p_combo_iterator->e_state =
             feed_view_state_prompt;
     }
 
@@ -73,9 +72,9 @@ feed_view_get_prompt_glyph(
 
 static
 char
-feed_view_get_text_glyph(
-    struct feed_view * const
-        p_iterator,
+feed_combo_iterator_get_text_glyph(
+    struct feed_combo_iterator * const
+        p_combo_iterator,
     unsigned long int const
         i_line_index,
     unsigned long int const
@@ -86,16 +85,15 @@ feed_view_get_text_glyph(
 
     b_result =
         feed_text_iterator_set_index(
-            p_iterator->p_client->p_text,
             &(
-                p_iterator->o_text_iterator),
+                p_combo_iterator->o_text_iterator),
             i_line_index,
             i_glyph_index);
 
     if (
         b_result)
     {
-        p_iterator->e_state =
+        p_combo_iterator->e_state =
             feed_view_state_text;
     }
 
@@ -106,23 +104,22 @@ feed_view_get_text_glyph(
 
 static
 char
-feed_view_next_prompt_glyph(
-    struct feed_view * const
-        p_iterator)
+feed_combo_iterator_next_prompt_glyph(
+    struct feed_combo_iterator * const
+        p_combo_iterator)
 {
     char
         b_result;
 
     b_result =
         feed_prompt_iterator_next_glyph(
-            p_iterator->p_client->p_prompt,
             &(
-                p_iterator->o_prompt_iterator));
+                p_combo_iterator->o_prompt_iterator));
 
     if (
         b_result)
     {
-        p_iterator->e_state =
+        p_combo_iterator->e_state =
             feed_view_state_prompt;
     }
 
@@ -133,23 +130,22 @@ feed_view_next_prompt_glyph(
 
 static
 char
-feed_view_first_text_glyph(
-    struct feed_view * const
-        p_iterator)
+feed_combo_iterator_first_text_glyph(
+    struct feed_combo_iterator * const
+        p_combo_iterator)
 {
     char
         b_result;
 
     b_result =
         feed_text_iterator_home_glyph(
-            p_iterator->p_client->p_text,
             &(
-                p_iterator->o_text_iterator));
+                p_combo_iterator->o_text_iterator));
 
     if (
         b_result)
     {
-        p_iterator->e_state =
+        p_combo_iterator->e_state =
             feed_view_state_text;
     }
 
@@ -160,23 +156,22 @@ feed_view_first_text_glyph(
 
 static
 char
-feed_view_next_line(
-    struct feed_view * const
-        p_iterator)
+feed_combo_iterator_next_line(
+    struct feed_combo_iterator * const
+        p_combo_iterator)
 {
     char
         b_result;
 
     b_result =
         feed_text_iterator_next_line(
-            p_iterator->p_client->p_text,
             &(
-                p_iterator->o_text_iterator));
+                p_combo_iterator->o_text_iterator));
 
     if (
         b_result)
     {
-        p_iterator->e_state =
+        p_combo_iterator->e_state =
             feed_view_state_text;
     }
 
@@ -187,23 +182,22 @@ feed_view_next_line(
 
 static
 char
-feed_view_next_text_glyph(
-    struct feed_view * const
-        p_iterator)
+feed_combo_iterator_next_text_glyph(
+    struct feed_combo_iterator * const
+        p_combo_iterator)
 {
     char
         b_result;
 
     b_result =
         feed_text_iterator_next_glyph(
-            p_iterator->p_client->p_text,
             &(
-                p_iterator->o_text_iterator));
+                p_combo_iterator->o_text_iterator));
 
     if (
         b_result)
     {
-        p_iterator->e_state =
+        p_combo_iterator->e_state =
             feed_view_state_text;
     }
 
@@ -214,36 +208,275 @@ feed_view_next_text_glyph(
 
 static
 char
-feed_view_first_prompt_glyph(
-    struct feed_view * const
-        p_iterator)
+feed_combo_iterator_first_prompt_glyph(
+    struct feed_combo_iterator * const
+        p_combo_iterator)
 {
     char
         b_result;
 
     b_result =
         feed_prompt_iterator_set_line(
-            p_iterator->p_client->p_prompt,
             &(
-                p_iterator->o_prompt_iterator),
-            p_iterator->o_text_iterator.i_line_index);
+                p_combo_iterator->o_prompt_iterator),
+            p_combo_iterator->o_text_iterator.i_line_index);
 
     if (
         b_result)
     {
         b_result =
             feed_prompt_iterator_first_glyph(
-                p_iterator->p_client->p_prompt,
                 &(
-                    p_iterator->o_prompt_iterator));
+                    p_combo_iterator->o_prompt_iterator));
 
         if (
             b_result)
         {
-            p_iterator->e_state =
+            p_combo_iterator->e_state =
                 feed_view_state_prompt;
         }
     }
+
+    return
+        b_result;
+
+}
+
+char
+feed_combo_iterator_init(
+    struct feed_combo_iterator * const
+        p_combo_iterator,
+    struct feed_client * const
+        p_client)
+{
+    char
+        b_result;
+
+    memset(
+        p_combo_iterator,
+        0x00u,
+        sizeof(
+            *(p_combo_iterator)));
+
+    p_combo_iterator->p_client =
+        p_client;
+
+    feed_text_iterator_init(
+        p_client,
+        p_client->p_text,
+        &(
+            p_combo_iterator->o_text_iterator));
+
+    feed_prompt_iterator_init(
+        p_client,
+        p_client->p_prompt,
+        &(
+            p_combo_iterator->o_prompt_iterator));
+
+    b_result =
+        1;
+
+    return
+        b_result;
+
+}
+
+void
+feed_combo_iterator_cleanup(
+    struct feed_combo_iterator * const
+        p_combo_iterator)
+{
+    feed_prompt_iterator_cleanup(
+        &(
+            p_combo_iterator->o_prompt_iterator));
+
+    feed_text_iterator_cleanup(
+        &(
+            p_combo_iterator->o_text_iterator));
+
+    p_combo_iterator->p_client =
+        (struct feed_client *)(
+            0);
+}
+
+char
+feed_combo_iterator_head(
+    struct feed_combo_iterator * const
+        p_combo_iterator,
+    struct feed_view_descriptor const * const
+        p_view_descriptor)
+{
+    char
+        b_result;
+
+    p_combo_iterator->o_text_iterator.i_line_index =
+        p_view_descriptor->i_line_index;
+
+    p_combo_iterator->o_text_iterator.p_line =
+        p_view_descriptor->p_line;
+
+    if (feed_view_state_prompt == p_view_descriptor->e_state)
+    {
+        if (
+            feed_combo_iterator_get_prompt_glyph(
+                p_combo_iterator,
+                p_view_descriptor->i_line_index,
+                p_view_descriptor->i_glyph_index))
+        {
+            b_result =
+                1;
+        }
+        else if (
+            feed_combo_iterator_first_text_glyph(
+                p_combo_iterator))
+        {
+            b_result =
+                1;
+        }
+        else
+        {
+            b_result =
+                0;
+        }
+    }
+    else
+    {
+        if (
+            feed_combo_iterator_get_text_glyph(
+                p_combo_iterator,
+                p_view_descriptor->i_line_index,
+                p_view_descriptor->i_glyph_index))
+        {
+            b_result =
+                1;
+        }
+        else
+        {
+            b_result =
+                0;
+        }
+    }
+
+    return
+        b_result;
+
+}
+
+char
+feed_combo_iterator_next(
+    struct feed_combo_iterator * const
+        p_combo_iterator)
+{
+    char
+        b_result;
+
+    if (feed_view_state_prompt == p_combo_iterator->e_state)
+    {
+        if (feed_combo_iterator_next_prompt_glyph(p_combo_iterator))
+        {
+            b_result = 1;
+        }
+        else if (feed_combo_iterator_first_text_glyph(p_combo_iterator))
+        {
+            b_result = 1;
+        }
+        else
+        {
+            b_result = 0;
+        }
+    }
+    else if (feed_view_state_text == p_combo_iterator->e_state)
+    {
+        if (feed_combo_iterator_next_text_glyph(p_combo_iterator))
+        {
+            b_result = 1;
+        }
+        else
+        {
+            if (feed_combo_iterator_next_line(p_combo_iterator))
+            {
+                if (feed_combo_iterator_first_prompt_glyph(p_combo_iterator))
+                {
+                    b_result = 1;
+                }
+                else if (feed_combo_iterator_first_text_glyph(p_combo_iterator))
+                {
+                    b_result = 1;
+                }
+                else
+                {
+                    b_result = 0;
+                }
+            }
+            else
+            {
+                b_result = 0;
+            }
+        }
+    }
+    else
+    {
+        b_result = 0;
+    }
+
+    return
+        b_result;
+
+}
+
+char
+feed_combo_iterator_query(
+    struct feed_combo_iterator * const
+        p_combo_iterator,
+    struct feed_view_descriptor * const
+        p_view_descriptor)
+{
+    char
+        b_result;
+
+    p_view_descriptor->e_state =
+        p_combo_iterator->e_state;
+
+    p_view_descriptor->p_line =
+        p_combo_iterator->o_text_iterator.p_line;
+
+    p_view_descriptor->i_line_index =
+        p_combo_iterator->o_text_iterator.i_line_index;
+
+    if (
+        feed_view_state_prompt == p_combo_iterator->e_state)
+    {
+        p_view_descriptor->p_glyph =
+            p_combo_iterator->o_prompt_iterator.p_glyph;
+
+        p_view_descriptor->i_glyph_index =
+            p_combo_iterator->o_prompt_iterator.i_glyph_index;
+    }
+    else if (
+        feed_view_state_text == p_combo_iterator->e_state)
+    {
+        feed_text_iterator_validate(
+            &(
+                p_combo_iterator->o_text_iterator));
+
+        p_view_descriptor->p_glyph =
+            p_combo_iterator->o_text_iterator.p_glyph;
+
+        p_view_descriptor->i_glyph_index =
+            p_combo_iterator->o_text_iterator.i_glyph_index;
+    }
+    else
+    {
+        p_view_descriptor->p_glyph =
+            (struct feed_glyph *)(
+                0);
+
+        p_view_descriptor->i_glyph_index =
+            0ul;
+    }
+
+    b_result =
+        1;
 
     return
         b_result;
@@ -263,20 +496,19 @@ feed_view_test(
         p_glyph;
 
     if (
-        feed_view_state_prompt == p_iterator->e_state)
+        feed_view_state_prompt == p_iterator->o_combo_iterator.e_state)
     {
         p_glyph =
-            p_iterator->o_prompt_iterator.p_glyph;
+            p_iterator->o_combo_iterator.o_prompt_iterator.p_glyph;
     }
     else
     {
         feed_text_iterator_validate(
-            p_iterator->p_client->p_text,
             &(
-                p_iterator->o_text_iterator));
+                p_iterator->o_combo_iterator.o_text_iterator));
 
         p_glyph =
-            p_iterator->o_text_iterator.p_glyph;
+            p_iterator->o_combo_iterator.o_text_iterator.p_glyph;
     }
 
     if (p_glyph)
@@ -353,53 +585,11 @@ feed_view_head(
     char
         b_result;
 
-    p_iterator->o_text_iterator.i_line_index =
-        p_view_descriptor->i_line_index;
-
-    p_iterator->o_text_iterator.p_line =
-        p_view_descriptor->p_line;
-
-    if (feed_view_state_prompt == p_view_descriptor->e_state)
-    {
-        if (
-            feed_view_get_prompt_glyph(
-                p_iterator,
-                p_view_descriptor->i_line_index,
-                p_view_descriptor->i_glyph_index))
-        {
-            b_result =
-                1;
-        }
-        else if (
-            feed_view_first_text_glyph(
-                p_iterator))
-        {
-            b_result =
-                1;
-        }
-        else
-        {
-            b_result =
-                0;
-        }
-    }
-    else
-    {
-        if (
-            feed_view_get_text_glyph(
-                p_iterator,
-                p_view_descriptor->i_line_index,
-                p_view_descriptor->i_glyph_index))
-        {
-            b_result =
-                1;
-        }
-        else
-        {
-            b_result =
-                0;
-        }
-    }
+    b_result =
+        feed_combo_iterator_head(
+            &(
+                p_iterator->o_combo_iterator),
+            p_view_descriptor);
 
     if (
         b_result)
@@ -435,20 +625,19 @@ feed_view_write(
         p_glyph;
 
     if (
-        feed_view_state_prompt == p_iterator->e_state)
+        feed_view_state_prompt == p_iterator->o_combo_iterator.e_state)
     {
         p_glyph =
-            p_iterator->o_prompt_iterator.p_glyph;
+            p_iterator->o_combo_iterator.o_prompt_iterator.p_glyph;
     }
     else
     {
         feed_text_iterator_validate(
-            p_iterator->p_client->p_text,
             &(
-                p_iterator->o_text_iterator));
+                p_iterator->o_combo_iterator.o_text_iterator));
 
         p_glyph =
-            p_iterator->o_text_iterator.p_glyph;
+            p_iterator->o_combo_iterator.o_text_iterator.p_glyph;
     }
 
     if (p_glyph)
@@ -582,54 +771,10 @@ feed_view_next(
     feed_view_write(
         p_iterator);
 
-    if (feed_view_state_prompt == p_iterator->e_state)
-    {
-        if (feed_view_next_prompt_glyph(p_iterator))
-        {
-            b_result = 1;
-        }
-        else if (feed_view_first_text_glyph(p_iterator))
-        {
-            b_result = 1;
-        }
-        else
-        {
-            b_result = 0;
-        }
-    }
-    else if (feed_view_state_text == p_iterator->e_state)
-    {
-        if (feed_view_next_text_glyph(p_iterator))
-        {
-            b_result = 1;
-        }
-        else
-        {
-            if (feed_view_next_line(p_iterator))
-            {
-                if (feed_view_first_prompt_glyph(p_iterator))
-                {
-                    b_result = 1;
-                }
-                else if (feed_view_first_text_glyph(p_iterator))
-                {
-                    b_result = 1;
-                }
-                else
-                {
-                    b_result = 0;
-                }
-            }
-            else
-            {
-                b_result = 0;
-            }
-        }
-    }
-    else
-    {
-        b_result = 0;
-    }
+    b_result =
+        feed_combo_iterator_next(
+            &(
+                p_iterator->o_combo_iterator));
 
     if (
         b_result)
@@ -654,50 +799,11 @@ feed_view_query(
     char
         b_result;
 
-    p_view_descriptor->e_state =
-        p_iterator->e_state;
-
-    p_view_descriptor->p_line =
-        p_iterator->o_text_iterator.p_line;
-
-    p_view_descriptor->i_line_index =
-        p_iterator->o_text_iterator.i_line_index;
-
-    if (
-        feed_view_state_prompt == p_iterator->e_state)
-    {
-        p_view_descriptor->p_glyph =
-            p_iterator->o_prompt_iterator.p_glyph;
-
-        p_view_descriptor->i_glyph_index =
-            p_iterator->o_prompt_iterator.i_glyph_index;
-    }
-    else if (
-        feed_view_state_text == p_iterator->e_state)
-    {
-        feed_text_iterator_validate(
-            p_iterator->p_client->p_text,
-            &(
-                p_iterator->o_text_iterator));
-
-        p_view_descriptor->p_glyph =
-            p_iterator->o_text_iterator.p_glyph;
-
-        p_view_descriptor->i_glyph_index =
-            p_iterator->o_text_iterator.i_glyph_index;
-    }
-    else
-    {
-        p_view_descriptor->p_glyph =
-            (struct feed_glyph *)(
-                0);
-
-        p_view_descriptor->i_glyph_index =
-            0ul;
-    }
-
     b_result =
-        1;
+        feed_combo_iterator_query(
+            &(
+                p_iterator->o_combo_iterator),
+            p_view_descriptor);
 
     return
         b_result;
@@ -720,6 +826,11 @@ feed_view_init(
     p_iterator->p_client =
         p_client;
 
+    feed_combo_iterator_init(
+        &(
+            p_iterator->o_combo_iterator),
+        p_client);
+
 }
 
 void
@@ -727,8 +838,13 @@ feed_view_cleanup(
     struct feed_view * const
         p_iterator)
 {
-    (void)(
-        p_iterator);
+    feed_combo_iterator_cleanup(
+        &(
+            p_iterator->o_combo_iterator));
+
+    p_iterator->p_client =
+        (struct feed_client *)(
+            0);
 }
 
 /* end-of-file: feed_view.c */

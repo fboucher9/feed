@@ -56,6 +56,98 @@ enum feed_view_state
 
 }; /* enum feed_view_state */
 
+struct feed_view_descriptor
+{
+    struct feed_line *
+        p_line;
+
+    struct feed_glyph *
+        p_glyph;
+
+    unsigned long int
+        i_line_index;
+
+    unsigned long int
+        i_glyph_index;
+
+    enum feed_view_state
+        e_state;
+
+    unsigned int
+        ui_padding[3u];
+
+};
+
+/*
+
+Structure: feed_combo_iterator
+
+Description:
+
+    Iterator for combination of prompt and text
+
+*/
+struct feed_combo_iterator
+{
+    struct feed_client *
+        p_client;
+
+    void *
+        pv_padding[1u];
+
+    /* -- */
+
+    /* Position in text */
+    struct feed_text_iterator
+        o_text_iterator;
+
+    /* -- */
+
+    /* Position in prompt */
+    struct feed_prompt_iterator
+        o_prompt_iterator;
+
+    /* -- */
+
+    enum feed_view_state
+        e_state;
+
+    unsigned int
+        ui_padding[3u];
+
+}; /* struct feed_combo_iterator */
+
+char
+feed_combo_iterator_init(
+    struct feed_combo_iterator * const
+        p_combo_iterator,
+    struct feed_client * const
+        p_client);
+
+void
+feed_combo_iterator_cleanup(
+    struct feed_combo_iterator * const
+        p_combo_iterator);
+
+char
+feed_combo_iterator_head(
+    struct feed_combo_iterator * const
+        p_combo_iterator,
+    struct feed_view_descriptor const * const
+        p_view_descriptor);
+
+char
+feed_combo_iterator_next(
+    struct feed_combo_iterator * const
+        p_combo_iterator);
+
+char
+feed_combo_iterator_query(
+    struct feed_combo_iterator * const
+        p_combo_iterator,
+    struct feed_view_descriptor * const
+        p_view_descriptor);
+
 /*
 
 refresh engine
@@ -91,50 +183,30 @@ struct feed_view
     struct feed_client *
         p_client;
 
-    /* Position in text */
-    struct feed_text_iterator
-        o_text_iterator;
+    void *
+        pv_padding[1u];
 
-    /* Position in prompt */
-    struct feed_prompt_iterator
-        o_prompt_iterator;
+    /* -- */
+
+    /* Iterator for prompt and text combination */
+    struct feed_combo_iterator
+        o_combo_iterator;
+
+    /* -- */
 
     /* Position in screen */
     struct feed_screen_iterator
         o_screen_iterator;
 
-    enum feed_view_state
-        e_state;
+    /* -- */
 
     int
         b_screen_full;
 
     unsigned int
-        ui_padding[2u];
-
-}; /* struct feed_view */
-
-struct feed_view_descriptor
-{
-    struct feed_line *
-        p_line;
-
-    struct feed_glyph *
-        p_glyph;
-
-    unsigned long int
-        i_line_index;
-
-    unsigned long int
-        i_glyph_index;
-
-    enum feed_view_state
-        e_state;
-
-    unsigned int
         ui_padding[3u];
 
-};
+}; /* struct feed_view */
 
 void
 feed_view_init(

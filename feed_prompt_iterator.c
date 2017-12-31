@@ -18,6 +18,8 @@
 
 char
 feed_prompt_iterator_init(
+    struct feed_client * const
+        p_client,
     struct feed_prompt * const
         p_prompt,
     struct feed_prompt_iterator * const
@@ -26,8 +28,11 @@ feed_prompt_iterator_init(
     char
         b_result;
 
-    (void)(
-        p_prompt);
+    p_iterator->p_client =
+        p_client;
+
+    p_iterator->p_prompt =
+        p_prompt;
 
     p_iterator->p_line =
         (struct feed_line *)(
@@ -53,13 +58,16 @@ feed_prompt_iterator_init(
 
 void
 feed_prompt_iterator_cleanup(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator)
 {
-    (void)(
-        p_prompt);
+    p_iterator->p_client =
+        (struct feed_client *)(
+            0);
+
+    p_iterator->p_prompt =
+        (struct feed_prompt *)(
+            0);
 
     p_iterator->p_line =
         (struct feed_line *)(
@@ -80,8 +88,6 @@ feed_prompt_iterator_cleanup(
 static
 char
 feed_prompt_iterator_validate_line(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator)
 {
@@ -97,13 +103,13 @@ feed_prompt_iterator_validate_line(
         {
             p_iterator->p_line =
                 feed_prompt_get1(
-                    p_prompt);
+                    p_iterator->p_prompt);
         }
         else
         {
             p_iterator->p_line =
                 feed_prompt_get2(
-                    p_prompt);
+                    p_iterator->p_prompt);
         }
 
         if (
@@ -132,8 +138,6 @@ feed_prompt_iterator_validate_line(
 static
 char
 feed_prompt_iterator_validate_glyph(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator)
 {
@@ -146,7 +150,6 @@ feed_prompt_iterator_validate_glyph(
     {
         b_result =
             feed_prompt_iterator_validate_line(
-                p_prompt,
                 p_iterator);
 
         if (
@@ -183,8 +186,6 @@ feed_prompt_iterator_validate_glyph(
 
 char
 feed_prompt_iterator_set_line(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator,
     unsigned long int const
@@ -192,9 +193,6 @@ feed_prompt_iterator_set_line(
 {
     char
         b_result;
-
-    (void)(
-        p_prompt);
 
     p_iterator->i_line_index =
         i_line_index;
@@ -212,7 +210,6 @@ feed_prompt_iterator_set_line(
 
     b_result =
         feed_prompt_iterator_validate_glyph(
-            p_prompt,
             p_iterator);
 
     return
@@ -222,8 +219,6 @@ feed_prompt_iterator_set_line(
 
 char
 feed_prompt_iterator_set_glyph(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator,
     unsigned long int const
@@ -241,7 +236,6 @@ feed_prompt_iterator_set_glyph(
 
     b_result =
         feed_prompt_iterator_validate_glyph(
-            p_prompt,
             p_iterator);
 
     return
@@ -251,8 +245,6 @@ feed_prompt_iterator_set_glyph(
 
 char
 feed_prompt_iterator_set_index(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator,
     unsigned long int const
@@ -279,7 +271,6 @@ feed_prompt_iterator_set_index(
 
     b_result =
         feed_prompt_iterator_validate_glyph(
-            p_prompt,
             p_iterator);
 
     return
@@ -289,8 +280,6 @@ feed_prompt_iterator_set_index(
 
 char
 feed_prompt_iterator_first_glyph(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator)
 {
@@ -299,7 +288,6 @@ feed_prompt_iterator_first_glyph(
 
     b_result =
         feed_prompt_iterator_set_glyph(
-            p_prompt,
             p_iterator,
             0ul);
 
@@ -310,8 +298,6 @@ feed_prompt_iterator_first_glyph(
 
 char
 feed_prompt_iterator_last_glyph(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator)
 {
@@ -320,7 +306,6 @@ feed_prompt_iterator_last_glyph(
 
     b_result =
         feed_prompt_iterator_validate_line(
-            p_prompt,
             p_iterator);
 
     if (
@@ -328,7 +313,6 @@ feed_prompt_iterator_last_glyph(
     {
         b_result =
             feed_prompt_iterator_set_glyph(
-                p_prompt,
                 p_iterator,
                 p_iterator->p_line->i_glyph_count - 1u);
     }
@@ -340,8 +324,6 @@ feed_prompt_iterator_last_glyph(
 
 char
 feed_prompt_iterator_next_glyph(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator)
 {
@@ -350,7 +332,6 @@ feed_prompt_iterator_next_glyph(
 
     b_result =
         feed_prompt_iterator_validate_glyph(
-            p_prompt,
             p_iterator);
 
     if (
@@ -382,8 +363,6 @@ feed_prompt_iterator_next_glyph(
 
 char
 feed_prompt_iterator_prev_glyph(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator)
 {
@@ -392,7 +371,6 @@ feed_prompt_iterator_prev_glyph(
 
     b_result =
         feed_prompt_iterator_validate_glyph(
-            p_prompt,
             p_iterator);
 
     if (

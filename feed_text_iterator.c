@@ -22,13 +22,18 @@
 
 void
 feed_text_iterator_init(
-    struct feed_text const * const
+    struct feed_client * const
+        p_client,
+    struct feed_text * const
         p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
-    (void)(
-        p_text);
+    p_text_iterator->p_client =
+        p_client;
+
+    p_text_iterator->p_text =
+        p_text;
 
     p_text_iterator->p_line =
         (struct feed_line *)(
@@ -48,14 +53,9 @@ feed_text_iterator_init(
 
 void
 feed_text_iterator_cleanup(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
-    (void)(
-        p_text);
-
     p_text_iterator->p_line =
         (struct feed_line *)(
             0);
@@ -75,14 +75,9 @@ feed_text_iterator_cleanup(
 static
 void
 feed_text_iterator_invalidate_line(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
-    (void)(
-        p_text);
-
     p_text_iterator->p_line =
         (struct feed_line *)(
             0);
@@ -92,14 +87,9 @@ feed_text_iterator_invalidate_line(
 static
 void
 feed_text_iterator_invalidate_glyph(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
-    (void)(
-        p_text);
-
     p_text_iterator->p_glyph =
         (struct feed_glyph *)(
             0);
@@ -108,20 +98,13 @@ feed_text_iterator_invalidate_glyph(
 
 void
 feed_text_iterator_invalidate(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
-    (void)(
-        p_text);
-
     feed_text_iterator_invalidate_line(
-        p_text,
         p_text_iterator);
 
     feed_text_iterator_invalidate_glyph(
-        p_text,
         p_text_iterator);
 
 }
@@ -129,8 +112,6 @@ feed_text_iterator_invalidate(
 static
 void
 feed_text_iterator_validate_line(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
@@ -138,7 +119,7 @@ feed_text_iterator_validate_line(
     {
         p_text_iterator->p_line =
             feed_text_get_line(
-                p_text,
+                p_text_iterator->p_text,
                 p_text_iterator->i_line_index);
     }
 
@@ -147,13 +128,10 @@ feed_text_iterator_validate_line(
 static
 void
 feed_text_iterator_validate_glyph(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
     feed_text_iterator_validate_line(
-        p_text,
         p_text_iterator);
 
     if (p_text_iterator->p_line)
@@ -170,21 +148,16 @@ feed_text_iterator_validate_glyph(
 
 void
 feed_text_iterator_validate(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
     feed_text_iterator_validate_glyph(
-        p_text,
         p_text_iterator);
 
 }
 
 char
 feed_text_iterator_set_line(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator,
     unsigned long int const
@@ -197,7 +170,6 @@ feed_text_iterator_set_line(
         i_line_index;
 
     feed_text_iterator_invalidate(
-        p_text,
         p_text_iterator);
 
     b_result =
@@ -210,22 +182,19 @@ feed_text_iterator_set_line(
 
 char
 feed_text_iterator_next_line(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
     char
         b_result;
 
-    if ((p_text_iterator->i_line_index + 1u) < p_text->i_line_count)
+    if ((p_text_iterator->i_line_index + 1u) < p_text_iterator->p_text->i_line_count)
     {
         feed_text_iterator_validate_line(
-            p_text,
             p_text_iterator);
 
         if (p_text_iterator->p_line
-            && (p_text_iterator->p_line->o_list.p_next != &(p_text->o_lines)))
+            && (p_text_iterator->p_line->o_list.p_next != &(p_text_iterator->p_text->o_lines)))
         {
             p_text_iterator->i_line_index ++;
 
@@ -234,7 +203,6 @@ feed_text_iterator_next_line(
                     p_text_iterator->p_line->o_list.p_next);
 
             feed_text_iterator_invalidate_glyph(
-                p_text,
                 p_text_iterator);
 
             b_result =
@@ -259,8 +227,6 @@ feed_text_iterator_next_line(
 
 char
 feed_text_iterator_prev_line(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
@@ -270,11 +236,10 @@ feed_text_iterator_prev_line(
     if (p_text_iterator->i_line_index > 0u)
     {
         feed_text_iterator_validate_line(
-            p_text,
             p_text_iterator);
 
         if (p_text_iterator->p_line
-            && (p_text_iterator->p_line->o_list.p_prev != &(p_text->o_lines)))
+            && (p_text_iterator->p_line->o_list.p_prev != &(p_text_iterator->p_text->o_lines)))
         {
             p_text_iterator->i_line_index --;
 
@@ -285,7 +250,6 @@ feed_text_iterator_prev_line(
             /* Invalidate the glyph ptr cache */
             /* Try to stay at same glyph index */
             feed_text_iterator_invalidate_glyph(
-                p_text,
                 p_text_iterator);
 
             b_result =
@@ -310,36 +274,28 @@ feed_text_iterator_prev_line(
 
 char
 feed_text_iterator_home_line(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
     return
         feed_text_iterator_set_line(
-            p_text,
             p_text_iterator,
             0ul);
 }
 
 char
 feed_text_iterator_end_line(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
     return
         feed_text_iterator_set_line(
-            p_text,
             p_text_iterator,
-            p_text->i_line_count - 1ul);
+            p_text_iterator->p_text->i_line_count - 1ul);
 }
 
 char
 feed_text_iterator_set_glyph(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator,
     unsigned long int const
@@ -352,7 +308,6 @@ feed_text_iterator_set_glyph(
         i_glyph_index;
 
     feed_text_iterator_invalidate_glyph(
-        p_text,
         p_text_iterator);
 
     b_result =
@@ -365,8 +320,6 @@ feed_text_iterator_set_glyph(
 
 char
 feed_text_iterator_next_glyph(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
@@ -374,7 +327,6 @@ feed_text_iterator_next_glyph(
         b_result;
 
     feed_text_iterator_validate(
-        p_text,
         p_text_iterator);
 
     if (p_text_iterator->p_line
@@ -417,8 +369,6 @@ feed_text_iterator_next_glyph(
 
 char
 feed_text_iterator_prev_glyph(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
@@ -426,7 +376,6 @@ feed_text_iterator_prev_glyph(
         b_result;
 
     feed_text_iterator_validate(
-        p_text,
         p_text_iterator);
 
     if (p_text_iterator->p_line
@@ -484,14 +433,11 @@ feed_text_iterator_prev_glyph(
 
 char
 feed_text_iterator_home_glyph(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
     return
         feed_text_iterator_set_glyph(
-            p_text,
             p_text_iterator,
             0ul);
 
@@ -499,8 +445,6 @@ feed_text_iterator_home_glyph(
 
 char
 feed_text_iterator_end_glyph(
-    struct feed_text const * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
@@ -508,7 +452,6 @@ feed_text_iterator_end_glyph(
         b_result;
 
     feed_text_iterator_validate_line(
-        p_text,
         p_text_iterator);
 
     if (
@@ -517,7 +460,6 @@ feed_text_iterator_end_glyph(
     {
         b_result =
             feed_text_iterator_set_glyph(
-                p_text,
                 p_text_iterator,
                 p_text_iterator->p_line->i_glyph_count - 1u);
     }
@@ -525,7 +467,6 @@ feed_text_iterator_end_glyph(
     {
         b_result =
             feed_text_iterator_home_glyph(
-                p_text,
                 p_text_iterator);
     }
 
@@ -536,8 +477,6 @@ feed_text_iterator_end_glyph(
 
 struct feed_glyph *
 feed_text_iterator_remove_glyph(
-    struct feed_text * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
@@ -545,7 +484,6 @@ feed_text_iterator_remove_glyph(
         p_glyph;
 
     feed_text_iterator_validate(
-        p_text,
         p_text_iterator);
 
     if (p_text_iterator->p_line
@@ -587,15 +525,12 @@ feed_text_iterator_remove_glyph(
 
 void
 feed_text_iterator_append_glyph(
-    struct feed_text * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator,
     struct feed_glyph * const
         p_glyph)
 {
     feed_text_iterator_validate_line(
-        p_text,
         p_text_iterator);
 
     if (p_text_iterator->p_line)
@@ -608,15 +543,12 @@ feed_text_iterator_append_glyph(
 
 void
 feed_text_iterator_write_glyph(
-    struct feed_text * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator,
     struct feed_glyph * const
         p_glyph)
 {
     feed_text_iterator_validate(
-        p_text,
         p_text_iterator);
 
     feed_line_insert_glyph_before(
@@ -629,8 +561,6 @@ feed_text_iterator_write_glyph(
 
 char
 feed_text_iterator_join_lines(
-    struct feed_text * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
@@ -644,7 +574,6 @@ feed_text_iterator_join_lines(
         o_next_line;
 
     feed_text_iterator_validate(
-        p_text,
         p_text_iterator);
 
     o_next_line =
@@ -664,17 +593,14 @@ feed_text_iterator_join_lines(
 
     if (
         feed_text_iterator_next_line(
-            p_text,
             &(
                 o_next_line)))
     {
         feed_text_iterator_home_glyph(
-            p_text,
             &(
                 o_next_line));
 
         feed_text_iterator_validate_line(
-            p_text,
             &(
                 o_next_line));
 
@@ -690,7 +616,6 @@ feed_text_iterator_join_lines(
 
             p_glyph =
                 feed_text_iterator_remove_glyph(
-                    p_text,
                     &(
                         o_next_line));
 
@@ -698,7 +623,6 @@ feed_text_iterator_join_lines(
                 p_glyph)
             {
                 feed_text_iterator_append_glyph(
-                    p_text,
                     p_text_iterator,
                     p_glyph);
             }
@@ -710,14 +634,13 @@ feed_text_iterator_join_lines(
         }
 
         feed_text_remove_line(
-            p_text,
+            p_text_iterator->p_text,
             o_next_line.p_line);
 
         feed_line_destroy(
             o_next_line.p_line);
 
         feed_text_iterator_invalidate_glyph(
-            p_text,
             p_text_iterator);
 
         b_result =
@@ -736,8 +659,6 @@ feed_text_iterator_join_lines(
 
 char
 feed_text_iterator_set_index(
-    struct feed_text * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator,
     unsigned long int const
@@ -755,7 +676,6 @@ feed_text_iterator_set_index(
         i_glyph_index;
 
     feed_text_iterator_invalidate(
-        p_text,
         p_text_iterator);
 
     b_result =
@@ -768,8 +688,6 @@ feed_text_iterator_set_index(
 
 char
 feed_text_iterator_set_offset(
-    struct feed_text * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator,
     unsigned long int const
@@ -786,7 +704,7 @@ feed_text_iterator_set_offset(
 
     if (
         feed_text_offset_to_index(
-            p_text,
+            p_text_iterator->p_text,
             i_offset,
             &(
                 i_line_index),
@@ -795,7 +713,6 @@ feed_text_iterator_set_offset(
     {
         if (
             feed_text_iterator_set_index(
-                p_text,
                 p_text_iterator,
                 i_line_index,
                 i_glyph_index))
@@ -822,8 +739,6 @@ feed_text_iterator_set_offset(
 
 void
 feed_text_iterator_save(
-    struct feed_text * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator,
     struct feed_buf * const
@@ -839,7 +754,6 @@ feed_text_iterator_save(
         b_more)
     {
         feed_text_iterator_validate(
-            p_text,
             p_text_iterator);
 
         if (
@@ -862,7 +776,6 @@ feed_text_iterator_save(
 
         if (
             feed_text_iterator_next_glyph(
-                p_text,
                 p_text_iterator))
         {
         }
@@ -870,11 +783,9 @@ feed_text_iterator_save(
         {
             if (
                 feed_text_iterator_next_line(
-                    p_text,
                     p_text_iterator))
             {
                 feed_text_iterator_home_glyph(
-                    p_text,
                     p_text_iterator);
             }
             else
@@ -889,8 +800,6 @@ feed_text_iterator_save(
 
 unsigned long int
 feed_text_iterator_get_offset(
-    struct feed_text * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
@@ -899,7 +808,7 @@ feed_text_iterator_get_offset(
 
     if (
         feed_text_index_to_offset(
-            p_text,
+            p_text_iterator->p_text,
             p_text_iterator->i_line_index,
             p_text_iterator->i_glyph_index,
             &(
@@ -919,8 +828,6 @@ feed_text_iterator_get_offset(
 
 void
 feed_text_iterator_delete_region(
-    struct feed_text * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator,
     unsigned long int const
@@ -945,7 +852,6 @@ feed_text_iterator_delete_region(
             i_region_iterator < i_region_length))
     {
         feed_text_iterator_validate(
-            p_text,
             p_text_iterator);
 
         if (p_text_iterator->p_glyph)
@@ -955,7 +861,6 @@ feed_text_iterator_delete_region(
 
             p_glyph =
                 feed_text_iterator_remove_glyph(
-                    p_text,
                     p_text_iterator);
 
             if (
@@ -965,7 +870,7 @@ feed_text_iterator_delete_region(
                     p_glyph->o_utf8_code.i_raw_len;
 
                 feed_glyph_destroy(
-                    p_text->p_client,
+                    p_text_iterator->p_client,
                     p_glyph);
             }
             else
@@ -978,7 +883,6 @@ feed_text_iterator_delete_region(
         {
             if (
                 feed_text_iterator_join_lines(
-                    p_text,
                     p_text_iterator))
             {
                 i_region_iterator ++;
@@ -994,8 +898,6 @@ feed_text_iterator_delete_region(
 
 void
 feed_text_iterator_load(
-    struct feed_text * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator,
     unsigned char const * const
@@ -1030,7 +932,7 @@ feed_text_iterator_load(
         i_result =
             feed_utf8_parser_write(
                 &(
-                    p_text->o_utf8_parser),
+                    p_text_iterator->p_text->o_utf8_parser),
                 p_data[i_data_iterator],
                 &(
                     o_utf8_code));
@@ -1046,13 +948,11 @@ feed_text_iterator_load(
                 if ('\n' == o_utf8_code.a_raw[0u])
                 {
                     feed_text_iterator_insert_newline(
-                        p_text,
                         p_text_iterator);
                 }
                 else
                 {
                     feed_text_iterator_insert_code(
-                        p_text,
                         p_text_iterator,
                         &(
                             o_utf8_code));
@@ -1071,8 +971,6 @@ feed_text_iterator_load(
 
 char
 feed_text_iterator_insert_newline(
-    struct feed_text * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator)
 {
@@ -1090,14 +988,12 @@ feed_text_iterator_insert_newline(
             '\n';
 
         feed_text_iterator_insert_code(
-            p_text,
             p_text_iterator,
             &(
                 o_utf8_code));
     }
 
     feed_text_iterator_validate(
-        p_text,
         p_text_iterator);
 
     if (
@@ -1124,13 +1020,13 @@ feed_text_iterator_insert_newline(
 
         p_line_down =
             feed_line_create(
-                p_text->p_client);
+                p_text_iterator->p_client);
 
         if (
             p_line_down)
         {
             feed_text_insert_line_after(
-                p_text,
+                p_text_iterator->p_text,
                 p_text_iterator->p_line,
                 p_line_down);
 
@@ -1168,7 +1064,6 @@ feed_text_iterator_insert_newline(
             p_text_iterator->p_line = p_line_down;
 
             feed_text_iterator_home_glyph(
-                p_text,
                 p_text_iterator);
 
             b_result =
@@ -1193,8 +1088,6 @@ feed_text_iterator_insert_newline(
 
 char
 feed_text_iterator_insert_code(
-    struct feed_text * const
-        p_text,
     struct feed_text_iterator * const
         p_text_iterator,
     struct feed_utf8_code const * const
@@ -1208,14 +1101,13 @@ feed_text_iterator_insert_code(
 
     p_glyph =
         feed_glyph_create(
-            p_text->p_client,
+            p_text_iterator->p_client,
             p_utf8_code);
 
     if (
         p_glyph)
     {
         feed_text_iterator_write_glyph(
-            p_text,
             p_text_iterator,
             p_glyph);
 

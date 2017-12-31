@@ -257,6 +257,7 @@ feed_init(
         p_this->p_text;
 
     feed_text_iterator_init(
+        p_this->p_client,
         p_this->p_text,
         &(
             p_this->o_cursor));
@@ -324,7 +325,6 @@ feed_cleanup(
             p_this->o_suggest_list));
 
     feed_text_iterator_cleanup(
-        p_this->p_text,
         &(
             p_this->o_cursor));
 
@@ -596,7 +596,6 @@ feed_load(
         i_result;
 
     feed_text_iterator_load(
-        p_this->p_text,
         &(
             p_this->o_cursor),
         p_data,
@@ -1098,11 +1097,11 @@ feed_main_refresh_job(
             /* Detect if cursor is visible */
             if (
                 (
-                    p_this->o_cursor.i_line_index == o_iterator.o_text_iterator.i_line_index)
+                    p_this->o_cursor.i_line_index == o_iterator.o_combo_iterator.o_text_iterator.i_line_index)
                 && (
-                    p_this->o_cursor.i_glyph_index == o_iterator.o_text_iterator.i_glyph_index)
+                    p_this->o_cursor.i_glyph_index == o_iterator.o_combo_iterator.o_text_iterator.i_glyph_index)
                 && (
-                    (o_iterator.e_state != feed_view_state_prompt)))
+                    (o_iterator.o_combo_iterator.e_state != feed_view_state_prompt)))
             {
                 p_this->o_cursor_visible.i_cursor_address =
                     o_iterator.o_screen_iterator.i_cursor_address;
@@ -1114,9 +1113,9 @@ feed_main_refresh_job(
                     p_glyph;
 
                 p_glyph =
-                    (feed_view_state_prompt == o_iterator.e_state)
-                    ? o_iterator.o_prompt_iterator.p_glyph
-                    : o_iterator.o_text_iterator.p_glyph;
+                    (feed_view_state_prompt == o_iterator.o_combo_iterator.e_state)
+                    ? o_iterator.o_combo_iterator.o_prompt_iterator.p_glyph
+                    : o_iterator.o_combo_iterator.o_text_iterator.p_glyph;
 
                 if (p_glyph)
                 {
@@ -1197,10 +1196,10 @@ feed_main_refresh_job(
                             e_syntax =
                                 feed_syntax_default;
 
-                            if (o_iterator.e_state == feed_view_state_prompt)
+                            if (o_iterator.o_combo_iterator.e_state == feed_view_state_prompt)
                             {
                                 if (
-                                    0u == o_iterator.o_text_iterator.i_line_index)
+                                    0u == o_iterator.o_combo_iterator.o_text_iterator.i_line_index)
                                 {
                                     e_syntax =
                                         feed_syntax_prompt1;
@@ -1376,7 +1375,6 @@ feed_main_insert_event(
                             p_glyph);
 
                     feed_text_iterator_write_glyph(
-                        p_this->p_text,
                         &(
                             p_this->o_cursor),
                         p_glyph);
@@ -1493,7 +1491,6 @@ feed_main_move_cursor_left(
 
     if (
         feed_text_iterator_prev_glyph(
-            p_this->p_text,
             &(
                 p_this->o_cursor)))
     {
@@ -1504,12 +1501,10 @@ feed_main_move_cursor_left(
     {
         if (
             feed_text_iterator_prev_line(
-                p_this->p_text,
                 &(
                     p_this->o_cursor)))
         {
             feed_text_iterator_end_glyph(
-                p_this->p_text,
                 &(
                     p_this->o_cursor));
 
@@ -1551,7 +1546,6 @@ feed_main_delete_glyph_next(
 {
     /* Detect eof */
     feed_text_iterator_validate(
-        p_this->p_text,
         &(
             p_this->o_cursor));
 
@@ -1568,7 +1562,6 @@ feed_main_delete_glyph_next(
 
         p_glyph =
             feed_text_iterator_remove_glyph(
-                p_this->p_text,
                 &(
                     p_this->o_cursor));
 
@@ -1580,7 +1573,6 @@ feed_main_delete_glyph_next(
                 /* Bring next line into this line */
                 /* Delete next line */
                 feed_text_iterator_join_lines(
-                    p_this->p_text,
                     &(
                         p_this->o_cursor));
             }
@@ -1604,7 +1596,6 @@ feed_main_move_cursor_right(
         b_result;
 
     if (feed_text_iterator_next_glyph(
-            p_this->p_text,
             &(
                 p_this->o_cursor)))
     {
@@ -1614,12 +1605,10 @@ feed_main_move_cursor_right(
     else
     {
         if (feed_text_iterator_next_line(
-            p_this->p_text,
             &(
                 p_this->o_cursor)))
         {
             feed_text_iterator_home_glyph(
-                p_this->p_text,
                 &(
                     p_this->o_cursor));
 
@@ -1670,7 +1659,6 @@ feed_main_move_word_left(
         if (feed_main_move_cursor_left(p_this))
         {
             feed_text_iterator_validate(
-                p_this->p_text,
                 &(
                     p_this->o_cursor));
 
@@ -1708,7 +1696,6 @@ feed_main_move_word_left(
             if (feed_main_move_cursor_left(p_this))
             {
                 feed_text_iterator_validate(
-                    p_this->p_text,
                     &(
                         p_this->o_cursor));
 
@@ -1759,7 +1746,6 @@ feed_main_move_word_right(
         !b_found)
     {
         feed_text_iterator_validate(
-            p_this->p_text,
             &(
                 p_this->o_cursor));
 
@@ -1801,7 +1787,6 @@ feed_main_move_word_right(
             if (feed_main_move_cursor_right(p_this))
             {
                 feed_text_iterator_validate(
-                    p_this->p_text,
                     &(
                         p_this->o_cursor));
 
@@ -1894,7 +1879,6 @@ feed_main_insert_newline(
     /* Create a new line */
     if (
         feed_text_iterator_insert_newline(
-            p_this->p_text,
             &(
                 p_this->o_cursor)))
     {
@@ -1996,13 +1980,11 @@ feed_main_move_page_home(
         p_this->o_view_begin.e_state = feed_view_state_prompt;
 
         feed_text_iterator_set_line(
-            p_this->p_text,
             &(
                 p_this->o_cursor),
             p_this->o_view_begin.i_line_index);
 
         feed_text_iterator_set_glyph(
-            p_this->p_text,
             &(
                 p_this->o_cursor),
             p_this->o_view_begin.i_glyph_index);
@@ -2048,12 +2030,10 @@ feed_main_move_page_end(
 
     /* Position cursor at end of document */
     feed_text_iterator_end_line(
-        p_this->p_text,
         &(
             p_this->o_cursor));
 
     feed_text_iterator_end_glyph(
-        p_this->p_text,
         &(
             p_this->o_cursor));
 
@@ -2081,7 +2061,6 @@ feed_main_delete_word_prev(
             if (feed_main_move_cursor_left(p_this))
             {
                 feed_text_iterator_validate(
-                    p_this->p_text,
                     &(
                         p_this->o_cursor));
 
@@ -2116,7 +2095,6 @@ feed_main_delete_word_prev(
                 !b_found)
             {
                 feed_text_iterator_validate(
-                    p_this->p_text,
                     &(
                         p_this->o_cursor));
 
@@ -2238,7 +2216,6 @@ feed_main_suggest_node(
             p_this->o_suggest_iterator;
 
         feed_text_iterator_delete_region(
-            p_this->p_text,
             &(
                 o_text_iterator),
             p_this->i_suggest_length);
@@ -2260,7 +2237,6 @@ feed_main_suggest_node(
                 p_this->o_suggest_iterator;
 
             feed_text_iterator_load(
-                p_this->p_text,
                 &(
                     o_text_iterator),
                 p_this->p_suggest_node->p_buffer,
@@ -2269,7 +2245,6 @@ feed_main_suggest_node(
 
         /* Move cursor */
         feed_text_iterator_set_offset(
-            p_this->p_text,
             &(
                 p_this->o_cursor),
             p_this->p_suggest_node->i_cursor_offset);
@@ -3042,13 +3017,11 @@ feed_consume(
         p_this->o_view_begin.e_state = feed_view_state_prompt;
 
         feed_text_iterator_set_line(
-            p_this->p_text,
             &(
                 p_this->o_cursor),
             p_this->o_view_begin.i_line_index);
 
         feed_text_iterator_set_glyph(
-            p_this->p_text,
             &(
                 p_this->o_cursor),
             p_this->o_view_begin.i_glyph_index);
@@ -3081,7 +3054,6 @@ feed_complete(
 
     i_cursor_offset =
         feed_text_iterator_get_offset(
-            p_this->p_text,
             &(
                 p_this->o_cursor));
 
@@ -3092,13 +3064,13 @@ feed_complete(
 
     /* Create an iterator */
     feed_text_iterator_init(
+        p_this->p_client,
         p_this->p_text,
         &(
             o_word_iterator));
 
     /* Goto word offset */
     feed_text_iterator_set_offset(
-        p_this->p_text,
         &(
             o_word_iterator),
         i_word_offset);
@@ -3141,7 +3113,6 @@ feed_complete(
                     p_word_buf + i_word_length))
             {
                 feed_text_iterator_save(
-                    p_this->p_text,
                     &(
                         o_word_iterator),
                     &(
@@ -3176,7 +3147,6 @@ feed_complete(
 
     /* Destroy the iterator */
     feed_text_iterator_cleanup(
-        p_this->p_text,
         &(
             o_word_iterator));
 
@@ -3200,7 +3170,6 @@ feed_cursor(
 
     i_cursor_offset =
         feed_text_iterator_get_offset(
-            p_this->p_text,
             &(
                 p_this->o_cursor));
 

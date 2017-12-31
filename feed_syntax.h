@@ -17,6 +17,12 @@ Description:
 
 #define INC_FEED_SYNTAX_H
 
+struct feed_client;
+
+struct feed_text;
+
+struct feed_text_iterator;
+
 /*
 
 Structure: feed_syntax_parser
@@ -31,66 +37,50 @@ struct feed_syntax_parser
     struct feed_client *
         p_client;
 
-    /* Queue */
-    struct feed_glyph *
-        a_glyphs[256u];
+    struct feed_text const *
+        p_text;
 
-    /* Raw word */
-    unsigned char
-        a_word[2048u];
+    /* -- */
 
-    /* Number of glyphs in queue */
-    unsigned int
-        i_glyph_count;
+    struct feed_text_iterator *
+        p_text_iterator;
 
-    /* Number of bytes in word */
-    unsigned int
-        i_word_length;
+    void *
+        pv_padding[1u];
+
+    /* -- */
 
     /* Current state */
     enum feed_syntax
         e_syntax;
 
-    /* Word detection state */
-    char
-        b_word;
-
-    /* Display of prompt */
-    char
-        b_prompt;
+    unsigned int
+        ui_padding[3u];
 
 }; /* struct feed_syntax_parser */
 
+/* Begin syntax iteration from top of page */
 void
 feed_syntax_parser_init(
     struct feed_syntax_parser * const
         p_syntax_parser,
     struct feed_client * const
-        p_client);
+        p_client,
+    struct feed_text const * const
+        p_text,
+    struct feed_text_iterator * const
+        p_text_iterator,
+    enum feed_syntax const
+        e_syntax);
 
 void
 feed_syntax_parser_cleanup(
     struct feed_syntax_parser * const
         p_syntax_parser);
 
-void
-feed_syntax_parser_head(
-    struct feed_syntax_parser * const
-        p_syntax_parser,
-    enum feed_syntax const
-        e_syntax);
-
+/* Continue syntax iteration from previous glyph */
 char
-feed_syntax_parser_write(
-    struct feed_syntax_parser * const
-        p_syntax_parser,
-    struct feed_glyph * const
-        p_glyph,
-    char const
-        b_prompt);
-
-char
-feed_syntax_parser_read(
+feed_syntax_parser_next(
     struct feed_syntax_parser * const
         p_syntax_parser,
     struct feed_glyph * * const

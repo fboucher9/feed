@@ -26,11 +26,21 @@ struct feed_glyph;
 
 struct feed_prompt_iterator
 {
+    struct feed_client *
+        p_client;
+
+    struct feed_prompt *
+        p_prompt;
+
+    /* -- */
+
     struct feed_line *
         p_line;
 
     struct feed_glyph *
         p_glyph;
+
+    /* -- */
 
     unsigned long int
         i_line_index;
@@ -42,6 +52,8 @@ struct feed_prompt_iterator
 
 char
 feed_prompt_iterator_init(
+    struct feed_client * const
+        p_client,
     struct feed_prompt * const
         p_prompt,
     struct feed_prompt_iterator * const
@@ -49,15 +61,11 @@ feed_prompt_iterator_init(
 
 void
 feed_prompt_iterator_cleanup(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator);
 
 char
 feed_prompt_iterator_set_line(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator,
     unsigned long int const
@@ -65,8 +73,6 @@ feed_prompt_iterator_set_line(
 
 char
 feed_prompt_iterator_set_glyph(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator,
     unsigned long int const
@@ -74,8 +80,6 @@ feed_prompt_iterator_set_glyph(
 
 char
 feed_prompt_iterator_set_index(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator,
     unsigned long int const
@@ -85,29 +89,21 @@ feed_prompt_iterator_set_index(
 
 char
 feed_prompt_iterator_first_glyph(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator);
 
 char
 feed_prompt_iterator_last_glyph(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator);
 
 char
 feed_prompt_iterator_next_glyph(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator);
 
 char
 feed_prompt_iterator_prev_glyph(
-    struct feed_prompt * const
-        p_prompt,
     struct feed_prompt_iterator * const
         p_iterator);
 

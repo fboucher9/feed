@@ -82,7 +82,9 @@ enum feed_syntax
     feed_syntax_preprocessor,
     feed_syntax_escape,
     feed_syntax_special,
-    feed_syntax_whitespace
+    feed_syntax_indentation,
+    feed_syntax_whitespace,
+    feed_syntax_newline
 };
 
 /* Definitions for key codes */
