@@ -100,6 +100,13 @@ feed_buf_read_character_array(
     unsigned char * const
         p_data_max);
 
+char
+feed_buf_read_number(
+    struct feed_buf * const
+        p_this,
+    signed long int * const
+        p_data);
+
 int
 feed_buf_compare(
     struct feed_buf const * const

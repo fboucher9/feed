@@ -12,8 +12,8 @@
 
 static
 char
-feed_options_init(
-    struct feed_options * const
+feed_main_descriptor_init(
+    struct feed_main_descriptor * const
         p_options,
     int const
         argc,
@@ -133,7 +133,7 @@ feed_options_init(
 
 static
 void
-feed_options_cleanup(
+feed_main_descriptor_cleanup(
     void * const
         p_placement)
 {
@@ -144,8 +144,8 @@ feed_options_cleanup(
 #if 0
 static
 void
-feed_options_report(
-    struct feed_options const * const
+feed_main_descriptor_report(
+    struct feed_main_descriptor const * const
         p_options)
 {
     struct feed_buf const *
@@ -198,33 +198,33 @@ main(
     int
         i_result;
 
-    struct feed_options
-        o_options;
+    struct feed_main_descriptor
+        o_main_descriptor;
 
     void *
         p_placement;
 
     if (
-        feed_options_init(
+        feed_main_descriptor_init(
             &(
-                o_options),
+                o_main_descriptor),
             argc,
             argv,
             &(
                 p_placement)))
     {
 #if 0
-        feed_options_report(
+        feed_main_descriptor_report(
             &(
-                o_options));
+                o_main_descriptor));
 #endif
 
         i_result =
             feed_main(
                 &(
-                    o_options));
+                    o_main_descriptor));
 
-        feed_options_cleanup(
+        feed_main_descriptor_cleanup(
             p_placement);
     }
 

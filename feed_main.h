@@ -9,7 +9,7 @@
 
 struct feed_buf;
 
-struct feed_options
+struct feed_main_descriptor
 {
     struct feed_buf const *
         p_min;
@@ -17,10 +17,10 @@ struct feed_options
     struct feed_buf const *
         p_max;
 
-}; /* struct feed_options */
+}; /* struct feed_main_descriptor */
 
 int
 feed_main(
-    struct feed_options const * const
+    struct feed_main_descriptor const * const
         p_options);
 

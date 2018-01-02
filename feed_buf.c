@@ -402,6 +402,95 @@ feed_buf_read_character_array(
 
 } /* feed_buf_read_character_array() */
 
+char
+feed_buf_read_number(
+    struct feed_buf * const
+        p_this,
+    signed long int * const
+        p_data)
+{
+    char
+        b_result;
+
+    signed long int
+        i_number;
+
+    unsigned char
+        c;
+
+    char
+        b_continue;
+
+    char
+        b_negative;
+
+    i_number =
+        0l;
+
+    b_continue =
+        1;
+
+    b_negative =
+        0;
+
+    if (
+        ((p_this->o_min.pc + 1) <= p_this->o_max.pc)
+        && ('-' == *(p_this->o_min.pc)))
+    {
+        b_negative =
+            1;
+
+        p_this->o_min.pc ++;
+    }
+
+    while (
+        b_continue
+        && (
+            (p_this->o_min.pc + 1)
+            <= p_this->o_max.pc))
+    {
+        c =
+            *(
+                p_this->o_min.pc);
+
+        if (
+            ( '0' <= c)
+            && ('9' >= c))
+        {
+            i_number =
+                (signed long int)(
+                    i_number * 10l
+                    + (signed long int)(
+                        c - '0'));
+
+            p_this->o_min.pc ++;
+        }
+        else
+        {
+            b_continue =
+                0;
+        }
+    }
+
+    if (
+        b_negative)
+    {
+        i_number =
+            -(i_number);
+    }
+
+    *(
+        p_data) =
+        i_number;
+
+    b_result =
+        1;
+
+    return
+        b_result;
+
+} /* feed_buf_read_number() */
+
 int
 feed_buf_compare(
     struct feed_buf const * const

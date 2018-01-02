@@ -363,14 +363,130 @@ feed_main_notify_callback(
     return 0;
 }
 
+struct feed_options
+{
+    struct feed_buf const *
+        p_file_name_buf;
+
+    struct feed_buf const *
+        p_geometry_value;
+
+    char
+        b_file_name;
+
+    char
+        b_geometry;
+
+    unsigned char
+        uc_padding[6u];
+
+};
+
+static
+void
+feed_options_init(
+    struct feed_options * const
+        p_options,
+    struct feed_main_descriptor const * const
+        p_main_descriptor)
+{
+    struct feed_main_descriptor
+        o_iterator;
+
+    o_iterator =
+        *(
+            p_main_descriptor);
+
+    p_options->p_file_name_buf =
+        (struct feed_buf const *)(
+            0);
+
+    p_options->p_geometry_value =
+        (struct feed_buf const *)(
+            0);
+
+    p_options->b_file_name =
+        0;
+
+    p_options->b_geometry =
+        0;
+
+    if (
+        o_iterator.p_min < o_iterator.p_max)
+    {
+        /* Consume argv[0u] */
+        o_iterator.p_min ++;
+
+        while (
+            o_iterator.p_min < o_iterator.p_max)
+        {
+            static unsigned char const g_optname_geometry[] =
+            {
+                '-',
+                'g'
+            };
+
+            struct feed_buf
+                o_optname_geometry;
+
+            feed_buf_init(
+                &(
+                    o_optname_geometry),
+                g_optname_geometry,
+                g_optname_geometry + sizeof(g_optname_geometry));
+
+            if (
+                0
+                == feed_buf_compare(
+                    o_iterator.p_min,
+                    &(
+                        o_optname_geometry)))
+            {
+                p_options->b_geometry =
+                    1;
+
+                o_iterator.p_min ++;
+
+                if (
+                    o_iterator.p_min < o_iterator.p_max)
+                {
+                    p_options->p_geometry_value =
+                        o_iterator.p_min;
+
+                    o_iterator.p_min ++;
+                }
+            }
+            else
+            {
+                p_options->b_file_name =
+                    1;
+
+                p_options->p_file_name_buf =
+                    o_iterator.p_min;
+
+                o_iterator.p_min =
+                    o_iterator.p_max;
+            }
+        }
+    }
+}
+
 int
 feed_main(
-    struct feed_options const * const
-        p_options)
+    struct feed_main_descriptor const * const
+        p_main_descriptor)
 {
     /* Test the library */
     struct feed_handle *
         p_feed_handle;
+
+    struct feed_options
+        o_options;
+
+    feed_options_init(
+        &(
+            o_options),
+        p_main_descriptor);
 
     {
         struct feed_descriptor
@@ -384,11 +500,70 @@ feed_main(
                 &(
                     feed_main_notify_callback);
 
-            o_feed_descriptor.i_max_screen_width =
-                0;
+            if (o_options.b_geometry)
+            {
+                /* Get width and height values */
+                struct feed_buf
+                    o_geometry_parser;
 
-            o_feed_descriptor.i_max_screen_height =
-                0;
+                signed long int
+                    i_geometry_width;
+
+                signed long int
+                    i_geometry_height;
+
+                o_geometry_parser =
+                    *(
+                        o_options.p_geometry_value);
+
+                i_geometry_width =
+                    0ul;
+
+                feed_buf_read_number(
+                    &(
+                        o_geometry_parser),
+                    &(
+                        i_geometry_width));
+
+                /* Skip the delimiter */
+                o_geometry_parser.o_min.pc ++;
+
+                i_geometry_height =
+                    0ul;
+
+                feed_buf_read_number(
+                    &(
+                        o_geometry_parser),
+                    &(
+                        i_geometry_height));
+
+                if (
+                    0ul
+                    == i_geometry_height)
+                {
+                    i_geometry_height =
+                        i_geometry_width;
+
+                    i_geometry_width =
+                        0ul;
+                }
+
+                o_feed_descriptor.i_max_screen_width =
+                    (unsigned short int)(
+                        i_geometry_width);
+
+                o_feed_descriptor.i_max_screen_height =
+                    (unsigned short int)(
+                        i_geometry_height);
+            }
+            else
+            {
+                o_feed_descriptor.i_max_screen_width =
+                    0;
+
+                o_feed_descriptor.i_max_screen_height =
+                    0;
+            }
         }
 
         p_feed_handle =
@@ -407,77 +582,88 @@ feed_main(
             p_save_buffer;
 
         if (
-            (
-                (p_options->p_max - p_options->p_min) > 1)
+            o_options.b_file_name
             || (
                 !isatty(STDIN_FILENO)))
         {
             FILE *
                 p_file_handle;
 
-            if ((p_options->p_max - p_options->p_min) > 1)
+            if (o_options.b_file_name)
             {
-                struct feed_buf const *
-                    p_file_name_buf;
+                static unsigned char const g_stdin_file_name[] =
+                {
+                    '-'
+                };
 
-                unsigned char *
-                    p_file_name0;
+                struct feed_buf
+                    o_stdin_file_name_buf;
 
-                unsigned long int
-                    argl;
-
-                p_file_name_buf =
-                    p_options->p_min + 1;
-
-                argl =
-                    (unsigned long int)(
-                        p_file_name_buf->o_max.pc
-                        - p_file_name_buf->o_min.pc);
-
-                p_file_name0 =
-                    (unsigned char *)(
-                        malloc(
-                            argl + 1ul));
+                feed_buf_init(
+                    &(
+                        o_stdin_file_name_buf),
+                    g_stdin_file_name,
+                    g_stdin_file_name + sizeof(g_stdin_file_name));
 
                 if (
-                    p_file_name0)
+                    0
+                    == feed_buf_compare(
+                        o_options.p_file_name_buf,
+                        &(
+                            o_stdin_file_name_buf)))
                 {
-                    memcpy(
-                        p_file_name0,
-                        p_file_name_buf->o_min.pc,
-                        argl);
+                    p_file_handle =
+                        stdin;
+                }
+                else
+                {
+                    unsigned char *
+                        p_file_name0;
 
-                    p_file_name0[argl] =
-                        '\000';
+                    unsigned long int
+                        argl;
+
+                    argl =
+                        (unsigned long int)(
+                            o_options.p_file_name_buf->o_max.pc
+                            - o_options.p_file_name_buf->o_min.pc);
+
+                    p_file_name0 =
+                        (unsigned char *)(
+                            malloc(
+                                argl + 1ul));
 
                     if (
-                        0
-                        == strcmp(
-                            (char const *)(
-                                p_file_name0),
-                            "-"))
+                        p_file_name0)
                     {
-                        p_file_handle =
-                            stdin;
-                    }
-                    else
-                    {
+                        memcpy(
+                            p_file_name0,
+                            o_options.p_file_name_buf->o_min.pc,
+                            argl);
+
+                        p_file_name0[argl] =
+                            '\000';
+
                         p_file_handle =
                             fopen(
                                 (char const *)(
                                     p_file_name0),
                                 "rt");
-                    }
 
-                    free(
-                        (void *)(
-                            p_file_name0));
+                        free(
+                            (void *)(
+                                p_file_name0));
+                    }
+                    else
+                    {
+                        p_file_handle =
+                            stdin;
+                    }
                 }
-                else
-                {
-                    p_file_handle =
-                        stdin;
-                }
+
+                feed_buf_cleanup(
+                    &(
+                        o_stdin_file_name_buf));
             }
             else
             {
