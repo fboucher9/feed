@@ -19,9 +19,7 @@ Description:
 
 struct feed_client;
 
-struct feed_text;
-
-struct feed_text_iterator;
+struct feed_combo_iterator;
 
 /*
 
@@ -37,16 +35,8 @@ struct feed_syntax_parser
     struct feed_client *
         p_client;
 
-    struct feed_text const *
-        p_text;
-
-    /* -- */
-
-    struct feed_text_iterator *
-        p_text_iterator;
-
-    void *
-        pv_padding[1u];
+    struct feed_combo_iterator *
+        p_combo_iterator;
 
     /* -- */
 
@@ -66,10 +56,8 @@ feed_syntax_parser_init(
         p_syntax_parser,
     struct feed_client * const
         p_client,
-    struct feed_text const * const
-        p_text,
-    struct feed_text_iterator * const
-        p_text_iterator,
+    struct feed_combo_iterator * const
+        p_combo_iterator,
     enum feed_syntax const
         e_syntax);
 
