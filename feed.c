@@ -460,6 +460,12 @@ feed_create(
                 p_heap);
         }
     }
+    else
+    {
+        p_this =
+            (struct feed_handle *)(
+                0);
+    }
 
     return
         p_this;
@@ -1736,7 +1742,7 @@ feed_main_move_word_right(
     struct feed_handle * const
         p_this)
 {
-    char
+    unsigned char
         b_found;
 
     b_found =

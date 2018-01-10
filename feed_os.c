@@ -227,6 +227,11 @@ main(
         feed_main_descriptor_cleanup(
             p_placement);
     }
+    else
+    {
+        i_result =
+            1;
+    }
 
     return
         i_result;

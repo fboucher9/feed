@@ -178,6 +178,8 @@ feed_prompt_set(
                     p_data,
                     i_data_length);
 
+                b_result =
+                    1;
             }
             else
             {

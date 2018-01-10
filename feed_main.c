@@ -371,10 +371,10 @@ struct feed_options
     struct feed_buf const *
         p_geometry_value;
 
-    char
+    unsigned char
         b_file_name;
 
-    char
+    unsigned char
         b_geometry;
 
     unsigned char

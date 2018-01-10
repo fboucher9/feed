@@ -1257,7 +1257,7 @@ feed_keys_print(
     if (
         i_code)
     {
-        char
+        unsigned char
             b_result;
 
         unsigned int
