@@ -8,19 +8,23 @@
 #
 # Remarks:
 #   Definitions must be independant of current folder, all folders
-#   must be relative to FEED_SRC_PATH and FEED_OBJ_PATH.
+#   must be relative to FEED_SRC_PATH and FEED_DST_PATH.
 #
 
 ifndef DBG
 DBG = 1
 endif
 
+ifndef PIC
+PIC = 1
+endif
+
 ifndef FEED_SRC_PATH
-FEED_SRC_PATH = .
+FEED_SRC_PATH =
 endif
 
 ifndef FEED_DST_PATH
-FEED_DST_PATH = .
+FEED_DST_PATH =
 endif
 
 ifndef FEED_CC
@@ -41,11 +45,29 @@ else
 FEED_CFG_DBG = fre
 endif
 
-FEED_CFLAGS_base = -fPIC
+ifeq ($(PIC),1)
+FEED_CFG_PIC =
+else
+FEED_CFG_PIC = _nopic
+endif
 
-FEED_CFLAGS_chk = -g -O0 $(FEED_CFLAGS_base)
+FEED_OBJ_PATH = $(FEED_DST_PATH).obj$(FEED_CFG_DBG)$(FEED_CFG_PIC)/
 
-FEED_CFLAGS_fre = -O2 -Os $(FEED_CFLAGS_base)
+ifeq ($(PIC),1)
+FEED_CFLAGS_PIC = -fPIC
+else
+FEED_CFLAGS_PIC =
+endif
+
+ifeq ($(DBG),1)
+FEED_CFLAGS_DBG = -g -O0
+else
+FEED_CFLAGS_DBG = -O2 -Os
+endif
+
+FEED_CXXFLAGS_PIC = $(FEED_CFLAGS_PIC)
+
+FEED_CXXFLAGS_DBG = $(FEED_CFLAGS_DBG)
 
 FEED_CFLAGS_WARNINGS = \
     -pedantic -Wall -Wextra -Wabi -Waggregate-return -Warray-bounds \
@@ -63,10 +85,6 @@ FEED_CFLAGS_WARNINGS = \
     -Wsync-nand -Wundef -Wunused -Wunused-macros -Wunused-result \
     -Wvariadic-macros -Wvla -Wwrite-strings
 
-FEED_CXXFLAGS_chk = $(FEED_CFLAGS_chk)
-
-FEED_CXXFLAGS_fre = $(FEED_CFLAGS_fre)
-
 FEED_CXXFLAGS_WARNINGS = \
     -pedantic -Wall -Wextra -Wabi -Waggregate-return -Warray-bounds \
     -Wattributes -Wbuiltin-macro-redefined -Wc++0x-compat \
@@ -83,48 +101,71 @@ FEED_CXXFLAGS_WARNINGS = \
     -Wsync-nand -Wundef -Wunused -Wunused-macros -Wunused-result \
     -Wvariadic-macros -Wvla -Wwrite-strings \
     -Wctor-dtor-privacy -Weffc++ -Wenum-compare -Wnon-virtual-dtor \
-    -Woverloaded-virtual -Wstrict-null-sentinel -Wsign-promo
+    -Woverloaded-virtual -Wstrict-null-sentinel -Wsign-promo \
+    -fno-rtti -fno-exceptions
 
-FEED_INCLUDES = -I$(FEED_DST_PATH)
+FEED_INCLUDES = -I$(FEED_OBJ_PATH)
 
-FEED_CFLAGS = $(CFLAGS) $(FEED_CFLAGS_$(FEED_CFG_DBG)) $(FEED_CFLAGS_WARNINGS) $(FEED_INCLUDES)
+FEED_CFLAGS = $(CFLAGS) $(FEED_CFLAGS_PIC) $(FEED_CFLAGS_DBG) $(FEED_CFLAGS_WARNINGS) $(FEED_INCLUDES)
 
-FEED_CXXFLAGS = $(CXXFLAGS) $(FEED_CXXFLAGS_$(FEED_CFG_DBG)) $(FEED_CXXFLAGS_WARNINGS) $(FEED_INCLUDES)
+FEED_CXXFLAGS = $(CXXFLAGS) $(FEED_CXXFLAGS_PIC) $(FEED_CXXFLAGS_DBG) $(FEED_CXXFLAGS_WARNINGS) $(FEED_INCLUDES)
 
-FEED_LDFLAGS_chk =
+ifeq ($(DBG),1)
+FEED_LDFLAGS_DBG =
+else
+FEED_LDFLAGS_DBG = -s
+endif
 
-FEED_LDFLAGS_fre = -s
-
-FEED_LDFLAGS = $(LDFLAGS) $(FEED_LDFLAGS_$(FEED_CFG_DBG))
+FEED_LDFLAGS = $(LDFLAGS) $(FEED_LDFLAGS_DBG)
 
 FEED_LIBS =
 
-FEED_LIBRARY_SRCS = \
-    $(FEED_DST_PATH)/_obj_feed_client.o \
-    $(FEED_DST_PATH)/_obj_feed_heap.o \
-    $(FEED_DST_PATH)/_obj_feed_tty.o \
-    $(FEED_DST_PATH)/_obj_feed_buf.o \
-    $(FEED_DST_PATH)/_obj_feed_keys.o \
-    $(FEED_DST_PATH)/_obj_feed_input.o \
-    $(FEED_DST_PATH)/_obj_feed_list.o \
-    $(FEED_DST_PATH)/_obj_feed_esc.o \
-    $(FEED_DST_PATH)/_obj_feed_glyph.o \
-    $(FEED_DST_PATH)/_obj_feed_line.o \
-    $(FEED_DST_PATH)/_obj_feed_text.o \
-    $(FEED_DST_PATH)/_obj_feed_screen.o \
-    $(FEED_DST_PATH)/_obj_feed_screen_info.o \
-    $(FEED_DST_PATH)/_obj_feed_screen_iterator.o \
-    $(FEED_DST_PATH)/_obj_feed_prompt.o \
-    $(FEED_DST_PATH)/_obj_feed_prompt_iterator.o \
-    $(FEED_DST_PATH)/_obj_feed_suggest.o \
-    $(FEED_DST_PATH)/_obj_feed_object.o \
-    $(FEED_DST_PATH)/_obj_feed_utf8.o \
-    $(FEED_DST_PATH)/_obj_feed_text_iterator.o \
-    $(FEED_DST_PATH)/_obj_feed_view.o \
-    $(FEED_DST_PATH)/_obj_feed_page.o \
-    $(FEED_DST_PATH)/_obj_feed_theme.o \
-    $(FEED_DST_PATH)/_obj_feed_dict.o \
-    $(FEED_DST_PATH)/_obj_feed.o
+define FEED_compile
+FEED_option_$(1)_input ?= $$(FEED_SRC_PATH)$(1).c
+FEED_option_$(1)_cflags ?= $$(FEED_CFLAGS)
+FEED_option_$(1)_cxxflags ?= $$(FEED_CXXFLAGS)
+FEED_option_$(1)_output ?= $$(FEED_OBJ_PATH)$(1).o
+FEED_option_$(1)_cmdfile ?= $$(FEED_option_$(1)_output).cmd
+FEED_option_$(1)_depfile ?= $$(FEED_option_$(1)_output).d
+$$(FEED_option_$(1)_cmdfile) : $$(FEED_SRC_PATH)feed_project.mak | $$(FEED_OBJ_PATH)
+	@echo generate $$(FEED_option_$(1)_cmdfile)
+	@echo  -c -o $$(FEED_option_$(1)_output) $$(FEED_option_$(1)_cflags) -MT $$(FEED_option_$(1)_output) -MMD -MP -MF $$(FEED_option_$(1)_depfile) $$(FEED_option_$(1)_input) > $$(FEED_option_$(1)_cmdfile)
+$$(FEED_option_$(1)_output) : $$(FEED_option_$(1)_input) $$(FEED_SRC_PATH)feed_project.mak | $$(FEED_OBJ_PATH) $$(FEED_option_$(1)_cmdfile)
+	@echo verifying $$(FEED_option_$(1)_output).oxx
+	@$$(FEED_CXX) -c -x c++ -o $$(FEED_option_$(1)_output).oxx $$(FEED_option_$(1)_cxxflags) $$(FEED_option_$(1)_input)
+	@echo compiling $$(FEED_option_$(1)_output)
+	@$$(FEED_CC) @$$(FEED_option_$(1)_cmdfile)
+endef
+
+FEED_LIBRARY_MODULES = \
+    feed_client \
+    feed_heap \
+    feed_tty \
+    feed_buf \
+    feed_keys \
+    feed_input \
+    feed_list \
+    feed_esc \
+    feed_glyph \
+    feed_line \
+    feed_text \
+    feed_screen \
+    feed_screen_info \
+    feed_screen_iterator \
+    feed_prompt \
+    feed_prompt_iterator \
+    feed_suggest \
+    feed_object \
+    feed_utf8 \
+    feed_text_iterator \
+    feed_view \
+    feed_page \
+    feed_theme \
+    feed_dict \
+    feed
+
+FEED_option_precomp_input = $(FEED_SRC_PATH)feed_os.h
+FEED_option_precomp_output = $(FEED_OBJ_PATH)feed_os.h.gch
 
 # Default target
 .PHONY: all
@@ -132,37 +173,37 @@ all : libfeed
 
 # Library
 .PHONY: libfeed
-libfeed: $(FEED_DST_PATH)/libfeed.a $(FEED_DST_PATH)/libfeed.so
+libfeed: $(FEED_OBJ_PATH)libfeed.a $(FEED_OBJ_PATH)libfeed.so
 
-$(FEED_DST_PATH)/libfeed.a : $(FEED_LIBRARY_SRCS)
-	@echo creating $@
-	@$(FEED_AR) rc $(FEED_DST_PATH)/libfeed.a $(FEED_LIBRARY_SRCS)
+$(foreach module,$(FEED_LIBRARY_MODULES), $(eval $(call FEED_compile,$(module))))
+$(foreach module,precomp, $(eval $(call FEED_compile,$(module))))
 
-$(FEED_DST_PATH)/libfeed.so : $(FEED_LIBRARY_SRCS) $(FEED_SRC_PATH)/feed.exports
-	@echo linking $@
-	@echo -shared -Wl,--version-script,$(FEED_SRC_PATH)/feed.exports -o $@ $(FEED_CFLAGS) $(FEED_LIBRARY_SRCS) $(FEED_LDFLAGS) $(FEED_LIBS) > $(FEED_DST_PATH)/_obj_libfeed_so.cmd
-	@$(FEED_CC) @$(FEED_DST_PATH)/_obj_libfeed_so.cmd
+# Create list of inputs for library
+FEED_LIBRARY_SRCS = $(foreach module,$(FEED_LIBRARY_MODULES), $(FEED_option_$(module)_output))
 
-# Build each object file
-$(FEED_DST_PATH)/_obj_%.o : $(FEED_SRC_PATH)/%.c
-	@echo compiling $@
-	@echo -c -o $@ $(FEED_CFLAGS) -MT $@ -MMD -MP -MF $@.d $< > $@.cmd
-	@$(FEED_CXX) -c -x c++ -o $@.oxx $(FEED_CXXFLAGS) $<
-	@$(FEED_CC) @$@.cmd
+# Dependency of each .o file with precompiled header file
+$(FEED_LIBRARY_SRCS) : $(FEED_option_precomp_output)
 
-# Build the precompiled header
-$(FEED_DST_PATH)/feed_os.h.gch : $(FEED_SRC_PATH)/feed_os.h
-	@echo generating $@
-	@$(FEED_CXX) -c -o $@.oxx $(FEED_CXXFLAGS) $(FEED_SRC_PATH)/feed_os.h
-	@$(FEED_CC) -c -o $@ $(FEED_CFLAGS) $(FEED_SRC_PATH)/feed_os.h
+$(FEED_OBJ_PATH) :
+	@echo creating $(FEED_OBJ_PATH) folder
+	@mkdir -p $(FEED_OBJ_PATH)
 
-# Indicate dependency on makefile
-$(FEED_DST_PATH)/libfeed.a : $(FEED_SRC_PATH)/feed_project.mak
+$(FEED_OBJ_PATH)libfeed.a : $(FEED_LIBRARY_SRCS) | $(FEED_OBJ_PATH)
+	@echo creating $(FEED_OBJ_PATH)libfeed.a
+	@$(FEED_AR) rc $(FEED_OBJ_PATH)libfeed.a $(FEED_LIBRARY_SRCS)
 
-$(FEED_DST_PATH)/libfeed.so : $(FEED_SRC_PATH)/feed_project.mak
+$(FEED_OBJ_PATH)libfeed_so.cmd : $(FEED_SRC_PATH)feed_project.mak | $(FEED_OBJ_PATH)
+	@echo generating $(FEED_OBJ_PATH)libfeed_so.cmd
+	@echo -shared -Wl,--version-script,$(FEED_SRC_PATH)feed.exports -o $(FEED_OBJ_PATH)libfeed.so $(FEED_CFLAGS) $(FEED_LIBRARY_SRCS) $(FEED_LDFLAGS) $(FEED_LIBS) > $(FEED_OBJ_PATH)libfeed_so.cmd
+
+$(FEED_OBJ_PATH)libfeed.so : $(FEED_LIBRARY_SRCS) $(FEED_SRC_PATH)feed.exports | $(FEED_OBJ_PATH) $(FEED_OBJ_PATH)libfeed_so.cmd
+	@echo linking $(FEED_OBJ_PATH)libfeed.so
+	@$(FEED_CC) @$(FEED_OBJ_PATH)libfeed_so.cmd
 
 # Indicate dependency on makefile
-$(FEED_LIBRARY_SRCS) : $(FEED_SRC_PATH)/feed_project.mak
+$(FEED_OBJ_PATH)libfeed.a : $(FEED_SRC_PATH)feed_project.mak
+
+$(FEED_OBJ_PATH)libfeed.so : $(FEED_SRC_PATH)feed_project.mak
 
 # Cleanup of temporary files
 .PHONY: clean
@@ -170,11 +211,8 @@ clean : feed_library_clean
 
 .PHONY: feed_library_clean
 feed_library_clean:
-	-rm -f $(FEED_DST_PATH)/_obj_*
-	-rm -f $(FEED_DST_PATH)/feed_os.h.gch
-	-rm -f $(FEED_DST_PATH)/feed_os.h.gch.oxx
-	-rm -f $(FEED_DST_PATH)/libfeed.a
-	-rm -f $(FEED_DST_PATH)/libfeed.so
+	-rm -r -f $(FEED_OBJ_PATH)
 
 # Include header dependency files
--include $(FEED_DST_PATH)/_obj_*.o.d
+-include $(FEED_OBJ_PATH)*.o.d
+
