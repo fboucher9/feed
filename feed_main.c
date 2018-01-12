@@ -213,6 +213,238 @@ feed_main_print_status(
 #endif
 
 static
+void
+feed_main_dump_key(
+    unsigned short int const
+        i_code,
+    unsigned char const * const
+        p_data,
+    unsigned long int const
+        i_data_length)
+{
+    printf("\"");
+
+    if (i_code)
+    {
+        unsigned char
+            c;
+
+        c =
+            (unsigned char)(
+                i_code & 0xFFu);
+
+        if (
+            FEED_KEY_CTRL & i_code)
+        {
+            printf("<ctrl>-");
+        }
+        if (
+            FEED_KEY_SHIFT & i_code)
+        {
+            printf("<shift>-");
+        }
+        if (
+            FEED_KEY_ALT & i_code)
+        {
+            printf("<alt>-");
+        }
+
+        if (
+            c < 32u)
+        {
+            printf("<.>");
+        }
+        else if (
+            c < 127u)
+        {
+            printf("<%c>", (char)(c));
+        }
+        else
+        {
+            if (
+                FEED_KEY_UP == c)
+            {
+                printf("<up>");
+            }
+            else if (
+                FEED_KEY_DOWN == c)
+            {
+                printf("<down>");
+            }
+            else if (
+                FEED_KEY_LEFT == c)
+            {
+                printf("<left>");
+            }
+            else if (
+                FEED_KEY_RIGHT == c)
+            {
+                printf("<right>");
+            }
+            else if (
+                FEED_KEY_INSERT == c)
+            {
+                printf("<insert>");
+            }
+            else if (
+                FEED_KEY_DELETE == c)
+            {
+                printf("<delete>");
+            }
+            else if (
+                FEED_KEY_HOME == c)
+            {
+                printf("<home>");
+            }
+            else if (
+                FEED_KEY_END == c)
+            {
+                printf("<end>");
+            }
+            else if (
+                FEED_KEY_PAGEUP == c)
+            {
+                printf("<pageup>");
+            }
+            else if (
+                FEED_KEY_PAGEDOWN == c)
+            {
+                printf("<pagedown>");
+            }
+            else if (
+                FEED_KEY_F1 == c)
+            {
+                printf("<f1>");
+            }
+            else if (
+                FEED_KEY_F2 == c)
+            {
+                printf("<f2>");
+            }
+            else if (
+                FEED_KEY_F3 == c)
+            {
+                printf("<f3>");
+            }
+            else if (
+                FEED_KEY_F4 == c)
+            {
+                printf("<f4>");
+            }
+            else if (
+                FEED_KEY_F5 == c)
+            {
+                printf("<f5>");
+            }
+            else if (
+                FEED_KEY_F6 == c)
+            {
+                printf("<f6>");
+            }
+            else if (
+                FEED_KEY_F7 == c)
+            {
+                printf("<f7>");
+            }
+            else if (
+                FEED_KEY_F8 == c)
+            {
+                printf("<f8>");
+            }
+            else if (
+                FEED_KEY_F9 == c)
+            {
+                printf("<f9>");
+            }
+            else if (
+                FEED_KEY_F10 == c)
+            {
+                printf("<f10>");
+            }
+            else if (
+                FEED_KEY_F11 == c)
+            {
+                printf("<f11>");
+            }
+            else if (
+                FEED_KEY_F12 == c)
+            {
+                printf("<f12>");
+            }
+            else
+            {
+                printf("<0x%02x>", (unsigned int)(i_code & 0xFFu));
+            }
+        }
+    }
+    else
+    {
+        if (1ul == i_data_length)
+        {
+            unsigned char
+                c;
+
+            c = (p_data[0u]);
+
+            if ((c >= 32u) &&
+                (c < 127u))
+            {
+                printf("<%c>", (char)(c));
+            }
+        }
+    }
+
+    printf("\"");
+
+    {
+        unsigned long int
+            i_data_iterator;
+
+        printf(" {");
+        for (
+            i_data_iterator = 0ul;
+            i_data_iterator < i_data_length;
+            i_data_iterator ++)
+        {
+            unsigned char
+                c;
+
+            c = p_data[i_data_iterator];
+
+            if (i_data_iterator)
+            {
+                printf(",");
+            }
+
+            if (
+                c < 32u)
+            {
+                printf(
+                    " %u",
+                    (unsigned int)(c));
+            }
+            else if (
+                c < 127u)
+            {
+                printf(
+                    " \'%c\'",
+                    (char)(c));
+            }
+            else
+            {
+                printf(
+                    " 0x%02x",
+                    (unsigned int)( c));
+            }
+        }
+
+        printf(" }");
+    }
+
+    printf("\n");
+}
+
+static
 int
 feed_main_notify_callback(
     void * const
@@ -226,6 +458,9 @@ feed_main_notify_callback(
     unsigned long int const
         i_data_length)
 {
+    int
+        i_result;
+
     struct feed_main_context *
         p_main_context;
 
@@ -244,6 +479,18 @@ feed_main_notify_callback(
 
     (void)(
         p_main_context);
+
+    i_result =
+        0;
+
+    if (
+        p_main_context->o_options.b_dumpkeys)
+    {
+        feed_main_dump_key(
+            i_code,
+            p_data,
+            i_data_length);
+    }
 
 #if 0 /* test of stop */
     if (i_data_length)
@@ -339,7 +586,8 @@ feed_main_notify_callback(
                 (char const *)(
                     a_data));
 
-            return -1;
+            i_result =
+                -1;
         }
     }
 #endif /* test of consume */
@@ -360,7 +608,8 @@ feed_main_notify_callback(
                 "cursor -> %lu\n",
                 i_cursor_offset);
 
-            return -1;
+            i_result =
+                -1;
         }
     }
 #endif /* test of cursor */
@@ -389,7 +638,8 @@ feed_main_notify_callback(
             (void)(
                 i_exec_result);
 
-            return -1;
+            i_result =
+                -1;
         }
     }
 #endif /* test of exec */
@@ -406,7 +656,9 @@ feed_main_notify_callback(
 
     /* ... */
 
-    return 0;
+    return
+        i_result;
+
 }
 
 static
