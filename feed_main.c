@@ -8,6 +8,44 @@
 
 #include "feed_buf.h"
 
+struct feed_options
+{
+    struct feed_buf const *
+        p_file_name_buf;
+
+    struct feed_buf const *
+        p_geometry_value;
+
+    unsigned char
+        b_file_name;
+
+    unsigned char
+        b_geometry;
+
+    unsigned char
+        b_dumpkeys;
+
+    unsigned char
+        uc_padding[5u];
+
+}; /* struct feed_options */
+
+struct feed_main_context
+{
+    struct feed_options
+        o_options;
+
+    struct feed_descriptor
+        o_descriptor;
+
+    struct feed_handle *
+        p_feed_handle;
+
+    void *
+        pv_padding[1u];
+
+}; /* struct feed_main_context */
+
 #if 0
 
 /* MOVE ME */
@@ -188,8 +226,9 @@ feed_main_notify_callback(
     unsigned long int const
         i_data_length)
 {
-    (void)(
-        p_context);
+    struct feed_main_context *
+        p_main_context;
+
     (void)(
         p_feed_handle);
     (void)(
@@ -198,6 +237,13 @@ feed_main_notify_callback(
         p_data);
     (void)(
         i_data_length);
+
+    p_main_context =
+        (struct feed_main_context *)(
+            p_context);
+
+    (void)(
+        p_main_context);
 
 #if 0 /* test of stop */
     if (i_data_length)
@@ -363,33 +409,17 @@ feed_main_notify_callback(
     return 0;
 }
 
-struct feed_options
-{
-    struct feed_buf const *
-        p_file_name_buf;
-
-    struct feed_buf const *
-        p_geometry_value;
-
-    unsigned char
-        b_file_name;
-
-    unsigned char
-        b_geometry;
-
-    unsigned char
-        uc_padding[6u];
-
-};
-
 static
-void
+char
 feed_options_init(
     struct feed_options * const
         p_options,
     struct feed_main_descriptor const * const
         p_main_descriptor)
 {
+    char
+        b_result;
+
     struct feed_main_descriptor
         o_iterator;
 
@@ -411,6 +441,9 @@ feed_options_init(
     p_options->b_geometry =
         0;
 
+    b_result =
+        1;
+
     if (
         o_iterator.p_min < o_iterator.p_max)
     {
@@ -418,42 +451,91 @@ feed_options_init(
         o_iterator.p_min ++;
 
         while (
-            o_iterator.p_min < o_iterator.p_max)
+            b_result
+            && (o_iterator.p_min < o_iterator.p_max))
         {
-            static unsigned char const g_optname_geometry[] =
-            {
-                '-',
-                'g'
-            };
-
-            struct feed_buf
-                o_optname_geometry;
-
-            feed_buf_init(
-                &(
-                    o_optname_geometry),
-                g_optname_geometry,
-                g_optname_geometry + sizeof(g_optname_geometry));
-
             if (
-                0
-                == feed_buf_compare(
-                    o_iterator.p_min,
-                    &(
-                        o_optname_geometry)))
+                ((o_iterator.p_min->o_min.pc + 1) < o_iterator.p_min->o_max.pc)
+                && ('-' == o_iterator.p_min->o_min.pc[0u]))
             {
-                p_options->b_geometry =
-                    1;
+                static unsigned char const g_optname_geometry[] =
+                {
+                    '-',
+                    'g'
+                };
 
-                o_iterator.p_min ++;
+                struct feed_buf
+                    o_optname_geometry;
+
+                feed_buf_init(
+                    &(
+                        o_optname_geometry),
+                    g_optname_geometry,
+                    g_optname_geometry + sizeof(g_optname_geometry));
 
                 if (
-                    o_iterator.p_min < o_iterator.p_max)
+                    0
+                    == feed_buf_compare(
+                        o_iterator.p_min,
+                        &(
+                            o_optname_geometry)))
                 {
-                    p_options->p_geometry_value =
-                        o_iterator.p_min;
+                    p_options->b_geometry =
+                        1;
 
                     o_iterator.p_min ++;
+
+                    if (
+                        o_iterator.p_min < o_iterator.p_max)
+                    {
+                        p_options->p_geometry_value =
+                            o_iterator.p_min;
+
+                        o_iterator.p_min ++;
+                    }
+                }
+                else
+                {
+                    static unsigned char const g_optname_dumpkeys[] =
+                    {
+                        '-',
+                        'd'
+                    };
+
+                    struct feed_buf
+                        o_optname_dumpkeys;
+
+                    feed_buf_init(
+                        &(
+                            o_optname_dumpkeys),
+                        g_optname_dumpkeys,
+                        g_optname_dumpkeys + sizeof(g_optname_dumpkeys));
+
+                    if (
+                        0
+                        == feed_buf_compare(
+                            o_iterator.p_min,
+                            &(
+                                o_optname_dumpkeys)))
+                    {
+                        p_options->b_dumpkeys =
+                            1;
+
+                        o_iterator.p_min ++;
+                    }
+                    else
+                    {
+                        printf(
+                            "usage:\n"
+                            " feed [options] [file|-]\n"
+                            "options:\n"
+                            " -g WxH     set geometry\n"
+                            " -d         dump key codes\n"
+                            );
+
+                        b_result =
+                            0;
+                    }
                 }
             }
             else
@@ -469,6 +551,91 @@ feed_options_init(
             }
         }
     }
+
+    return
+        b_result;
+
+}
+
+static
+void
+init_feed_descriptor(
+    struct feed_main_context * const
+        p_main_context,
+    struct feed_descriptor * const
+        p_feed_descriptor)
+{
+    p_feed_descriptor->p_context =
+        p_main_context;
+
+    p_feed_descriptor->p_notify =
+        &(
+            feed_main_notify_callback);
+
+    if (p_main_context->o_options.b_geometry)
+    {
+        /* Get width and height values */
+        struct feed_buf
+            o_geometry_parser;
+
+        signed long int
+            i_geometry_width;
+
+        signed long int
+            i_geometry_height;
+
+        o_geometry_parser =
+            *(
+                p_main_context->o_options.p_geometry_value);
+
+        i_geometry_width =
+            0ul;
+
+        feed_buf_read_number(
+            &(
+                o_geometry_parser),
+            &(
+                i_geometry_width));
+
+        /* Skip the delimiter */
+        o_geometry_parser.o_min.pc ++;
+
+        i_geometry_height =
+            0ul;
+
+        feed_buf_read_number(
+            &(
+                o_geometry_parser),
+            &(
+                i_geometry_height));
+
+        if (
+            0ul
+            == i_geometry_height)
+        {
+            i_geometry_height =
+                i_geometry_width;
+
+            i_geometry_width =
+                0ul;
+        }
+
+        p_feed_descriptor->i_max_screen_width =
+            (unsigned short int)(
+                i_geometry_width);
+
+        p_feed_descriptor->i_max_screen_height =
+            (unsigned short int)(
+                i_geometry_height);
+    }
+    else
+    {
+        p_feed_descriptor->i_max_screen_width =
+            0;
+
+        p_feed_descriptor->i_max_screen_height =
+            0;
+    }
 }
 
 int
@@ -477,372 +644,304 @@ feed_main(
         p_main_descriptor)
 {
     /* Test the library */
-    struct feed_handle *
-        p_feed_handle;
+    struct feed_main_context
+        o_main_context;
 
-    struct feed_options
-        o_options;
+    struct feed_main_context *
+        p_main_context;
 
-    feed_options_init(
+    p_main_context =
         &(
-            o_options),
-        p_main_descriptor);
-
-    {
-        struct feed_descriptor
-            o_feed_descriptor;
-
-        {
-            o_feed_descriptor.p_context =
-                NULL;
-
-            o_feed_descriptor.p_notify =
-                &(
-                    feed_main_notify_callback);
-
-            if (o_options.b_geometry)
-            {
-                /* Get width and height values */
-                struct feed_buf
-                    o_geometry_parser;
-
-                signed long int
-                    i_geometry_width;
-
-                signed long int
-                    i_geometry_height;
-
-                o_geometry_parser =
-                    *(
-                        o_options.p_geometry_value);
-
-                i_geometry_width =
-                    0ul;
-
-                feed_buf_read_number(
-                    &(
-                        o_geometry_parser),
-                    &(
-                        i_geometry_width));
-
-                /* Skip the delimiter */
-                o_geometry_parser.o_min.pc ++;
-
-                i_geometry_height =
-                    0ul;
-
-                feed_buf_read_number(
-                    &(
-                        o_geometry_parser),
-                    &(
-                        i_geometry_height));
-
-                if (
-                    0ul
-                    == i_geometry_height)
-                {
-                    i_geometry_height =
-                        i_geometry_width;
-
-                    i_geometry_width =
-                        0ul;
-                }
-
-                o_feed_descriptor.i_max_screen_width =
-                    (unsigned short int)(
-                        i_geometry_width);
-
-                o_feed_descriptor.i_max_screen_height =
-                    (unsigned short int)(
-                        i_geometry_height);
-            }
-            else
-            {
-                o_feed_descriptor.i_max_screen_width =
-                    0;
-
-                o_feed_descriptor.i_max_screen_height =
-                    0;
-            }
-        }
-
-        p_feed_handle =
-            feed_create(
-                &(
-                    o_feed_descriptor));
-    }
+            o_main_context);
 
     if (
-        p_feed_handle)
+        feed_options_init(
+            &(
+                p_main_context->o_options),
+            p_main_descriptor))
     {
-        unsigned long int
-            i_save_length;
+        init_feed_descriptor(
+            p_main_context,
+            &(
+                p_main_context->o_descriptor));
 
-        unsigned char *
-            p_save_buffer;
+        p_main_context->p_feed_handle =
+            feed_create(
+                &(
+                    p_main_context->o_descriptor));
 
         if (
-            o_options.b_file_name
-            || (
-                !isatty(STDIN_FILENO)))
+            p_main_context->p_feed_handle)
         {
-            FILE *
-                p_file_handle;
+            unsigned long int
+                i_save_length;
 
-            if (o_options.b_file_name)
+            unsigned char *
+                p_save_buffer;
+
+            if (
+                p_main_context->o_options.b_file_name
+                || (
+                    !isatty(STDIN_FILENO)))
             {
-                static unsigned char const g_stdin_file_name[] =
+                FILE *
+                    p_file_handle;
+
+                if (p_main_context->o_options.b_file_name)
                 {
-                    '-'
-                };
+                    static unsigned char const g_stdin_file_name[] =
+                    {
+                        '-'
+                    };
 
-                struct feed_buf
-                    o_stdin_file_name_buf;
+                    struct feed_buf
+                        o_stdin_file_name_buf;
 
-                feed_buf_init(
-                    &(
-                        o_stdin_file_name_buf),
-                    g_stdin_file_name,
-                    g_stdin_file_name + sizeof(g_stdin_file_name));
-
-                if (
-                    0
-                    == feed_buf_compare(
-                        o_options.p_file_name_buf,
+                    feed_buf_init(
                         &(
-                            o_stdin_file_name_buf)))
-                {
-                    p_file_handle =
-                        stdin;
-                }
-                else
-                {
-                    unsigned char *
-                        p_file_name0;
-
-                    unsigned long int
-                        argl;
-
-                    argl =
-                        (unsigned long int)(
-                            o_options.p_file_name_buf->o_max.pc
-                            - o_options.p_file_name_buf->o_min.pc);
-
-                    p_file_name0 =
-                        (unsigned char *)(
-                            malloc(
-                                argl + 1ul));
+                            o_stdin_file_name_buf),
+                        g_stdin_file_name,
+                        g_stdin_file_name + sizeof(g_stdin_file_name));
 
                     if (
-                        p_file_name0)
-                    {
-                        memcpy(
-                            p_file_name0,
-                            o_options.p_file_name_buf->o_min.pc,
-                            argl);
-
-                        p_file_name0[argl] =
-                            '\000';
-
-                        p_file_handle =
-                            fopen(
-                                (char const *)(
-                                    p_file_name0),
-                                "rt");
-
-                        free(
-                            (void *)(
-                                p_file_name0));
-                    }
-                    else
+                        0
+                        == feed_buf_compare(
+                            p_main_context->o_options.p_file_name_buf,
+                            &(
+                                o_stdin_file_name_buf)))
                     {
                         p_file_handle =
                             stdin;
                     }
+                    else
+                    {
+                        unsigned char *
+                            p_file_name0;
+
+                        unsigned long int
+                            argl;
+
+                        argl =
+                            (unsigned long int)(
+                                p_main_context->o_options.p_file_name_buf->o_max.pc
+                                - p_main_context->o_options.p_file_name_buf->o_min.pc);
+
+                        p_file_name0 =
+                            (unsigned char *)(
+                                malloc(
+                                    argl + 1ul));
+
+                        if (
+                            p_file_name0)
+                        {
+                            memcpy(
+                                p_file_name0,
+                                p_main_context->o_options.p_file_name_buf->o_min.pc,
+                                argl);
+
+                            p_file_name0[argl] =
+                                '\000';
+
+                            p_file_handle =
+                                fopen(
+                                    (char const *)(
+                                        p_file_name0),
+                                    "rt");
+
+                            free(
+                                (void *)(
+                                    p_file_name0));
+                        }
+                        else
+                        {
+                            p_file_handle =
+                                stdin;
+                        }
+                    }
+
+                    feed_buf_cleanup(
+                        &(
+                            o_stdin_file_name_buf));
+                }
+                else
+                {
+                    p_file_handle =
+                        stdin;
                 }
 
-                feed_buf_cleanup(
-                    &(
-                        o_stdin_file_name_buf));
-            }
-            else
-            {
-                p_file_handle =
-                    stdin;
-            }
-
-            if (
-                p_file_handle)
-            {
-                char
-                    b_eof;
-
-                b_eof =
-                    0;
-
-                while (
-                    (!b_eof))
+                if (
+                    p_file_handle)
                 {
-                    unsigned char a_block[1024u];
+                    char
+                        b_eof;
 
-                    signed long int iResult;
+                    b_eof =
+                        0;
 
-                    iResult =
-                        (signed long int)(
-                            fread(
-                                a_block,
-                                sizeof(a_block[0u]),
-                                sizeof(a_block),
-                                p_file_handle));
-
-                    if (
-                        iResult > 0)
+                    while (
+                        (!b_eof))
                     {
-                        feed_load(
-                            p_feed_handle,
-                            a_block,
-                            (unsigned long int)(
-                                iResult));
+                        unsigned char a_block[1024u];
 
-                        if (feof(p_file_handle))
+                        signed long int iResult;
+
+                        iResult =
+                            (signed long int)(
+                                fread(
+                                    a_block,
+                                    sizeof(a_block[0u]),
+                                    sizeof(a_block),
+                                    p_file_handle));
+
+                        if (
+                            iResult > 0)
+                        {
+                            feed_load(
+                                p_main_context->p_feed_handle,
+                                a_block,
+                                (unsigned long int)(
+                                    iResult));
+
+                            if (feof(p_file_handle))
+                            {
+                                b_eof =
+                                    1;
+                            }
+                        }
+                        else
                         {
                             b_eof =
                                 1;
                         }
                     }
-                    else
+
+                    if (stdin != p_file_handle)
                     {
-                        b_eof =
-                            1;
+                        fclose(
+                            p_file_handle);
                     }
                 }
-
-                if (stdin != p_file_handle)
-                {
-                    fclose(
-                        p_file_handle);
-                }
-            }
-        }
-        else
-        {
-            {
-                static unsigned char const s_prompt1[] =
-                {
-                    'f', 'e', 'e', 'd', ' ', '>', ' '
-                };
-
-                feed_prompt1(
-                    p_feed_handle,
-                    s_prompt1,
-                    sizeof(
-                        s_prompt1));
-            }
-
-            {
-                static unsigned char const s_prompt2[] =
-                {
-                    ' ',
-                    '>',
-                    ' '
-                };
-
-                feed_prompt2(
-                    p_feed_handle,
-                    s_prompt2,
-                    sizeof(
-                        s_prompt2));
-            }
-        }
-
-        /* Setup of color theme */
-        {
-            feed_theme(
-                p_feed_handle,
-                feed_syntax_prompt1,
-                feed_color_dark_yellow,
-                feed_color_default);
-
-            feed_theme(
-                p_feed_handle,
-                feed_syntax_prompt2,
-                feed_color_dark_magenta,
-                feed_color_default);
-
-            feed_theme(
-                p_feed_handle,
-                feed_syntax_operator,
-                feed_color_dark_black,
-                feed_color_dark_white);
-        }
-
-        feed_start(
-            p_feed_handle);
-
-        /* Note: get text buffer to flush */
-        {
-            i_save_length =
-                feed_length(
-                    p_feed_handle);
-
-            if (
-                i_save_length)
-            {
-                p_save_buffer =
-                    (unsigned char *)(
-                        malloc(
-                            i_save_length));
             }
             else
             {
-                p_save_buffer =
-                    (unsigned char *)(
-                        0);
+                {
+                    static unsigned char const s_prompt1[] =
+                    {
+                        'f', 'e', 'e', 'd', ' ', '>', ' '
+                    };
+
+                    feed_prompt1(
+                        p_main_context->p_feed_handle,
+                        s_prompt1,
+                        sizeof(
+                            s_prompt1));
+                }
+
+                {
+                    static unsigned char const s_prompt2[] =
+                    {
+                        ' ',
+                        '>',
+                        ' '
+                    };
+
+                    feed_prompt2(
+                        p_main_context->p_feed_handle,
+                        s_prompt2,
+                        sizeof(
+                            s_prompt2));
+                }
             }
 
-            if (
-                p_save_buffer)
+            /* Setup of color theme */
             {
-                if (
-                    0
-                    != feed_save(
-                        p_feed_handle,
-                        p_save_buffer,
-                        i_save_length))
-                {
-                }
-                else
-                {
-                    i_save_length =
-                        0ul;
-                }
+                feed_theme(
+                    p_main_context->p_feed_handle,
+                    feed_syntax_prompt1,
+                    feed_color_dark_yellow,
+                    feed_color_default);
+
+                feed_theme(
+                    p_main_context->p_feed_handle,
+                    feed_syntax_prompt2,
+                    feed_color_dark_magenta,
+                    feed_color_default);
+
+                feed_theme(
+                    p_main_context->p_feed_handle,
+                    feed_syntax_operator,
+                    feed_color_dark_black,
+                    feed_color_dark_white);
             }
-        }
 
-        feed_destroy(
-            p_feed_handle);
+            feed_start(
+                p_main_context->p_feed_handle);
 
-        /* Print the text buffer here. */
-        {
-            if (
-                p_save_buffer)
+            /* Note: get text buffer to flush */
             {
+                i_save_length =
+                    feed_length(
+                        p_main_context->p_feed_handle);
+
                 if (
                     i_save_length)
                 {
-                    if (!isatty(STDOUT_FILENO))
-                    {
-                        fwrite(
-                            p_save_buffer,
-                            i_save_length,
-                            1,
-                            stdout);
-                    }
+                    p_save_buffer =
+                        (unsigned char *)(
+                            malloc(
+                                i_save_length));
+                }
+                else
+                {
+                    p_save_buffer =
+                        (unsigned char *)(
+                            0);
                 }
 
-                free(
-                    (void *)(
-                        p_save_buffer));
+                if (
+                    p_save_buffer)
+                {
+                    if (
+                        0
+                        != feed_save(
+                            p_main_context->p_feed_handle,
+                            p_save_buffer,
+                            i_save_length))
+                    {
+                    }
+                    else
+                    {
+                        i_save_length =
+                            0ul;
+                    }
+                }
+            }
+
+            feed_destroy(
+                p_main_context->p_feed_handle);
+
+            /* Print the text buffer here. */
+            {
+                if (
+                    p_save_buffer)
+                {
+                    if (
+                        i_save_length)
+                    {
+                        if (!isatty(STDOUT_FILENO))
+                        {
+                            fwrite(
+                                p_save_buffer,
+                                i_save_length,
+                                1,
+                                stdout);
+                        }
+                    }
+
+                    free(
+                        (void *)(
+                            p_save_buffer));
+                }
             }
         }
     }
