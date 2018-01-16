@@ -2640,6 +2640,50 @@ feed_main_event_callback(
 }
 
 static
+int
+feed_main_exec_char(
+    struct feed_handle * const
+        p_this,
+    unsigned char const
+        c,
+    char const
+        b_notify)
+{
+    int
+        i_result;
+
+    struct feed_event
+        o_event;
+
+    i_result =
+        feed_input_write(
+            p_this->p_input,
+            c,
+            &(
+                o_event));
+
+    if (
+        0
+        <= i_result)
+    {
+        if (
+            0
+            < i_result)
+        {
+            feed_main_event_callback(
+                p_this,
+                &(
+                    o_event),
+                b_notify);
+        }
+    }
+
+    return
+        i_result;
+
+}
+
+static
 void
 feed_main_step(
     struct feed_handle * const
@@ -2663,30 +2707,16 @@ feed_main_step(
         int
             i_result;
 
-        struct feed_event
-            o_event;
-
         i_result =
-            feed_input_write(
-                p_this->p_input,
+            feed_main_exec_char(
+                p_this,
                 c,
-                &(
-                    o_event));
+                1);
 
         if (
             0
             <= i_result)
         {
-            if (
-                0
-                < i_result)
-            {
-                feed_main_event_callback(
-                    p_this,
-                    &(
-                        o_event),
-                    1);
-            }
         }
         else
         {
@@ -3214,34 +3244,18 @@ feed_exec(
         unsigned char
             c;
 
-        struct feed_event
-            o_event;
-
         c =
             p_data[i_data_iterator];
 
         i_result =
-            feed_input_write(
-                p_this->p_input,
+            feed_main_exec_char(
+                p_this,
                 c,
-                &(
-                    o_event));
+                0);
 
         if (
-            0
-            <= i_result)
+            0 <= i_result)
         {
-            if (
-                0
-                < i_result)
-            {
-                feed_main_event_callback(
-                    p_this,
-                    &(
-                        o_event),
-                    0);
-            }
-
             i_data_iterator ++;
         }
     }
