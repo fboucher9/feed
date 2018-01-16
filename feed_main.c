@@ -693,6 +693,9 @@ feed_options_init(
     p_options->b_geometry =
         0;
 
+    p_options->b_dumpkeys =
+        0;
+
     b_result =
         1;
 
