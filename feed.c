@@ -28,6 +28,10 @@ Description:
 
 #include "feed_prompt.h"
 
+#include "feed_device.h"
+
+#include "feed_device_std.h"
+
 #include "feed_screen.h"
 
 #include "feed_screen_info.h"
@@ -99,8 +103,8 @@ struct feed_handle
     struct feed_dict *
         p_dict;
 
-    void *
-        pv_padding[1u];
+    struct feed_device_std *
+        p_device_std;
 
     /* -- */
 
@@ -112,6 +116,9 @@ struct feed_handle
 
     struct feed_screen_iterator
         o_cursor_visible;
+
+    struct feed_device
+        o_device;
 
     /* -- */
 
@@ -233,6 +240,51 @@ feed_init(
         feed_input_create(
             p_this->p_client);
 
+    if (
+        p_this->o_descriptor.p_device_intf)
+    {
+        p_this->p_device_std =
+            (struct feed_device_std *)(
+                0);
+
+        feed_device_init(
+            &(
+                p_this->o_device),
+            p_this->o_descriptor.p_device_intf,
+            p_this->o_descriptor.p_context);
+    }
+    else
+    {
+        struct feed_device_std_descriptor
+            o_device_std_descriptor;
+
+        o_device_std_descriptor.i_tty_file_descriptor =
+            STDERR_FILENO;
+
+        o_device_std_descriptor.i_read_file_descriptor =
+            STDERR_FILENO;
+
+        o_device_std_descriptor.i_write_file_descriptor =
+            STDERR_FILENO;
+
+        p_this->p_device_std =
+            feed_device_std_create(
+                p_this->p_client,
+                &(
+                    o_device_std_descriptor));
+
+        feed_device_init(
+            &(
+                p_this->o_device),
+            feed_device_std_intf(),
+            p_this->p_device_std);
+    }
+
+    feed_client_set_device(
+        p_this->p_client,
+        &(
+            p_this->o_device));
+
     p_this->p_screen_info =
         &(
             p_this->o_screen_info);
@@ -336,6 +388,26 @@ feed_cleanup(
 
         p_this->p_screen_info =
             (struct feed_screen_info *)(
+                0);
+    }
+
+    feed_client_set_device(
+        p_this->p_client,
+        (struct feed_device *)(
+            0));
+
+    feed_device_cleanup(
+        &(
+            p_this->o_device));
+
+    if (
+        p_this->p_device_std)
+    {
+        feed_device_std_destroy(
+            p_this->p_device_std);
+
+        p_this->p_device_std =
+            (struct feed_device_std *)(
                 0);
     }
 

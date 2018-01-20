@@ -19,6 +19,8 @@ struct feed_prompt;
 
 struct feed_text;
 
+struct feed_device;
+
 struct feed_client
 {
     struct feed_heap *
@@ -32,6 +34,9 @@ struct feed_client
 
     struct feed_text *
         p_text;
+
+    struct feed_device *
+        p_device;
 
 }; /* struct feed_client */
 
@@ -52,6 +57,18 @@ feed_client_get_heap(
 
 struct feed_screen_info *
 feed_client_get_screen_info(
+    struct feed_client * const
+        p_client);
+
+void
+feed_client_set_device(
+    struct feed_client * const
+        p_client,
+    struct feed_device * const
+        p_device);
+
+struct feed_device *
+feed_client_get_device(
     struct feed_client * const
         p_client);
 

@@ -827,6 +827,10 @@ init_feed_descriptor(
         &(
             feed_main_notify_callback);
 
+    p_feed_descriptor->p_device_intf =
+        (struct feed_device_intf *)(
+            0);
+
     if (p_main_context->o_options.b_geometry)
     {
         /* Get width and height values */

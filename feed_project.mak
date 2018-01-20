@@ -162,6 +162,8 @@ FEED_LIBRARY_MODULES = \
     feed_page \
     feed_theme \
     feed_dict \
+    feed_device_std \
+    feed_device \
     feed
 
 FEED_option_precomp_input = $(FEED_SRC_PATH)feed_os.h

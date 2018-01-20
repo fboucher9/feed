@@ -27,16 +27,6 @@ feed_tty_destroy(
         p_tty);
 
 char
-feed_tty_enable(
-    struct feed_tty * const
-        p_tty);
-
-char
-feed_tty_disable(
-    struct feed_tty * const
-        p_tty);
-
-char
 feed_tty_flush(
     struct feed_tty * const
         p_tty);

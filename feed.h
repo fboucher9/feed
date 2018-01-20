@@ -21,6 +21,8 @@ Description:
 /* Predefine library handle */
 struct feed_handle;
 
+struct feed_device_intf;
+
 /* Descriptor for initialization of library handle */
 struct feed_descriptor
 {
@@ -31,6 +33,9 @@ struct feed_descriptor
         unsigned short int i_key,
         unsigned char const * const p_event,
         unsigned long int const i_event_length);
+
+    /* hook of device interface */
+    struct feed_device_intf const * p_device_intf;
 
     /* application context for callbacks */
     void * p_context;
@@ -162,6 +167,31 @@ enum feed_syntax
 
 #define FEED_KEY_F12 \
     ((unsigned short int)(152u))
+
+struct feed_device_intf
+{
+    int (* p_enter)(
+        void * const p_context);
+
+    int (* p_leave)(
+        void * const p_context);
+
+    int (* p_query)(
+        void * const p_context,
+        unsigned short int * const p_columns,
+        unsigned short int * const p_rows);
+
+    signed long int (* p_read)(
+        void * const p_context,
+        unsigned char * const p_buf,
+        unsigned long int const i_buf_len);
+
+    signed long int (* p_write)(
+        void * const p_context,
+        unsigned char const * const p_buf,
+        unsigned long int const i_buf_len);
+
+}; /* struct feed_device_intf */
 
 #if defined(__cplusplus)
 extern "C" {

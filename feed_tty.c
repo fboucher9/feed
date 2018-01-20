@@ -26,31 +26,18 @@ Description:
 
 #include "feed_object.h"
 
+#include "feed_device.h"
+
 struct feed_tty
 {
     struct feed_client *
         p_client;
 
-    void *
-        p_termios;
-
-    int
-        i_output_file;
-
-    int
-        i_input_file;
-
     unsigned int
         i_cache_len;
 
     int
-        a_padding1[1u];
-
-    char
-        b_enabled;
-
-    char
-        ac_padding[7u];
+        a_padding1[3u];
 
     unsigned char
         a_cache[65536u];
@@ -67,60 +54,20 @@ feed_tty_init(
 {
     char b_result;
 
-    struct feed_heap *
-        p_heap;
-
     if (
         p_client)
     {
         if (
             p_tty)
         {
-            p_heap =
-                feed_client_get_heap(
-                    p_client);
+            p_tty->p_client =
+                p_client;
 
-            if (
-                p_heap)
-            {
-                p_tty->p_client =
-                    p_client;
+            p_tty->i_cache_len =
+                0u;
 
-                p_tty->p_termios =
-                    feed_heap_alloc(
-                        p_heap,
-                        sizeof(
-                            struct termios));
-
-                if (
-                    p_tty->p_termios)
-                {
-                    p_tty->i_output_file =
-                        STDERR_FILENO;
-
-                    p_tty->i_input_file =
-                        STDERR_FILENO;
-
-                    p_tty->i_cache_len =
-                        0u;
-
-                    p_tty->b_enabled =
-                        0;
-
-                    b_result =
-                        1;
-                }
-                else
-                {
-                    b_result =
-                        0;
-                }
-            }
-            else
-            {
-                b_result =
-                    0;
-            }
+            b_result =
+                1;
         }
         else
         {
@@ -185,30 +132,8 @@ feed_tty_cleanup(
         if (
             p_client)
         {
-            struct feed_heap *
-                p_heap;
-
-            p_heap =
-                feed_client_get_heap(
-                    p_client);
-
-            if (
-                p_heap)
-            {
-                feed_tty_flush(
-                    p_tty);
-
-                if (p_tty->p_termios)
-                {
-                    feed_heap_free(
-                        p_heap,
-                        p_tty->p_termios);
-
-                    p_tty->p_termios =
-                        (void *)(
-                            0);
-                }
-            }
+            feed_tty_flush(
+                p_tty);
 
             p_tty->p_client =
                 (struct feed_client *)(
@@ -284,166 +209,6 @@ feed_tty_destroy(
 
 } /* feed_tty_destroy() */
 
-static
-void
-feed_tty_set_raw_options(
-    struct termios * const
-        p_termios)
-{
-    p_termios->c_iflag &=
-        (unsigned int)(~(unsigned int)(
-            BRKINT
-            | ICRNL
-            | INPCK
-            | ISTRIP
-            | IXON));
-
-    p_termios->c_oflag &=
-        (unsigned int)(~(unsigned int)(
-            OPOST));
-
-    p_termios->c_cflag |=
-        CS8;
-
-    p_termios->c_lflag &=
-        (unsigned int)(~(unsigned int)(
-            ECHO
-            | ICANON
-            | IEXTEN
-            | ISIG));
-
-    p_termios->c_cc[VMIN] =
-        1;
-
-    p_termios->c_cc[VTIME] =
-        0;
-
-}
-
-char
-feed_tty_enable(
-    struct feed_tty * const
-        p_tty)
-{
-    char
-        b_result;
-
-    struct termios
-        o_termios;
-
-    int
-        i_term_status;
-
-    if (
-        isatty(
-            p_tty->i_input_file))
-    {
-        i_term_status =
-            tcgetattr(
-                p_tty->i_input_file,
-                (struct termios *)(
-                    p_tty->p_termios));
-
-        if (
-            0 <= i_term_status)
-        {
-            memcpy(
-                &(
-                    o_termios),
-                p_tty->p_termios,
-                sizeof(
-                    struct termios));
-
-            feed_tty_set_raw_options(
-                &(
-                    o_termios));
-
-            i_term_status =
-                tcsetattr(
-                    p_tty->i_input_file,
-                    TCSADRAIN,
-                    &(
-                        o_termios));
-
-            if (
-                0 <= i_term_status)
-            {
-                p_tty->b_enabled =
-                    1;
-
-                b_result =
-                    1;
-            }
-            else
-            {
-                b_result =
-                    0;
-            }
-        }
-        else
-        {
-            b_result =
-                0;
-        }
-    }
-    else
-    {
-        b_result =
-            0;
-    }
-
-    return
-        b_result;
-
-}
-
-char
-feed_tty_disable(
-    struct feed_tty * const
-        p_tty)
-{
-    char
-        b_result;
-
-    if (
-        p_tty->b_enabled)
-    {
-        int
-            i_term_status;
-
-        i_term_status =
-            tcsetattr(
-                p_tty->i_input_file,
-                TCSADRAIN,
-                (struct termios *)(
-                    p_tty->p_termios));
-
-        if (
-            0 <= i_term_status)
-        {
-            p_tty->b_enabled =
-                1;
-
-            b_result =
-                1;
-        }
-        else
-        {
-            b_result =
-                0;
-        }
-    }
-    else
-    {
-        b_result =
-            1;
-    }
-
-    return
-        b_result;
-
-}
-
 char
 feed_tty_read_character(
     struct feed_tty * const
@@ -454,18 +219,17 @@ feed_tty_read_character(
     char
         b_result;
 
-    int
+    signed long int
         i_result;
 
     feed_tty_flush(
         p_tty);
 
     i_result =
-        (int)(
-            read(
-                p_tty->i_input_file,
-                p_value,
-                1));
+        feed_device_read(
+            p_tty->p_client->p_device,
+            p_value,
+            1);
 
     if (
         i_result > 0)
@@ -496,7 +260,7 @@ feed_tty_read_character_array(
     char
         b_result;
 
-    int
+    signed long int
         i_result;
 
     unsigned long int
@@ -515,11 +279,10 @@ feed_tty_read_character_array(
             < i_buf_len))
     {
         i_result =
-            (int)(
-                read(
-                    p_tty->i_input_file,
-                    p_buf + i_index,
-                    i_buf_len - i_index));
+            feed_device_read(
+                p_tty->p_client->p_device,
+                p_buf + i_index,
+                i_buf_len - i_index);
 
         if (
             i_result > 0)
@@ -566,15 +329,14 @@ feed_tty_flush(
                 i_index
                 < p_tty->i_cache_len))
         {
-            int
+            signed long int
                 i_result;
 
             i_result =
-                (int)(
-                    write(
-                        p_tty->i_output_file,
-                        p_tty->a_cache + i_index,
-                        p_tty->i_cache_len - i_index));
+                feed_device_write(
+                    p_tty->p_client->p_device,
+                    p_tty->a_cache + i_index,
+                    p_tty->i_cache_len - i_index);
 
             if (
                 i_result > 0)
@@ -1419,29 +1181,15 @@ feed_tty_get_window_size(
     int
         i_result;
 
-    struct winsize
-        o_winsize;
-
     i_result =
-        ioctl(
-            p_tty->i_output_file,
-            TIOCGWINSZ,
-            &(
-                o_winsize));
+        feed_device_query(
+            p_tty->p_client->p_device,
+            p_columns,
+            p_rows);
 
     if (
         0 <= i_result)
     {
-        *(
-            p_columns) =
-            (unsigned short int)(
-                o_winsize.ws_col);
-
-        *(
-            p_rows) =
-            (unsigned short int)(
-                o_winsize.ws_row);
-
         b_result =
             1;
     }

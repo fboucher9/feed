@@ -28,6 +28,8 @@ Description:
 
 #include "feed_screen_info.h"
 
+#include "feed_device.h"
+
 struct feed_screen_descriptor
 {
     unsigned short int
@@ -745,8 +747,9 @@ feed_screen_enter(
             p_client)
         {
             if (
-                feed_tty_enable(
-                    p_screen->p_tty))
+                0
+                == feed_device_enter(
+                    p_client->p_device))
             {
                 unsigned char
                     a_sgr_reset[1u];
@@ -811,8 +814,8 @@ feed_screen_leave(
             feed_tty_flush(
                 p_screen->p_tty);
 
-            feed_tty_disable(
-                p_screen->p_tty);
+            feed_device_leave(
+                p_client->p_device);
         }
     }
 

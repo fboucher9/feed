@@ -20,6 +20,14 @@ feed_client_init(
         (struct feed_screen_info *)(
             0);
 
+    p_client->p_prompt =
+        (struct feed_prompt *)(
+            0);
+
+    p_client->p_text =
+        (struct feed_text *)(
+            0);
+
     b_result =
         1;
 
@@ -39,6 +47,14 @@ feed_client_cleanup(
 
     p_client->p_screen_info =
         (struct feed_screen_info *)(
+            0);
+
+    p_client->p_prompt =
+        (struct feed_prompt *)(
+            0);
+
+    p_client->p_text =
+        (struct feed_text *)(
             0);
 
 } /* feed_client_cleanup() */
@@ -62,5 +78,27 @@ feed_client_get_screen_info(
         p_client->p_screen_info;
 
 } /* feed_client_get_screen_info() */
+
+void
+feed_client_set_device(
+    struct feed_client * const
+        p_client,
+    struct feed_device * const
+        p_device)
+{
+    p_client->p_device =
+        p_device;
+
+} /* feed_client_set_device() */
+
+struct feed_device *
+feed_client_get_device(
+    struct feed_client * const
+        p_client)
+{
+    return
+        p_client->p_device;
+
+} /* feed_client_get_device() */
 
 /* end-of-file: feed_client.c */
