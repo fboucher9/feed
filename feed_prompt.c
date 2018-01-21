@@ -40,19 +40,14 @@ feed_prompt_init(
         (struct feed_prompt *)(
             p_buf);
 
-    if (
-        p_prompt)
-    {
-        p_prompt->p_client =
-            p_client;
+    p_prompt->p_client =
+        p_client;
 
-        p_prompt->a_prompt[0u] =
-            NULL;
+    p_prompt->a_prompt[0u] =
+        NULL;
 
-        p_prompt->a_prompt[1u] =
-            NULL;
-
-    }
+    p_prompt->a_prompt[1u] =
+        NULL;
 
     return
         1;
@@ -72,32 +67,27 @@ feed_prompt_cleanup(
         (struct feed_prompt *)(
             p_buf);
 
+    p_prompt->p_client =
+        NULL;
+
     if (
-        p_prompt)
+        p_prompt->a_prompt[0u])
     {
-        p_prompt->p_client =
+        feed_line_destroy(
+            p_prompt->a_prompt[0u]);
+
+        p_prompt->a_prompt[0u] =
             NULL;
+    }
 
-        if (
-            p_prompt->a_prompt[0u])
-        {
-            feed_line_destroy(
-                p_prompt->a_prompt[0u]);
+    if (
+        p_prompt->a_prompt[1u])
+    {
+        feed_line_destroy(
+            p_prompt->a_prompt[1u]);
 
-            p_prompt->a_prompt[0u] =
-                NULL;
-        }
-
-        if (
-            p_prompt->a_prompt[1u])
-        {
-            feed_line_destroy(
-                p_prompt->a_prompt[1u]);
-
-            p_prompt->a_prompt[1u] =
-                NULL;
-        }
-
+        p_prompt->a_prompt[1u] =
+            NULL;
     }
 }
 
@@ -150,7 +140,7 @@ feed_prompt_set(
         b_result;
 
     /* Delete the previous prompt */
-    if (p_prompt && (i_index < 2u))
+    if (i_index < 2u)
     {
         if (
             p_prompt->a_prompt[i_index])
@@ -249,7 +239,7 @@ feed_prompt_get(
     struct feed_line *
         p_line;
 
-    if (p_prompt && (i_index < 2u))
+    if (i_index < 2u)
     {
         p_line =
             p_prompt->a_prompt[i_index];

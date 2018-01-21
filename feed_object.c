@@ -27,58 +27,38 @@ feed_object_create(
     void *
         p_buf;
 
+    struct feed_heap *
+        p_heap;
+
+    p_heap =
+        feed_client_get_heap(
+            p_client);
+
+    p_buf =
+        feed_heap_alloc(
+            p_heap,
+            i_buf_len);
+
     if (
-        p_client)
+        p_buf)
     {
-        struct feed_heap *
-            p_heap;
-
-        p_heap =
-            feed_client_get_heap(
-                p_client);
-
         if (
-            p_heap)
+            (*p_init_cb)(
+                p_buf,
+                p_client,
+                p_descriptor))
         {
-            p_buf =
-                feed_heap_alloc(
-                    p_heap,
-                    i_buf_len);
-
-            if (
-                p_buf)
-            {
-                if (
-                    (*p_init_cb)(
-                        p_buf,
-                        p_client,
-                        p_descriptor))
-                {
-                }
-                else
-                {
-                    feed_heap_free(
-                        p_heap,
-                        p_buf);
-
-                    p_buf =
-                        (void *)(
-                            0);
-                }
-            }
         }
         else
         {
+            feed_heap_free(
+                p_heap,
+                p_buf);
+
             p_buf =
                 (void *)(
                     0);
         }
-    }
-    else
-    {
-        p_buf =
-            (void *)(
-                0);
     }
 
     return
@@ -96,28 +76,21 @@ feed_object_destroy(
         void * const
             p_buf))
 {
-    if (p_client)
+    struct feed_heap *
+        p_heap;
+
+    p_heap =
+        feed_client_get_heap(
+            p_client);
+
+    if (p_buf)
     {
-        struct feed_heap *
-            p_heap;
+        (*p_cleanup_cb)(
+            p_buf);
 
-        p_heap =
-            feed_client_get_heap(
-                p_client);
-
-        if (
-            p_heap)
-        {
-            if (p_buf)
-            {
-                (*p_cleanup_cb)(
-                    p_buf);
-
-                feed_heap_free(
-                    p_heap,
-                    p_buf);
-            }
-        }
+        feed_heap_free(
+            p_heap,
+            p_buf);
     }
 }
 

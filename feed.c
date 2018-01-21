@@ -391,10 +391,8 @@ feed_cleanup(
                 0);
     }
 
-    feed_client_set_device(
-        p_this->p_client,
-        (struct feed_device *)(
-            0));
+    feed_client_reset_device(
+        p_this->p_client);
 
     feed_device_cleanup(
         &(
@@ -465,6 +463,10 @@ feed_cleanup(
             (struct feed_client *)(
                 0);
     }
+
+    p_this->p_heap =
+        (struct feed_heap *)(
+            0);
 
 } /* feed_cleanup() */
 
@@ -563,10 +565,6 @@ feed_destroy(
         {
             feed_cleanup(
                 p_this);
-
-            p_this->p_heap =
-                (struct feed_heap *)(
-                    0);
 
             feed_heap_free(
                 p_heap,

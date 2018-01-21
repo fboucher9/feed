@@ -54,32 +54,14 @@ feed_tty_init(
 {
     char b_result;
 
-    if (
-        p_client)
-    {
-        if (
-            p_tty)
-        {
-            p_tty->p_client =
-                p_client;
+    p_tty->p_client =
+        p_client;
 
-            p_tty->i_cache_len =
-                0u;
+    p_tty->i_cache_len =
+        0u;
 
-            b_result =
-                1;
-        }
-        else
-        {
-            b_result =
-                0;
-        }
-    }
-    else
-    {
-        b_result =
-            0;
-    }
+    b_result =
+        1;
 
     return b_result;
 }
@@ -121,25 +103,12 @@ feed_tty_cleanup(
     struct feed_tty * const
         p_tty)
 {
-    if (p_tty)
-    {
-        struct feed_client *
-            p_client;
+    feed_tty_flush(
+        p_tty);
 
-        p_client =
-            p_tty->p_client;
-
-        if (
-            p_client)
-        {
-            feed_tty_flush(
-                p_tty);
-
-            p_tty->p_client =
-                (struct feed_client *)(
-                    0);
-        }
-    }
+    p_tty->p_client =
+        (struct feed_client *)(
+            0);
 }
 
 static
@@ -188,24 +157,16 @@ feed_tty_destroy(
     struct feed_tty * const
         p_tty)
 {
-    if (
-        p_tty)
-    {
-        struct feed_client * const
-            p_client =
-            p_tty->p_client;
+    struct feed_client * const
+        p_client =
+        p_tty->p_client;
 
-        if (
-            p_client)
-        {
-            feed_object_destroy(
-                p_client,
-                (void *)(
-                    p_tty),
-                &(
-                    feed_tty_cleanup_cb));
-        }
-    }
+    feed_object_destroy(
+        p_client,
+        (void *)(
+            p_tty),
+        &(
+            feed_tty_cleanup_cb));
 
 } /* feed_tty_destroy() */
 

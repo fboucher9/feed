@@ -50,6 +50,18 @@ feed_client_cleanup(
     struct feed_client * const
         p_client);
 
+void
+feed_client_set_heap(
+    struct feed_client * const
+        p_client,
+    struct feed_heap * const
+        p_heap);
+
+void
+feed_client_reset_heap(
+    struct feed_client * const
+        p_client);
+
 struct feed_heap *
 feed_client_get_heap(
     struct feed_client * const
@@ -66,6 +78,11 @@ feed_client_set_device(
         p_client,
     struct feed_device * const
         p_device);
+
+void
+feed_client_reset_device(
+    struct feed_client * const
+        p_client);
 
 struct feed_device *
 feed_client_get_device(
