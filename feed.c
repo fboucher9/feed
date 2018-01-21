@@ -2144,7 +2144,10 @@ feed_main_delete_word_prev(
 
                 if (p_this->o_cursor.p_glyph)
                 {
-                    if (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                    if ((0u == p_this->o_cursor.p_glyph->o_utf8_code.i_raw_len)
+                        || ('\t' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                        || ('\n' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                        || (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u]))
                     {
                         feed_main_delete_glyph_next(p_this);
                     }
@@ -2178,7 +2181,10 @@ feed_main_delete_word_prev(
 
                 if (p_this->o_cursor.p_glyph)
                 {
-                    if (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                    if ((0u == p_this->o_cursor.p_glyph->o_utf8_code.i_raw_len)
+                        || ('\t' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                        || ('\n' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u])
+                        || (' ' == p_this->o_cursor.p_glyph->o_utf8_code.a_raw[0u]))
                     {
                         b_found =
                             1;
@@ -2225,6 +2231,36 @@ feed_main_delete_glyph_prev(
         {
             feed_main_delete_glyph_next(p_this);
         }
+    }
+}
+
+static
+void
+feed_main_delete_to_line_end(
+    struct feed_handle * const
+        p_this)
+{
+    while (
+        feed_text_iterator_validate(
+            &(
+                p_this->o_cursor)),
+        (p_this->o_cursor.i_glyph_index + 1u) < p_this->o_cursor.p_line->i_glyph_count)
+    {
+        feed_main_delete_glyph_next(
+            p_this);
+    }
+}
+
+static
+void
+feed_main_delete_to_line_begin(
+    struct feed_handle * const
+        p_this)
+{
+    while (
+        p_this->o_cursor.i_glyph_index)
+    {
+        feed_main_delete_glyph_prev(p_this);
     }
 }
 
@@ -2609,6 +2645,16 @@ feed_main_event_callback(
         else if ((FEED_KEY_DELETE) == p_event->i_code)
         {
             feed_main_delete_glyph_next(
+                p_this);
+        }
+        else if ((FEED_KEY_CTRL | 'K') == p_event->i_code)
+        {
+            feed_main_delete_to_line_end(
+                p_this);
+        }
+        else if ((FEED_KEY_CTRL | 'U') == p_event->i_code)
+        {
+            feed_main_delete_to_line_begin(
                 p_this);
         }
         else if (
