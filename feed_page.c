@@ -84,10 +84,17 @@ feed_page_push(
     struct feed_page_node *
         p_page_node;
 
+    struct feed_heap *
+        p_heap;
+
+    p_heap =
+        feed_client_get_heap(
+            p_page->p_client);
+
     p_page_node =
         (struct feed_page_node *)(
             feed_heap_alloc(
-                p_page->p_client->p_heap,
+                p_heap,
                 (unsigned long int)(
                     sizeof(
                         struct feed_page_node))));
@@ -129,6 +136,13 @@ feed_page_pop(
         struct feed_page_node *
             p_page_node;
 
+        struct feed_heap *
+            p_heap;
+
+        p_heap =
+            feed_client_get_heap(
+                p_page->p_client);
+
         p_page_node =
             (struct feed_page_node *)(
                 p_page->o_pages.p_prev);
@@ -144,7 +158,7 @@ feed_page_pop(
             p_page_node->o_view_descriptor;
 
         feed_heap_free(
-            p_page->p_client->p_heap,
+            p_heap,
             (void *)(
                 p_page_node));
 

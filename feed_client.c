@@ -126,6 +126,26 @@ feed_client_get_heap(
 
 } /* feed_client_get_heap() */
 
+void
+feed_client_set_screen_info(
+    struct feed_client * const
+        p_client,
+    struct feed_screen_info * const
+        p_screen_info)
+{
+    p_client->p_screen_info =
+        p_screen_info;
+}
+
+void
+feed_client_reset_screen_info(
+    struct feed_client * const
+        p_client)
+{
+    p_client->p_screen_info =
+        g_feed_screen_info_null_ptr;
+}
+
 struct feed_screen_info *
 feed_client_get_screen_info(
     struct feed_client * const
@@ -135,6 +155,64 @@ feed_client_get_screen_info(
         p_client->p_screen_info;
 
 } /* feed_client_get_screen_info() */
+
+void
+feed_client_set_prompt(
+    struct feed_client * const
+        p_client,
+    struct feed_prompt * const
+        p_prompt)
+{
+    p_client->p_prompt =
+        p_prompt;
+}
+
+void
+feed_client_reset_prompt(
+    struct feed_client * const
+        p_client)
+{
+    p_client->p_prompt =
+        g_feed_prompt_null_ptr;
+}
+
+struct feed_prompt *
+feed_client_get_prompt(
+    struct feed_client * const
+        p_client)
+{
+    return
+        p_client->p_prompt;
+}
+
+void
+feed_client_set_text(
+    struct feed_client * const
+        p_client,
+    struct feed_text * const
+        p_text)
+{
+    p_client->p_text =
+        p_text;
+}
+
+void
+feed_client_reset_text(
+    struct feed_client * const
+        p_client)
+{
+    p_client->p_text =
+        g_feed_text_null_ptr;
+}
+
+struct feed_text *
+feed_client_get_text(
+    struct feed_client * const
+        p_client)
+{
+    return
+        p_client->p_text;
+}
 
 void
 feed_client_set_device(

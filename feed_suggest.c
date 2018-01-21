@@ -58,10 +58,17 @@ feed_suggest_node_init(
 
     if (p_suggest_descriptor->i_length)
     {
+        struct feed_heap *
+            p_heap;
+
+        p_heap =
+            feed_client_get_heap(
+                p_client);
+
         p_suggest_node->p_buffer =
             (unsigned char *)(
                 feed_heap_alloc(
-                    p_client->p_heap,
+                    p_heap,
                     p_suggest_descriptor->i_length));
 
         if (p_suggest_node->p_buffer)
@@ -149,8 +156,15 @@ feed_suggest_node_cleanup(
     if (
         p_suggest_node->p_buffer)
     {
+        struct feed_heap *
+            p_heap;
+
+        p_heap =
+            feed_client_get_heap(
+                p_suggest_node->p_client);
+
         feed_heap_free(
-            p_suggest_node->p_client->p_heap,
+            p_heap,
             (void *)(
                 p_suggest_node->p_buffer));
 

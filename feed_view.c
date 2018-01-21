@@ -263,13 +263,15 @@ feed_combo_iterator_init(
 
     feed_text_iterator_init(
         p_client,
-        p_client->p_text,
+        feed_client_get_text(
+            p_client),
         &(
             p_combo_iterator->o_text_iterator));
 
     feed_prompt_iterator_init(
         p_client,
-        p_client->p_prompt,
+        feed_client_get_prompt(
+            p_client),
         &(
             p_combo_iterator->o_prompt_iterator));
 
@@ -513,6 +515,13 @@ feed_view_test(
 
     if (p_glyph)
     {
+        struct feed_screen_info *
+            p_screen_info;
+
+        p_screen_info =
+            feed_client_get_screen_info(
+                p_iterator->p_client);
+
         if (p_glyph->o_utf8_code.i_raw_len)
         {
             if (
@@ -520,7 +529,7 @@ feed_view_test(
             {
                 b_result =
                     feed_screen_iterator_test_newline(
-                        p_iterator->p_client->p_screen_info,
+                        p_screen_info,
                         &(
                             p_iterator->o_screen_iterator));
             }
@@ -529,7 +538,7 @@ feed_view_test(
             {
                 b_result =
                     feed_screen_iterator_test_tab(
-                        p_iterator->p_client->p_screen_info,
+                        p_screen_info,
                         &(
                             p_iterator->o_screen_iterator));
             }
@@ -543,7 +552,7 @@ feed_view_test(
 
                 b_result =
                     feed_screen_iterator_test_write(
-                        p_iterator->p_client->p_screen_info,
+                        p_screen_info,
                         &(
                             p_iterator->o_screen_iterator),
                         i_glyph_width);
@@ -553,7 +562,7 @@ feed_view_test(
         {
             b_result =
                 feed_screen_iterator_test_clear(
-                    p_iterator->p_client->p_screen_info,
+                    p_screen_info,
                     &(
                         p_iterator->o_screen_iterator));
         }
@@ -594,8 +603,15 @@ feed_view_head(
     if (
         b_result)
     {
+        struct feed_screen_info *
+            p_screen_info;
+
+        p_screen_info =
+            feed_client_get_screen_info(
+                p_iterator->p_client);
+
         feed_screen_iterator_init(
-            p_iterator->p_client->p_screen_info,
+            p_screen_info,
             &(
                 p_iterator->o_screen_iterator));
 
@@ -642,6 +658,13 @@ feed_view_write(
 
     if (p_glyph)
     {
+        struct feed_screen_info *
+            p_screen_info;
+
+        p_screen_info =
+            feed_client_get_screen_info(
+                p_iterator->p_client);
+
         /* Advance screen position */
         if (p_glyph->o_utf8_code.i_raw_len)
         {
@@ -651,7 +674,7 @@ feed_view_write(
                 /* Empty line, so do a newline */
                 i_width =
                     feed_screen_iterator_newline(
-                        p_iterator->p_client->p_screen_info,
+                        p_screen_info,
                         &(
                             p_iterator->o_screen_iterator));
             }
@@ -660,7 +683,7 @@ feed_view_write(
             {
                 i_width =
                     feed_screen_iterator_tab(
-                        p_iterator->p_client->p_screen_info,
+                        p_screen_info,
                         &(
                             p_iterator->o_screen_iterator));
             }
@@ -671,7 +694,7 @@ feed_view_write(
                         p_glyph);
 
                 feed_screen_iterator_write(
-                    p_iterator->p_client->p_screen_info,
+                    p_screen_info,
                     &(
                         p_iterator->o_screen_iterator),
                     i_width);
@@ -681,7 +704,7 @@ feed_view_write(
         {
             i_width =
                 feed_screen_iterator_clear(
-                    p_iterator->p_client->p_screen_info,
+                    p_screen_info,
                     &(
                         p_iterator->o_screen_iterator));
         }

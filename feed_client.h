@@ -67,8 +67,54 @@ feed_client_get_heap(
     struct feed_client * const
         p_client);
 
+void
+feed_client_set_screen_info(
+    struct feed_client * const
+        p_client,
+    struct feed_screen_info * const
+        p_screen_info);
+
+void
+feed_client_reset_screen_info(
+    struct feed_client * const
+        p_client);
+
 struct feed_screen_info *
 feed_client_get_screen_info(
+    struct feed_client * const
+        p_client);
+
+void
+feed_client_set_prompt(
+    struct feed_client * const
+        p_client,
+    struct feed_prompt * const
+        p_prompt);
+
+void
+feed_client_reset_prompt(
+    struct feed_client * const
+        p_client);
+
+struct feed_prompt *
+feed_client_get_prompt(
+    struct feed_client * const
+        p_client);
+
+void
+feed_client_set_text(
+    struct feed_client * const
+        p_client,
+    struct feed_text * const
+        p_text);
+
+void
+feed_client_reset_text(
+    struct feed_client * const
+        p_client);
+
+struct feed_text *
+feed_client_get_text(
     struct feed_client * const
         p_client);
 

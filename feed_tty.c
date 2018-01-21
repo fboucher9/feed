@@ -183,12 +183,19 @@ feed_tty_read_character(
     signed long int
         i_result;
 
+    struct feed_device *
+        p_device;
+
     feed_tty_flush(
         p_tty);
 
+    p_device =
+        feed_client_get_device(
+            p_tty->p_client);
+
     i_result =
         feed_device_read(
-            p_tty->p_client->p_device,
+            p_device,
             p_value,
             1);
 
@@ -227,11 +234,18 @@ feed_tty_read_character_array(
     unsigned long int
         i_index;
 
+    struct feed_device *
+        p_device;
+
     i_index =
         0u;
 
     b_result =
         1;
+
+    p_device =
+        feed_client_get_device(
+            p_tty->p_client);
 
     while (
         b_result
@@ -241,7 +255,7 @@ feed_tty_read_character_array(
     {
         i_result =
             feed_device_read(
-                p_tty->p_client->p_device,
+                p_device,
                 p_buf + i_index,
                 i_buf_len - i_index);
 
@@ -278,11 +292,18 @@ feed_tty_flush(
         unsigned long int
             i_index;
 
+        struct feed_device *
+            p_device;
+
         b_result =
             1;
 
         i_index =
             0u;
+
+        p_device =
+            feed_client_get_device(
+                p_tty->p_client);
 
         while (
             b_result
@@ -295,7 +316,7 @@ feed_tty_flush(
 
             i_result =
                 feed_device_write(
-                    p_tty->p_client->p_device,
+                    p_device,
                     p_tty->a_cache + i_index,
                     p_tty->i_cache_len - i_index);
 
@@ -1142,9 +1163,16 @@ feed_tty_get_window_size(
     int
         i_result;
 
+    struct feed_device *
+        p_device;
+
+    p_device =
+        feed_client_get_device(
+            p_tty->p_client);
+
     i_result =
         feed_device_query(
-            p_tty->p_client->p_device,
+            p_device,
             p_columns,
             p_rows);
 

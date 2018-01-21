@@ -653,10 +653,17 @@ feed_screen_enter(
         p_client =
         p_screen->p_client;
 
+    struct feed_device *
+        p_device;
+
+    p_device =
+        feed_client_get_device(
+            p_client);
+
     if (
         0
         == feed_device_enter(
-            p_client->p_device))
+            p_device))
     {
         unsigned char
             a_sgr_reset[1u];
@@ -692,6 +699,13 @@ feed_screen_leave(
         p_client =
         p_screen->p_client;
 
+    struct feed_device *
+        p_device;
+
+    p_device =
+        feed_client_get_device(
+            p_client);
+
     feed_screen_newline_raw(
         p_screen);
 
@@ -704,7 +718,7 @@ feed_screen_leave(
         p_screen->p_tty);
 
     feed_device_leave(
-        p_client->p_device);
+        p_device);
 
 } /* feed_screen_leave() */
 

@@ -222,8 +222,9 @@ feed_init(
     p_this->p_heap =
         p_heap;
 
-    p_this->o_client.p_heap =
-        p_heap;
+    feed_client_set_heap(
+        p_this->p_client,
+        p_this->p_heap);
 
     p_this->o_descriptor =
         *(
@@ -233,8 +234,9 @@ feed_init(
         feed_prompt_create(
             p_this->p_client);
 
-    p_this->o_client.p_prompt =
-        p_this->p_prompt;
+    feed_client_set_prompt(
+        p_this->p_client,
+        p_this->p_prompt);
 
     p_this->p_input =
         feed_input_create(
@@ -292,8 +294,9 @@ feed_init(
     feed_screen_info_init(
         p_this->p_screen_info);
 
-    p_this->p_client->p_screen_info =
-        p_this->p_screen_info;
+    feed_client_set_screen_info(
+        p_this->p_client,
+        p_this->p_screen_info);
 
     p_this->p_screen =
         feed_screen_create(
@@ -305,8 +308,9 @@ feed_init(
         feed_text_create(
             p_this->p_client);
 
-    p_this->o_client.p_text =
-        p_this->p_text;
+    feed_client_set_text(
+        p_this->p_client,
+        p_this->p_text);
 
     feed_text_iterator_init(
         p_this->p_client,
@@ -551,29 +555,21 @@ feed_destroy(
     struct feed_handle * const
         p_this)
 {
-    if (
-        p_this)
-    {
-        struct feed_heap *
-            p_heap;
+    struct feed_heap *
+        p_heap;
 
-        p_heap =
-            p_this->p_heap;
+    p_heap =
+        p_this->p_heap;
 
-        if (
-            p_heap)
-        {
-            feed_cleanup(
-                p_this);
+    feed_cleanup(
+        p_this);
 
-            feed_heap_free(
-                p_heap,
-                p_this);
+    feed_heap_free(
+        p_heap,
+        p_this);
 
-            feed_heap_destroy(
-                p_heap);
-        }
-    }
+    feed_heap_destroy(
+        p_heap);
 
 } /* feed_destroy() */
 
@@ -590,22 +586,13 @@ feed_prompt1(
         i_result;
 
     if (
-        p_this)
+        feed_prompt_set1(
+            p_this->p_prompt,
+            p_data,
+            i_data_length))
     {
-        if (
-            feed_prompt_set1(
-                p_this->p_prompt,
-                p_data,
-                i_data_length))
-        {
-            i_result =
-                0;
-        }
-        else
-        {
-            i_result =
-                -1;
-        }
+        i_result =
+            0;
     }
     else
     {
@@ -631,22 +618,13 @@ feed_prompt2(
         i_result;
 
     if (
-        p_this)
+        feed_prompt_set2(
+            p_this->p_prompt,
+            p_data,
+            i_data_length))
     {
-        if (
-            feed_prompt_set2(
-                p_this->p_prompt,
-                p_data,
-                i_data_length))
-        {
-            i_result =
-                0;
-        }
-        else
-        {
-            i_result =
-                -1;
-        }
+        i_result =
+            0;
     }
     else
     {
@@ -2871,73 +2849,64 @@ feed_start(
         i_result;
 
     if (
-        p_this)
+        !(p_this->b_started))
     {
+        p_this->b_started =
+            1;
+
         if (
-            !(p_this->b_started))
+            feed_screen_enter(
+                p_this->p_screen))
         {
-            p_this->b_started =
+            /* Move cursor to begin of document? */
+            {
+                p_this->o_cursor.i_glyph_index =
+                    0u;
+
+                p_this->o_cursor.p_glyph =
+                    NULL;
+
+                p_this->o_cursor.i_line_index =
+                    0u;
+
+                p_this->o_cursor.p_line =
+                    NULL;
+
+                p_this->o_view_begin.p_line =
+                    NULL;
+
+                p_this->o_view_begin.p_glyph =
+                    NULL;
+
+                p_this->o_view_begin.i_line_index =
+                    0u;
+
+                p_this->o_view_begin.i_glyph_index =
+                    0u;
+
+                p_this->o_view_begin.e_state =
+                    feed_view_state_prompt;
+            }
+
+            /* force initial refresh */
+            p_this->b_refresh_cursor =
                 1;
 
-            if (
-                feed_screen_enter(
-                    p_this->p_screen))
-            {
-                /* Move cursor to begin of document? */
-                {
-                    p_this->o_cursor.i_glyph_index =
-                        0u;
+            p_this->b_refresh_text =
+                1;
 
-                    p_this->o_cursor.p_glyph =
-                        NULL;
+            feed_main_loop(
+                p_this);
 
-                    p_this->o_cursor.i_line_index =
-                        0u;
+            feed_screen_set_cursor_pos(
+                p_this->p_screen,
+                p_this->i_final_cursor_address);
 
-                    p_this->o_cursor.p_line =
-                        NULL;
+            feed_screen_leave(
+                p_this->p_screen);
 
-                    p_this->o_view_begin.p_line =
-                        NULL;
-
-                    p_this->o_view_begin.p_glyph =
-                        NULL;
-
-                    p_this->o_view_begin.i_line_index =
-                        0u;
-
-                    p_this->o_view_begin.i_glyph_index =
-                        0u;
-
-                    p_this->o_view_begin.e_state =
-                        feed_view_state_prompt;
-                }
-
-                /* force initial refresh */
-                p_this->b_refresh_cursor =
-                    1;
-
-                p_this->b_refresh_text =
-                    1;
-
-                feed_main_loop(
-                    p_this);
-
-                feed_screen_set_cursor_pos(
-                    p_this->p_screen,
-                    p_this->i_final_cursor_address);
-
-                feed_screen_leave(
-                    p_this->p_screen);
-
-                i_result =
-                    0;
-            }
-            else
-            {
-                i_result =
-                    -1;
-            }
+            i_result =
+                0;
         }
         else
         {

@@ -206,24 +206,16 @@ feed_line_destroy(
     struct feed_line * const
         p_line)
 {
-    if (
-        p_line)
-    {
-        struct feed_client * const
-            p_client =
-            p_line->p_client;
+    struct feed_client * const
+        p_client =
+        p_line->p_client;
 
-        if (
-            p_client)
-        {
-            feed_object_destroy(
-                p_client,
-                (void *)(
-                    p_line),
-                &(
-                    feed_line_cleanup_cb));
-        }
-    }
+    feed_object_destroy(
+        p_client,
+        (void *)(
+            p_line),
+        &(
+            feed_line_cleanup_cb));
 }
 
 void
@@ -247,34 +239,26 @@ feed_line_append_utf8_code(
     struct feed_utf8_code const * const
         p_utf8_code)
 {
+    struct feed_client * const
+        p_client =
+            p_line->p_client;
+
+    /* Create a character */
+    /* Set char information */
+    struct feed_glyph * const
+        p_glyph =
+        feed_glyph_create(
+            p_client,
+            p_utf8_code);
+
     if (
-        p_line)
+        p_glyph)
     {
-        struct feed_client * const
-            p_client =
-                p_line->p_client;
+        /* Store the char into the list */
+        feed_line_append_glyph(
+            p_line,
+            p_glyph);
 
-        if (
-            p_client)
-        {
-            /* Create a character */
-            /* Set char information */
-            struct feed_glyph * const
-                p_glyph =
-                feed_glyph_create(
-                    p_client,
-                    p_utf8_code);
-
-            if (
-                p_glyph)
-            {
-                /* Store the char into the list */
-                feed_line_append_glyph(
-                    p_line,
-                    p_glyph);
-
-            }
-        }
     }
 }
 

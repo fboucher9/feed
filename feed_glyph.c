@@ -155,20 +155,12 @@ feed_glyph_destroy(
     struct feed_glyph * const
         p_glyph)
 {
-    if (p_glyph)
-    {
-        if (
-            p_client)
-        {
-            feed_object_destroy(
-                p_client,
-                (void *)(
-                    p_glyph),
-                &(
-                    feed_glyph_cleanup_cb));
-
-        }
-    }
+    feed_object_destroy(
+        p_client,
+        (void *)(
+            p_glyph),
+        &(
+            feed_glyph_cleanup_cb));
 
 } /* feed_glyph_destroy() */
 

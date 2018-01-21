@@ -159,7 +159,8 @@ feed_dict_node_create(
         p_dict->p_client;
 
     p_heap =
-        p_client->p_heap;
+        feed_client_get_heap(
+            p_client);
 
     p_placement =
         feed_heap_alloc(
@@ -211,7 +212,8 @@ feed_dict_node_destroy(
         p_dict_node->p_client;
 
     p_heap =
-        p_client->p_heap;
+        feed_client_get_heap(
+            p_client);
 
     feed_dict_node_cleanup(
         p_dict_node);
@@ -294,7 +296,8 @@ feed_dict_cleanup(
         p_dict->p_client;
 
     p_heap =
-        p_client->p_heap;
+        feed_client_get_heap(
+            p_client);
 
     if (
         p_dict->b_lookup_valid)
@@ -395,7 +398,8 @@ feed_dict_invalidate_lookup(
             p_dict->p_client;
 
         p_heap =
-            p_client->p_heap;
+            feed_client_get_heap(
+                p_client);
 
         feed_heap_free(
             p_heap,
@@ -433,7 +437,8 @@ feed_dict_validate_lookup(
             p_dict->p_client;
 
         p_heap =
-            p_client->p_heap;
+            feed_client_get_heap(
+                p_client);
 
         p_dict->p_lookup =
             (struct feed_dict_node * *)(
