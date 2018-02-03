@@ -44,6 +44,14 @@ struct feed_text_iterator
     unsigned long int
         i_glyph_index;
 
+    /* -- */
+
+    unsigned long int
+        i_line_offset;
+
+    unsigned long int
+        i_glyph_offset;
+
 }; /* struct feed_text_iterator */
 
 void

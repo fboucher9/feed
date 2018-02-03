@@ -49,6 +49,12 @@ feed_text_iterator_init(
     p_text_iterator->i_glyph_index =
         0ul;
 
+    p_text_iterator->i_line_offset =
+        0ul;
+
+    p_text_iterator->i_glyph_offset =
+        0ul;
+
 }
 
 void
@@ -70,6 +76,12 @@ feed_text_iterator_cleanup(
     p_text_iterator->i_glyph_index =
         0ul;
 
+    p_text_iterator->i_line_offset =
+        0ul;
+
+    p_text_iterator->i_glyph_offset =
+        0ul;
+
 }
 
 static
@@ -82,6 +94,9 @@ feed_text_iterator_invalidate_line(
         (struct feed_line *)(
             0);
 
+    p_text_iterator->i_line_offset =
+        0ul;
+
 }
 
 static
@@ -93,6 +108,9 @@ feed_text_iterator_invalidate_glyph(
     p_text_iterator->p_glyph =
         (struct feed_glyph *)(
             0);
+
+    p_text_iterator->i_glyph_offset =
+        0ul;
 
 }
 
@@ -118,9 +136,11 @@ feed_text_iterator_validate_line(
     if (!(p_text_iterator->p_line))
     {
         p_text_iterator->p_line =
-            feed_text_get_line(
+            feed_text_get_line_and_offset(
                 p_text_iterator->p_text,
-                p_text_iterator->i_line_index);
+                p_text_iterator->i_line_index,
+                &(
+                    p_text_iterator->i_line_offset));
     }
 
 }
@@ -139,9 +159,11 @@ feed_text_iterator_validate_glyph(
         if (!(p_text_iterator->p_glyph))
         {
             p_text_iterator->p_glyph =
-                feed_line_get_glyph(
+                feed_line_get_glyph_and_offset(
                     p_text_iterator->p_line,
-                    p_text_iterator->i_glyph_index);
+                    p_text_iterator->i_glyph_index,
+                    &(
+                        p_text_iterator->i_glyph_offset));
         }
     }
 }
@@ -196,6 +218,10 @@ feed_text_iterator_next_line(
         if (p_text_iterator->p_line
             && (p_text_iterator->p_line->o_list.p_next != &(p_text_iterator->p_text->o_lines)))
         {
+            p_text_iterator->i_line_offset +=
+                feed_line_length(
+                    p_text_iterator->p_line);
+
             p_text_iterator->i_line_index ++;
 
             p_text_iterator->p_line =
@@ -246,6 +272,10 @@ feed_text_iterator_prev_line(
             p_text_iterator->p_line =
                 (struct feed_line *)(
                     p_text_iterator->p_line->o_list.p_prev);
+
+            p_text_iterator->i_line_offset -=
+                feed_line_length(
+                    p_text_iterator->p_line);
 
             /* Invalidate the glyph ptr cache */
             /* Try to stay at same glyph index */
@@ -333,10 +363,13 @@ feed_text_iterator_next_glyph(
         && p_text_iterator->p_glyph
         && ((p_text_iterator->i_glyph_index + 1u) < p_text_iterator->p_line->i_glyph_count))
     {
+        p_text_iterator->i_glyph_offset +=
+            p_text_iterator->p_glyph->o_utf8_code.i_raw_len;
+
+        p_text_iterator->i_glyph_index ++;
+
         if (p_text_iterator->p_glyph->o_list.p_next != &(p_text_iterator->p_line->o_glyphs))
         {
-            p_text_iterator->i_glyph_index ++;
-
             p_text_iterator->p_glyph =
                 (struct feed_glyph *)(
                     p_text_iterator->p_glyph->o_list.p_next);
@@ -346,8 +379,6 @@ feed_text_iterator_next_glyph(
         }
         else
         {
-            p_text_iterator->i_glyph_index ++;
-
             p_text_iterator->p_glyph =
                 (struct feed_glyph *)(
                     0);
@@ -391,6 +422,9 @@ feed_text_iterator_prev_glyph(
                     (struct feed_glyph *)(
                         p_text_iterator->p_glyph->o_list.p_prev);
 
+                p_text_iterator->i_glyph_offset -=
+                    p_text_iterator->p_glyph->o_utf8_code.i_raw_len;
+
                 b_result =
                     1;
             }
@@ -409,6 +443,10 @@ feed_text_iterator_prev_glyph(
                 p_text_iterator->p_glyph =
                     (struct feed_glyph *)(
                         p_text_iterator->p_line->o_glyphs.p_prev);
+
+                p_text_iterator->i_glyph_offset =
+                    p_text_iterator->p_line->i_raw_len
+                    - p_text_iterator->p_glyph->o_utf8_code.i_raw_len;
 
                 b_result =
                     1;
@@ -806,20 +844,12 @@ feed_text_iterator_get_offset(
     unsigned long int
         i_offset;
 
-    if (
-        feed_text_index_to_offset(
-            p_text_iterator->p_text,
-            p_text_iterator->i_line_index,
-            p_text_iterator->i_glyph_index,
-            &(
-                i_offset)))
-    {
-    }
-    else
-    {
-        i_offset =
-            0ul;
-    }
+    feed_text_iterator_validate(
+        p_text_iterator);
+
+    i_offset =
+        p_text_iterator->i_line_offset
+        + p_text_iterator->i_glyph_offset;
 
     return
         i_offset;
@@ -1058,6 +1088,9 @@ feed_text_iterator_insert_newline(
                         p_glyph_next;
                 }
             }
+
+            p_text_iterator->i_line_offset +=
+                p_text_iterator->p_line->i_raw_len;
 
             p_text_iterator->i_line_index ++;
 
