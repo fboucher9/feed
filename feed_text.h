@@ -81,6 +81,15 @@ feed_text_get_line(
     unsigned long int const
         i_line_index);
 
+struct feed_line *
+feed_text_get_line_and_offset(
+    struct feed_text const * const
+        p_text,
+    unsigned long int const
+        i_line_index,
+    unsigned long int * const
+        p_raw_offset);
+
 void
 feed_text_write_utf8_code(
     struct feed_text * const

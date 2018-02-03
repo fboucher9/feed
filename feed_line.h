@@ -103,6 +103,15 @@ feed_line_get_glyph(
     unsigned long int const
         i_glyph_index);
 
+struct feed_glyph *
+feed_line_get_glyph_and_offset(
+    struct feed_line * const
+        p_line,
+    unsigned long int const
+        i_glyph_index,
+    unsigned long int * const
+        p_raw_offset);
+
 unsigned long int
 feed_line_length(
     struct feed_line * const

@@ -308,6 +308,94 @@ feed_text_get_line(
 
 }
 
+struct feed_line *
+feed_text_get_line_and_offset(
+    struct feed_text const * const
+        p_text,
+    unsigned long int const
+        i_line_index,
+    unsigned long int * const
+        p_raw_offset)
+{
+    struct feed_line *
+        p_line;
+
+    unsigned long int
+        i_raw_offset;
+
+    i_raw_offset =
+        0ul;
+
+    if (
+        i_line_index >= p_text->i_line_count)
+    {
+        p_line =
+            NULL;
+    }
+    else if (
+        0u == i_line_index)
+    {
+        p_line =
+            (struct feed_line *)(
+                p_text->o_lines.p_next);
+    }
+    else
+    {
+        struct feed_list *
+            p_iterator;
+
+        unsigned int
+            i_line_iterator;
+
+        i_line_iterator =
+            0u;
+
+        p_iterator =
+            p_text->o_lines.p_next;
+
+        while (
+            (
+                i_line_iterator < i_line_index)
+            && (
+                p_iterator != &(p_text->o_lines)))
+        {
+            p_line =
+                (struct feed_line *)(
+                    p_iterator);
+
+            i_raw_offset +=
+                p_line->i_raw_len;
+
+            i_line_iterator ++;
+
+            p_iterator =
+                p_iterator->p_next;
+        }
+
+        if (
+            p_iterator != &(p_text->o_lines))
+        {
+            p_line =
+                (struct feed_line *)(
+                    p_iterator);
+        }
+        else
+        {
+            p_line =
+                (struct feed_line *)(
+                    0);
+        }
+    }
+
+    *(
+        p_raw_offset) =
+        i_raw_offset;
+
+    return
+        p_line;
+
+}
+
 void
 feed_text_write_utf8_code(
     struct feed_text * const

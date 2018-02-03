@@ -382,6 +382,95 @@ feed_line_get_glyph(
 
 }
 
+struct feed_glyph *
+feed_line_get_glyph_and_offset(
+    struct feed_line * const
+        p_line,
+    unsigned long int const
+        i_glyph_index,
+    unsigned long int * const
+        p_raw_offset)
+{
+    struct feed_glyph *
+        p_glyph;
+
+    unsigned long int
+        i_raw_offset;
+
+    i_raw_offset =
+        0ul;
+
+    if (
+        i_glyph_index >= p_line->i_glyph_count)
+    {
+        p_glyph =
+            (struct feed_glyph *)(
+                0);
+    }
+    else if (
+        0u == i_glyph_index)
+    {
+        p_glyph =
+            (struct feed_glyph *)(
+                p_line->o_glyphs.p_next);
+    }
+    else
+    {
+        struct feed_list *
+            p_glyph_iterator;
+
+        unsigned int
+            i_glyph_iterator;
+
+        i_glyph_iterator =
+            0u;
+
+        p_glyph_iterator =
+            p_line->o_glyphs.p_next;
+
+        while (
+            (
+                i_glyph_iterator < i_glyph_index)
+            && (
+                p_glyph_iterator != &(p_line->o_glyphs)))
+        {
+            p_glyph =
+                (struct feed_glyph *)(
+                    p_glyph_iterator);
+
+            i_raw_offset +=
+                p_glyph->o_utf8_code.i_raw_len;
+
+            i_glyph_iterator ++;
+
+            p_glyph_iterator =
+                p_glyph_iterator->p_next;
+        }
+
+        if (
+            p_glyph_iterator != &(p_line->o_glyphs))
+        {
+            p_glyph =
+                (struct feed_glyph *)(
+                    p_glyph_iterator);
+        }
+        else
+        {
+            p_glyph =
+                (struct feed_glyph *)(
+                    0);
+        }
+    }
+
+    *(
+        p_raw_offset) =
+        i_raw_offset;
+
+    return
+        p_glyph;
+
+} /* feed_line_get_glyph_and_offset() */
+
 unsigned long int
 feed_line_length(
     struct feed_line * const
