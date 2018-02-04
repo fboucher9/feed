@@ -492,7 +492,7 @@ feed_main_notify_callback(
             i_data_length);
     }
 
-#if 1 /* test of cursor position */
+#if 0 /* test of cursor position */
     if (
         (FEED_KEY_CTRL | 'G') == i_code)
     {
@@ -1150,6 +1150,12 @@ feed_main(
                     feed_syntax_operator,
                     feed_color_dark_black,
                     feed_color_dark_white);
+
+                feed_theme(
+                    p_main_context->p_feed_handle,
+                    feed_syntax_suggest,
+                    feed_color_dark_green,
+                    feed_color_default);
             }
 
             feed_start(

@@ -1286,8 +1286,21 @@ feed_main_refresh_job(
                             {
                                 if (p_this->b_suggest)
                                 {
-                                    e_syntax =
-                                        feed_syntax_suggest;
+                                    unsigned long int
+                                        i_text_offset;
+
+                                    i_text_offset =
+                                        feed_text_iterator_get_offset(
+                                            &(
+                                                o_iterator.o_combo_iterator.o_text_iterator));
+
+                                    if (
+                                        (i_text_offset >= p_this->i_suggest_offset) &&
+                                        (i_text_offset < p_this->i_suggest_offset + p_this->i_suggest_length))
+                                    {
+                                        e_syntax =
+                                            feed_syntax_suggest;
+                                    }
                                 }
                                 else
                                 {
