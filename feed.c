@@ -740,6 +740,12 @@ feed_main_move_cursor_xy(
                     p_this->o_cursor.p_glyph =
                         o_view_descriptor.p_glyph;
 
+                    p_this->o_cursor.i_line_offset =
+                        o_view_descriptor.i_line_offset;
+
+                    p_this->o_cursor.i_glyph_offset =
+                        o_view_descriptor.i_glyph_offset;
+
                     b_more =
                         1;
 
@@ -760,6 +766,12 @@ feed_main_move_cursor_xy(
 
                     p_this->o_cursor.p_glyph =
                         o_view_descriptor.p_glyph;
+
+                    p_this->o_cursor.i_line_offset =
+                        o_view_descriptor.i_line_offset;
+
+                    p_this->o_cursor.i_glyph_offset =
+                        o_view_descriptor.i_glyph_offset;
 
                     b_more =
                         0;
@@ -782,6 +794,12 @@ feed_main_move_cursor_xy(
 
                         p_this->o_cursor.p_glyph =
                             o_view_descriptor.p_glyph;
+
+                        p_this->o_cursor.i_line_offset =
+                            o_view_descriptor.i_line_offset;
+
+                        p_this->o_cursor.i_glyph_offset =
+                            o_view_descriptor.i_glyph_offset;
 
                         b_found_after =
                             1;
@@ -1273,6 +1291,7 @@ feed_main_refresh_job(
                                 }
                                 else
                                 {
+#if 0 /* test highlight of special characters */
                                     /* Try to determine the syntax */
                                     if (p_glyph->o_utf8_code.i_raw_len)
                                     {
@@ -1284,6 +1303,26 @@ feed_main_refresh_job(
                                                 feed_syntax_operator;
                                         }
                                     }
+#endif
+
+#if 0 /* test highlight by offset */
+                                    {
+                                        unsigned long int
+                                            i_text_offset;
+
+                                        i_text_offset =
+                                            feed_text_iterator_get_offset(
+                                                &(
+                                                    o_iterator.o_combo_iterator.o_text_iterator));
+
+                                        if (
+                                            i_text_offset >= 10)
+                                        {
+                                            e_syntax =
+                                                feed_syntax_operator;
+                                        }
+                                    }
+#endif /* test highlight by offset */
                                 }
                             }
 
@@ -1454,6 +1493,10 @@ feed_main_insert_event(
                             o_view_descriptor.i_line_index = p_this->o_cursor.i_line_index;
 
                             o_view_descriptor.i_glyph_index = p_this->o_cursor.i_glyph_index;
+
+                            o_view_descriptor.i_line_offset = p_this->o_cursor.i_line_offset;
+
+                            o_view_descriptor.i_glyph_offset = p_this->o_cursor.i_glyph_offset;
 
                             o_view_descriptor.e_state = feed_view_state_text;
 
@@ -1949,6 +1992,10 @@ feed_main_insert_newline(
             o_view_descriptor.i_line_index = p_this->o_cursor.i_line_index;
 
             o_view_descriptor.i_glyph_index = p_this->o_cursor.i_glyph_index;
+
+            o_view_descriptor.i_line_offset = p_this->o_cursor.i_line_offset;
+
+            o_view_descriptor.i_glyph_offset = p_this->o_cursor.i_glyph_offset;
 
             o_view_descriptor.e_state = feed_view_state_prompt;
 

@@ -492,6 +492,25 @@ feed_main_notify_callback(
             i_data_length);
     }
 
+#if 1 /* test of cursor position */
+    if (
+        (FEED_KEY_CTRL | 'G') == i_code)
+    {
+        unsigned long int
+            i_cursor_offset;
+
+        i_cursor_offset =
+            feed_cursor(
+                p_feed_handle);
+
+        printf("cursor offset | %10lu bytes\n",
+            i_cursor_offset);
+
+        i_result =
+            -1;
+    }
+#endif /* test of cursor position */
+
 #if 0 /* test of stop */
     if (i_data_length)
     {
@@ -646,8 +665,8 @@ feed_main_notify_callback(
 
     if (i_data_length)
     {
-        if ((4 == p_data[0u])
-            || (3 == p_data[0u]))
+        if (((FEED_KEY_CTRL | 'D') == i_code)
+            || ((FEED_KEY_CTRL | 'C') == i_code))
         {
             feed_stop(
                 p_feed_handle);

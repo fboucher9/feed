@@ -70,6 +70,12 @@ struct feed_view_descriptor
     unsigned long int
         i_glyph_index;
 
+    unsigned long int
+        i_line_offset;
+
+    unsigned long int
+        i_glyph_offset;
+
     enum feed_view_state
         e_state;
 

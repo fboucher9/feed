@@ -314,6 +314,9 @@ feed_combo_iterator_head(
     p_combo_iterator->o_text_iterator.i_line_index =
         p_view_descriptor->i_line_index;
 
+    p_combo_iterator->o_text_iterator.i_line_offset =
+        p_view_descriptor->i_line_offset;
+
     p_combo_iterator->o_text_iterator.p_line =
         p_view_descriptor->p_line;
 
@@ -445,6 +448,9 @@ feed_combo_iterator_query(
     p_view_descriptor->i_line_index =
         p_combo_iterator->o_text_iterator.i_line_index;
 
+    p_view_descriptor->i_line_offset =
+        p_combo_iterator->o_text_iterator.i_line_offset;
+
     if (
         feed_view_state_prompt == p_combo_iterator->e_state)
     {
@@ -453,6 +459,9 @@ feed_combo_iterator_query(
 
         p_view_descriptor->i_glyph_index =
             p_combo_iterator->o_prompt_iterator.i_glyph_index;
+
+        p_view_descriptor->i_glyph_offset =
+            0ul;
     }
     else if (
         feed_view_state_text == p_combo_iterator->e_state)
@@ -466,6 +475,9 @@ feed_combo_iterator_query(
 
         p_view_descriptor->i_glyph_index =
             p_combo_iterator->o_text_iterator.i_glyph_index;
+
+        p_view_descriptor->i_glyph_offset =
+            p_combo_iterator->o_text_iterator.i_glyph_offset;
     }
     else
     {
@@ -474,6 +486,9 @@ feed_combo_iterator_query(
                 0);
 
         p_view_descriptor->i_glyph_index =
+            0ul;
+
+        p_view_descriptor->i_glyph_offset =
             0ul;
     }
 

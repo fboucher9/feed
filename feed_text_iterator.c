@@ -586,13 +586,21 @@ feed_text_iterator_write_glyph(
     struct feed_glyph * const
         p_glyph)
 {
+    unsigned char
+        i_raw_len;
+
     feed_text_iterator_validate(
         p_text_iterator);
+
+    i_raw_len =
+        p_glyph->o_utf8_code.i_raw_len;
 
     feed_line_insert_glyph_before(
         p_text_iterator->p_line,
         p_glyph,
         p_text_iterator->p_glyph);
+
+    p_text_iterator->i_glyph_offset += i_raw_len;
 
     p_text_iterator->i_glyph_index ++;
 }
