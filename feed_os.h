@@ -28,7 +28,11 @@ Description:
 
 #include <unistd.h>
 
+#if defined FEED_OS_LINUX
+
 #include <termios.h>
+
+#endif /* #if defined FEED_OS_LINUX */
 
 #include <errno.h>
 
@@ -36,7 +40,11 @@ Description:
 
 #include <sys/types.h>
 
+#if defined FEED_OS_LINUX
+
 #include <sys/ioctl.h>
+
+#endif /* #if defined FEED_OS_LINUX */
 
 #include <time.h>
 

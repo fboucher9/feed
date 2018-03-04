@@ -30,7 +30,15 @@ Description:
 
 #include "feed_device.h"
 
+#if defined FEED_OS_LINUX
+
 #include "feed_device_std.h"
+
+#elif defined FEED_OS_WINDOWS
+
+#include "feed_device_w32.h"
+
+#endif
 
 #include "feed_screen.h"
 
@@ -103,8 +111,22 @@ struct feed_handle
     struct feed_dict *
         p_dict;
 
+#if defined FEED_OS_LINUX
+
     struct feed_device_std *
         p_device_std;
+
+#elif defined FEED_OS_WINDOWS
+
+    struct feed_device_w32 *
+        p_device_w32;
+
+#else /* #if defined FEED_OS_Xx */
+
+    void *
+        p_device_other;
+
+#endif /* #if defined FEED_OS_Xx */
 
     /* -- */
 
@@ -242,13 +264,19 @@ feed_init(
         feed_input_create(
             p_this->p_client);
 
+#if defined FEED_OS_LINUX
+    p_this->p_device_std =
+        (struct feed_device_std *)(
+            0);
+#elif defined FEED_OS_WINDOWS
+    p_this->p_device_w32 =
+        (struct feed_device_w32 *)(
+            0);
+#endif /* #if defined FEED_OS_LINUX */
+
     if (
         p_this->o_descriptor.p_device_intf)
     {
-        p_this->p_device_std =
-            (struct feed_device_std *)(
-                0);
-
         feed_device_init(
             &(
                 p_this->o_device),
@@ -257,6 +285,8 @@ feed_init(
     }
     else
     {
+#if defined FEED_OS_LINUX
+
         struct feed_device_std_descriptor
             o_device_std_descriptor;
 
@@ -280,6 +310,20 @@ feed_init(
                 p_this->o_device),
             feed_device_std_intf(),
             p_this->p_device_std);
+        l
+#elif defined FEED_OS_WINDOWS
+
+        p_this->p_device_w32 =
+            feed_device_w32_create(
+                p_this->p_client);
+
+        feed_device_init(
+            &(
+                p_this->o_device),
+            feed_device_w32_intf(),
+            p_this->p_device_w32);
+
+#endif /* #if defined FEED_OS_LINUX */
     }
 
     feed_client_set_device(
@@ -402,6 +446,7 @@ feed_cleanup(
         &(
             p_this->o_device));
 
+#if defined FEED_OS_LINUX
     if (
         p_this->p_device_std)
     {
@@ -412,6 +457,18 @@ feed_cleanup(
             (struct feed_device_std *)(
                 0);
     }
+#elif defined FEED_OS_WINDOWS
+    if (
+        p_this->p_device_w32)
+    {
+        feed_device_w32_destroy(
+            p_this->p_device_w32);
+
+        p_this->p_device_w32 =
+            (struct feed_device_w32 *)(
+                0);
+    }
+#endif /* #if defined FEED_OS_LINUX */
 
     if (
         p_this->p_text)

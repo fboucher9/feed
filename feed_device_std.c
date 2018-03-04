@@ -14,6 +14,8 @@ Description:
 
 #include "feed_os.h"
 
+#if defined FEED_OS_LINUX
+
 #include "feed_cfg.h"
 
 #include "feed_device_std.h"
@@ -522,5 +524,7 @@ feed_device_std_intf(void)
             g_feed_device_std_intf);
 
 } /* feed_device_std_intf() */
+
+#endif /* #if defined FEED_OS_LINUX */
 
 /* end-of-file: feed_device_std.c */
