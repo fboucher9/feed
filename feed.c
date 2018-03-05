@@ -310,7 +310,7 @@ feed_init(
                 p_this->o_device),
             feed_device_std_intf(),
             p_this->p_device_std);
-        l
+
 #elif defined FEED_OS_WINDOWS
 
         p_this->p_device_w32 =

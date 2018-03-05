@@ -959,11 +959,8 @@ feed_main(
 
             if (
                 p_main_context->o_options.b_file_name
-#if defined FEED_OS_LINUX
                 || (
-                    !isatty(STDIN_FILENO))
-#endif /* #if defined FEED_OS_LINUX */
-                )
+                    !isatty(STDIN_FILENO)))
             {
                 FILE *
                     p_file_handle;
@@ -1161,12 +1158,8 @@ feed_main(
                     feed_color_default);
             }
 
-            fprintf(stderr, "--- BEGIN feed_start ---\n");
-
             feed_start(
                 p_main_context->p_feed_handle);
-
-            fprintf(stderr, "--- END feed_start ---\n");
 
             /* Note: get text buffer to flush */
             {
