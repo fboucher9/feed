@@ -55,7 +55,7 @@ else
 FEED_CFG_PIC = _nopic
 endif
 
-FEED_OBJ_PATH = $(FEED_DST_PATH).obj$(FEED_CFG_DBG)$(FEED_CFG_PIC)/
+FEED_OBJ_PATH = $(FEED_DST_PATH).obj/feed/$(FEED_CFG_DBG)$(FEED_CFG_PIC)/
 
 ifeq ($(PIC),1)
 FEED_CFLAGS_PIC = -fPIC
@@ -177,6 +177,7 @@ FEED_LIBRARY_MODULES = \
     feed_device_std \
     feed_device_w32 \
     feed_device \
+    feed_syntax \
     feed
 
 FEED_option_precomp_input = $(FEED_SRC_PATH)feed_os.h

@@ -18,9 +18,11 @@ Description:
 
 #include "feed_syntax.h"
 
-#include "feed_text.h"
+#include "feed_list.h"
 
-#include "feed_text_iterator.h"
+#include "feed_utf8.h"
+
+#include "feed_glyph.h"
 
 char
 feed_syntax_parser_init(
@@ -28,10 +30,6 @@ feed_syntax_parser_init(
         p_syntax_parser,
     struct feed_client * const
         p_client,
-    struct feed_text const * const
-        p_text,
-    struct feed_text_iterator * const
-        p_text_iterator,
     enum feed_syntax const
         e_syntax)
 {
@@ -41,14 +39,29 @@ feed_syntax_parser_init(
     p_syntax_parser->p_client =
         p_client;
 
-    p_syntax_parser->p_text =
-        p_text;
-
-    p_syntax_parser->p_text_iterator =
-        p_text_iterator;
-
     p_syntax_parser->e_syntax =
         e_syntax;
+
+    p_syntax_parser->i_raw_len =
+        0u;
+
+    p_syntax_parser->i_input_read_index =
+        0u;
+
+    p_syntax_parser->i_input_write_index =
+        0u;
+
+    p_syntax_parser->i_input_count =
+        0u;
+
+    p_syntax_parser->i_output_read_index =
+        0u;
+
+    p_syntax_parser->i_output_write_index =
+        0u;
+
+    p_syntax_parser->i_output_count =
+        0u;
 
     b_result =
         1;
@@ -68,6 +81,7 @@ feed_syntax_parser_cleanup(
 
 } /* feed_syntax_parser_cleanup() */
 
+#if 0
 static
 char
 feed_syntax_parser_move_right(
@@ -104,7 +118,9 @@ feed_syntax_parser_move_right(
         }
     }
 }
+#endif
 
+#if 0
 char
 feed_syntax_parser_next(
     struct feed_syntax_parser * const
@@ -250,4 +266,179 @@ feed_syntax_parser_next(
         b_result;
 
 } /* feed_syntax_parser_next() */
+#endif
 
+/*
+
+*/
+char
+feed_syntax_parser_is_ready(
+    struct feed_syntax_parser * const
+        p_syntax_parser)
+{
+    char
+        b_result;
+
+    if (
+        p_syntax_parser->i_output_count)
+    {
+        b_result =
+            1;
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+} /* feed_syntax_parser_is_ready() */
+
+/*
+
+*/
+char
+feed_syntax_parser_write(
+    struct feed_syntax_parser * const
+        p_syntax_parser,
+    struct feed_glyph * const
+        p_glyph)
+{
+    char
+        b_result;
+
+#if 0
+    if (
+        p_syntax_parser->i_input_count < 128u)
+    {
+        unsigned char
+            i_glyph_raw_len;
+
+        i_glyph_raw_len =
+            p_glyph->o_utf8_code.i_raw_len;
+
+        if (
+            (p_syntax_parser->i_raw_len + i_glyph_raw_len) <= 1024u)
+        {
+            memcpy(
+                p_syntax_parser->a_raw + p_syntax_parser->i_raw_len,
+                p_glyph->o_utf8_code.a_raw,
+                i_glyph_raw_len);
+
+            p_syntax_parser->a_input[p_syntax_parser->i_input_write_index] =
+                p_glyph;
+
+            p_syntax_parser->i_input_write_index ++;
+
+            if (p_syntax_parser->i_input_write_index >= 128u)
+            {
+                p_syntax_parser->i_input_write_index = 0u;
+            }
+
+            p_syntax_parser->i_input_count ++;
+
+            p_syntax_parser->i_raw_len += i_glyph_raw_len;
+
+            /* Trigger state machine... */
+
+            b_result =
+                1;
+        }
+        else
+        {
+            b_result =
+                0;
+        }
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+#endif
+
+    /* Store glyph directly into output queue */
+    if (
+        p_syntax_parser->i_output_count < 128u)
+    {
+        p_syntax_parser->a_output[p_syntax_parser->i_output_write_index] =
+            p_glyph;
+
+        p_syntax_parser->a_syntax[p_syntax_parser->i_output_write_index] =
+            feed_syntax_default;
+
+        p_syntax_parser->i_output_write_index ++;
+
+        if (p_syntax_parser->i_output_write_index >= 128u)
+        {
+            p_syntax_parser->i_output_write_index = 0u;
+        }
+
+        p_syntax_parser->i_output_count ++;
+
+        b_result =
+            1;
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+} /* feed_syntax_parser_write() */
+
+/*
+
+*/
+char
+feed_syntax_parser_read(
+    struct feed_syntax_parser * const
+        p_syntax_parser,
+    struct feed_glyph * * const
+        pp_glyph,
+    enum feed_syntax * const
+        p_syntax)
+{
+    char
+        b_result;
+
+    if (
+        p_syntax_parser->i_output_count)
+    {
+        *(
+            pp_glyph) =
+            p_syntax_parser->a_output[p_syntax_parser->i_output_read_index];
+
+        *(
+            p_syntax) =
+            p_syntax_parser->a_syntax[p_syntax_parser->i_output_read_index];
+
+        p_syntax_parser->i_output_read_index ++;
+
+        if (p_syntax_parser->i_output_read_index >= 128u)
+        {
+            p_syntax_parser->i_output_read_index = 0u;
+        }
+
+        p_syntax_parser->i_output_count --;
+
+        b_result =
+            1;
+    }
+    else
+    {
+        b_result =
+            0;
+    }
+
+    return
+        b_result;
+
+} /* feed_syntax_parser_read() */
+
+/* end-of-file: feed_syntax.c */

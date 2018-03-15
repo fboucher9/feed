@@ -461,7 +461,7 @@ feed_tty_write_character_array(
 
     while (
         b_result
-        && (p_buf_iterator < p_buf_max))
+        && (p_buf_iterator != p_buf_max))
     {
         c_data =
             *(
