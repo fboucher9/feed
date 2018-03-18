@@ -2955,6 +2955,14 @@ feed_main_loop(
             p_this);
 
     }
+
+    /* Do a final refresh */
+    feed_main_suggest_exit(
+        p_this);
+
+    feed_main_refresh_job(
+        p_this);
+
 }
 
 int
