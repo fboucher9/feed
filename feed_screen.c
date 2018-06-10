@@ -685,6 +685,34 @@ feed_screen_enter(
             0;
     }
 
+    if (
+        b_result)
+    {
+        /* Detect initial cursor position */
+        unsigned int
+            i_cursor_y;
+
+        unsigned int
+            i_cursor_x;
+
+        if (
+            feed_tty_get_cursor_position(
+                p_screen->p_tty,
+                &(
+                    i_cursor_y),
+                &(
+                    i_cursor_x)))
+        {
+            /* Do the initial newline... */
+            if (
+                i_cursor_x > 1)
+            {
+                feed_screen_newline_raw(
+                    p_screen);
+            }
+        }
+    }
+
     return
         b_result;
 
