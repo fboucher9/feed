@@ -2621,6 +2621,15 @@ feed_main_event_callback(
         }
     }
 
+    /* Ignore non-verbose ctrl-@ code */
+    if (!b_done)
+    {
+        if (0u == p_event->i_code)
+        {
+            b_done = 1;
+        }
+    }
+
     if (!b_done)
     {
         if (
